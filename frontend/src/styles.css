@@ -116,6 +116,12 @@ button {
   max-width: 760px;
 }
 
+/* На страницах-разделах отступы задаёт stack */
+.stack > .chips,
+.stack > .section {
+  margin: 0;
+}
+
 .page-title {
   font-size: 2rem;
   font-weight: 800;
@@ -1760,8 +1766,13 @@ input:focus {
   }
 
   .nav {
-    justify-content: flex-start;
-    padding: 0 20px;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 16px;
+  }
+
+  .nav a {
+    font-size: 15px;
   }
 
   .scenario-card {

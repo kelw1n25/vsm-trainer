@@ -8,16 +8,18 @@ interface Props {
   scenarios: ScenarioSummary[] | null;
   error: string | null;
   action?: ReactNode;
+  /** Число в бейдже, если показана только часть сценариев. */
+  total?: number;
 }
 
-export function ScenarioSection({ title, scenarios, error, action }: Props) {
+export function ScenarioSection({ title, scenarios, error, action, total }: Props) {
   const { start, error: startError } = useStartScenario();
   return (
     <section className="section">
       <div className="section__head">
         <h2 className="section__title">
           {title}
-          {scenarios && <span className="count-badge">{scenarios.length}</span>}
+          {scenarios && <span className="count-badge">{total ?? scenarios.length}</span>}
         </h2>
         {action}
       </div>
