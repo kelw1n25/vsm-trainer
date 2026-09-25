@@ -18,17 +18,26 @@ function windowPath(x: number, width: number): string {
 }
 
 interface HeroTrainProps {
-  /** Насколько поезд проехал вперёд (в единицах viewBox) — меняется при смене слайда. */
+  /** Насколько поезд проехал вперёд (в единицах viewBox) — задаётся ползунком hero. */
   offset?: number;
   moving?: boolean;
+  /** Короткий плавный переход (клавиатура); при перетаскивании поезд следует без задержки. */
+  smooth?: boolean;
 }
 
+const WHEELS = [
+  { cx: 406, cy: 268, r: 7 },
+  { cx: 450, cy: 267, r: 7 },
+  { cx: 895, cy: 259, r: 6.5 },
+  { cx: 937, cy: 258, r: 6.5 },
+];
+
 /** Скоростной поезд на фоне города — правая часть hero-блока. */
-export function HeroTrain({ offset = 0, moving = false }: HeroTrainProps) {
+export function HeroTrain({ offset = 0, moving = false, smooth = false }: HeroTrainProps) {
   const id = useSvgId();
   return (
     <svg
-      className={`hero__train ${moving ? "hero__train--moving" : ""}`}
+      className={`hero__train ${moving ? "hero__train--moving" : ""} ${smooth ? "hero__train--smooth" : ""}`}
       viewBox="0 0 1000 300"
       preserveAspectRatio="xMaxYMax meet"
       aria-hidden="true"
@@ -142,12 +151,18 @@ export function HeroTrain({ offset = 0, moving = false }: HeroTrainProps) {
             <rect x="390" y="250" width="76" height="18" rx="6" />
             <rect x="880" y="242" width="72" height="17" rx="6" />
           </g>
-          <g fill="#243047" className="hero__wheels">
-            <circle cx="406" cy="268" r="7" />
-            <circle cx="450" cy="267" r="7" />
-            <circle cx="895" cy="259" r="6.5" />
-            <circle cx="937" cy="258" r="6.5" />
-          </g>
+          {/* Колёса поворачиваются пропорционально пройденному пути */}
+          {WHEELS.map(({ cx, cy, r }) => (
+            <g key={cx} transform={`rotate(${-offset * 4} ${cx} ${cy})`}>
+              <circle cx={cx} cy={cy} r={r} fill="#243047" />
+              <path
+                d={`M${cx - r + 1.5} ${cy}H${cx + r - 1.5}M${cx} ${cy - r + 1.5}V${cy + r - 1.5}`}
+                stroke="#6E819E"
+                strokeWidth="1.4"
+              />
+              <circle cx={cx} cy={cy} r="1.8" fill="#9FB0C8" />
+            </g>
+          ))}
 
           <path
             d="M225 232C228 205 262 176 335 160L520 128L1250 67.5V246L300 264C255 265 223 254 225 232Z"
@@ -406,12 +421,136 @@ function DelayBoard() {
   );
 }
 
+/** Шумная компания с колонкой в вагоне тишины. */
+function NoisyGroup() {
+  return (
+    <Frame top="#EEF4FC" bottom="#D6E4F5">
+      <WindowView x={10} y={10} width={64} height={40} />
+      <rect x="96" y="12" width="56" height="18" rx="5" fill="#FFFFFF" stroke="#C6D6EC" />
+      <text x="124" y="25" textAnchor="middle" fontSize="8" fontWeight="700" fill="#1E5FD6" fontFamily="Manrope, sans-serif">
+        Тишина 🤫
+      </text>
+      <rect x="6" y="96" width="148" height="34" rx="10" fill="#2E5CC4" />
+      <path d="M0 132L160 126V150H0Z" fill="#C5D3E6" />
+      {[
+        { x: 28, color: "#E8735A", hair: "#3A2E2A" },
+        { x: 62, color: "#7BA05B", hair: "#6B3F2A" },
+        { x: 96, color: "#F2B84B", hair: "#2B2320" },
+      ].map(({ x, color, hair }) => (
+        <g key={x}>
+          <path d={`M${x - 14} 116C${x - 14} 96 ${x - 8} 86 ${x} 86S${x + 14} 96 ${x + 14} 116Z`} fill={color} />
+          <circle cx={x} cy="74" r="10" fill="#F2C9A5" />
+          <path d={`M${x - 10} 72C${x - 10} 62 ${x + 10} 62 ${x + 10} 72 ${x + 6} 67 ${x - 6} 67 ${x - 10} 72Z`} fill={hair} />
+          <path d={`M${x - 4} 78q4 4 8 0`} stroke="#8A4B3A" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+        </g>
+      ))}
+      <rect x="122" y="92" width="22" height="26" rx="5" fill="#1B1F2A" />
+      <circle cx="133" cy="101" r="5" fill="#3A4150" />
+      <circle cx="133" cy="112" r="3" fill="#3A4150" />
+      <g fill="#1E5FD6" className="notes">
+        <path d="M118 58v14a4 4 0 1 1-2-3.5V58h8v4z" />
+        <path d="M140 46v12a3.5 3.5 0 1 1-2-3V46h7v3.5z" />
+      </g>
+    </Frame>
+  );
+}
+
+/** Мама с ребёнком и значок аллергена. */
+function AllergyChild() {
+  return (
+    <Frame top="#EAF2FC" bottom="#D0E0F4">
+      <WindowView x={94} y={8} width={60} height={48} />
+      <rect x="6" y="100" width="148" height="32" rx="10" fill="#2E5CC4" />
+      <path d="M0 132L160 126V150H0Z" fill="#C5D3E6" />
+      <path d="M14 132C12 100 24 78 44 76S70 96 68 132Z" fill="#8E6BBF" />
+      <circle cx="44" cy="60" r="13" fill="#F2C9A5" />
+      <path d="M30 60C28 44 60 42 58 60 56 50 34 50 30 60Z" fill="#4A3426" />
+      <path d="M31 60C30 72 32 80 36 82" stroke="#4A3426" strokeWidth="5" fill="none" strokeLinecap="round" />
+      <path d="M64 102C80 96 86 88 92 84" stroke="#8E6BBF" strokeWidth="8" strokeLinecap="round" fill="none" />
+      <path d="M78 132C78 110 84 100 96 100S114 110 114 132Z" fill="#5FB0E8" />
+      <circle cx="96" cy="88" r="11" fill="#F6BFA8" />
+      <g fill="#E1343C" opacity="0.75">
+        <circle cx="91" cy="90" r="1.6" />
+        <circle cx="100" cy="92" r="1.6" />
+        <circle cx="95" cy="95" r="1.4" />
+        <circle cx="102" cy="86" r="1.3" />
+      </g>
+      <path d="M86 84C86 74 106 74 106 84 102 80 90 80 86 84Z" fill="#6B3F2A" />
+      <circle cx="136" cy="80" r="14" fill="#FFFFFF" stroke="#E1343C" strokeWidth="2.5" />
+      <ellipse cx="136" cy="80" rx="6" ry="7.5" fill="#C98A3A" />
+      <path d="M126 70L146 90" stroke="#E1343C" strokeWidth="2.5" strokeLinecap="round" />
+    </Frame>
+  );
+}
+
+/** Пассажир на кресле-коляске и переносной пандус у двери вагона. */
+function WheelchairBoarding() {
+  return (
+    <Frame top="#EAF1FB" bottom="#CFDFF3">
+      <rect x="84" y="10" width="76" height="118" rx="6" fill="#F5F8FC" />
+      <rect x="96" y="22" width="36" height="96" rx="4" fill="#2B3F66" />
+      <rect x="102" y="28" width="24" height="34" rx="3" fill="#CFE3FF" />
+      <rect x="84" y="118" width="76" height="4" fill="#E1343C" />
+      <path d="M0 132H160V150H0Z" fill="#BFCDE0" />
+      <path d="M40 132L96 118V124L46 136Z" fill="#8FA3C0" />
+      <path d="M40 132L96 118" stroke="#6E819E" strokeWidth="2" />
+      <circle cx="44" cy="122" r="14" fill="none" stroke="#243047" strokeWidth="4" />
+      <circle cx="44" cy="122" r="3" fill="#243047" />
+      <circle cx="66" cy="130" r="5" fill="none" stroke="#243047" strokeWidth="3" />
+      <path d="M32 94H56L62 116H42Z" fill="#2E5CC4" />
+      <path d="M32 80V116" stroke="#243047" strokeWidth="4" strokeLinecap="round" />
+      <path d="M38 96C38 80 44 72 52 72S64 80 64 96Z" fill="#56657F" />
+      <path d="M56 100H74V112" stroke="#34465F" strokeWidth="7" strokeLinecap="round" fill="none" />
+      <circle cx="52" cy="60" r="10" fill="#F0C4A0" />
+      <path d="M42 58C42 46 62 46 62 58 58 52 46 52 42 58Z" fill="#2E2622" />
+      <rect x="6" y="18" width="30" height="30" rx="6" fill="#1E5FD6" />
+      <circle cx="21" cy="26" r="2.6" fill="#FFFFFF" />
+      <path d="M19 30v7h6l2 5M15 36a6 6 0 1 0 9 5" stroke="#FFFFFF" strokeWidth="2" fill="none" strokeLinecap="round" />
+    </Frame>
+  );
+}
+
+/** Задымление в тамбуре и огнетушитель. */
+function SmokeVestibule() {
+  const id = useSvgId();
+  return (
+    <Frame top="#E3E9F2" bottom="#C3CEDD">
+      <defs>
+        <filter id={`${id}-smoke`}>
+          <feGaussianBlur stdDeviation="3" />
+        </filter>
+      </defs>
+      <rect x="10" y="8" width="64" height="120" rx="6" fill="#F2F5FA" />
+      <rect x="20" y="20" width="44" height="40" rx="5" fill="#CFE3FF" />
+      <path d="M0 128H160V150H0Z" fill="#AFBDD2" />
+      <rect x="96" y="92" width="22" height="36" rx="4" fill="#6E7F99" />
+      <rect x="92" y="88" width="30" height="6" rx="2" fill="#56657F" />
+      <g className="smoke" filter={`url(#${id}-smoke)`} fill="#8D97A8" opacity="0.8">
+        <circle cx="106" cy="76" r="12" />
+        <circle cx="120" cy="58" r="15" />
+        <circle cx="100" cy="44" r="14" />
+        <circle cx="128" cy="32" r="16" />
+      </g>
+      <path d="M103 90q3-8 6 0" stroke="#FF8A3D" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <rect x="132" y="84" width="16" height="42" rx="7" fill="#E1343C" />
+      <rect x="135" y="76" width="10" height="10" rx="2" fill="#243047" />
+      <path d="M145 80h8l4 6" stroke="#243047" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <rect x="134" y="96" width="12" height="10" rx="2" fill="#FFFFFF" opacity="0.85" />
+      <circle cx="40" cy="96" r="6" fill="#FFC53D" className="blink" />
+    </Frame>
+  );
+}
+
 const byScenario: Record<string, () => ReactNode> = {
   "business-seat-conflict": SeatConflict,
   "drunk-passenger": ConductorAndPassenger,
   "medical-heart-attack": MedicalHelp,
   "suspicious-item": LeftBag,
   "train-delay-compensation": DelayBoard,
+  "noisy-group-quiet-car": NoisyGroup,
+  "allergy-child": AllergyChild,
+  "wheelchair-boarding": WheelchairBoarding,
+  "smoke-vestibule": SmokeVestibule,
 };
 
 // Для новых сценариев без своей картинки — иллюстрация по категории

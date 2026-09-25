@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import { useMeta, useScenarios } from "../hooks";
 import { firstName } from "../labels";
 import type { Analytics } from "../types";
+import { HeroScroller } from "./HeroScroller";
 import { StarIcon } from "./icons";
 import { HeroTrain } from "./illustrations";
 
-// На сколько поезд проезжает вперёд на каждом следующем слайде (единицы viewBox иллюстрации)
-const TRAIN_STEP = 70;
-const DRIVE_MS = 1600;
+// Сколько поезд проезжает за весь ход ползунка (единицы viewBox иллюстрации)
+const TRAIN_DISTANCE = 220;
+// Сколько после последнего движения линии скорости ещё «дуют» сильнее
+const WIND_AFTER_MS = 350;
 
 interface Slide {
   eyebrow: string;
@@ -18,29 +20,29 @@ interface Slide {
   note: string;
 }
 
-/** Hero с переключаемыми слайдами: приветствие, челлендж недели, персональная рекомендация. */
+/** Hero с ползунком: приветствие, челлендж недели, рекомендация; ползунок ведёт поезд. */
 export function HeroCarousel() {
   const { session } = useAuth();
   const meta = useMeta();
   const { scenarios } = useScenarios();
   const [recommendation, setRecommendation] = useState<Analytics["recommendation"]>(null);
-  const [index, setIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [smooth, setSmooth] = useState(false);
   const [moving, setMoving] = useState(false);
+  const windTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  function select(next: number) {
-    if (next === index) return;
-    setIndex(next);
+  const move = useCallback((value: number, animated: boolean) => {
+    setProgress(value);
+    setSmooth(animated);
     setMoving(true);
-  }
+    clearTimeout(windTimer.current);
+    windTimer.current = setTimeout(() => setMoving(false), WIND_AFTER_MS);
+  }, []);
+
+  useEffect(() => () => clearTimeout(windTimer.current), []);
 
   useEffect(() => {
-    if (!moving) return;
-    const id = setTimeout(() => setMoving(false), DRIVE_MS);
-    return () => clearTimeout(id);
-  }, [moving, index]);
-
-  useEffect(() => {
-    // Без рекомендации карусель просто покажет на один слайд меньше
+    // Без рекомендации в карусели просто на один слайд меньше
     api
       .myAnalytics()
       .then((analytics) => setRecommendation(analytics.recommendation))
@@ -73,13 +75,13 @@ export function HeroCarousel() {
       note: "Закрой пробел — и навык вырастет быстрее!",
     });
   }
-  const position = Math.min(index, slides.length - 1);
-  const current = slides[position];
+  // Слайд — ближайший к положению ползунка
+  const current = slides[Math.round(progress * (slides.length - 1))];
   const longTitle = current.title[1].length > 24;
 
   return (
     <section className="hero" aria-roledescription="карусель">
-      <HeroTrain offset={position * TRAIN_STEP} moving={moving} />
+      <HeroTrain offset={progress * TRAIN_DISTANCE} moving={moving} smooth={smooth} />
       <div className="hero__content" key={current.eyebrow}>
         <p className="hero__eyebrow">{current.eyebrow}</p>
         <h1 className={`hero__title ${longTitle ? "hero__title--long" : ""}`}>
@@ -94,17 +96,8 @@ export function HeroCarousel() {
         <span>{current.note}</span>
       </div>
       {slides.length > 1 && (
-        <div className="hero__dots" role="tablist" aria-label="Слайды">
-          {slides.map((slide, i) => (
-            <button
-              key={slide.eyebrow}
-              role="tab"
-              aria-selected={slide === current}
-              aria-label={`Слайд ${i + 1}: ${slide.eyebrow}`}
-              className={`hero__dot ${slide === current ? "hero__dot--active" : ""}`}
-              onClick={() => select(i)}
-            />
-          ))}
+        <div className="hero__scroller">
+          <HeroScroller value={progress} steps={slides.length} label={current.eyebrow} onChange={move} />
         </div>
       )}
     </section>
