@@ -107,7 +107,7 @@ nodes:
           set_flags: [chief_informed]
           competences: {service: 15}
         reaction:
-          - {speaker: yulia, expression: happy, text: "Купе было бы идеально. Спасибо!"}
+          - {speaker: yulia, expression: happy, text: "Купе было бы идеально. Спасибо!", sound: sigh}
         next: lost_child
         best: true
         explanation: "Рассказать об оснащении поезда, а для уединённого кормления — сообщить начальнику и предложить купе при возможности."
@@ -132,6 +132,7 @@ nodes:
       - {speaker: narrator, text: "Через полчаса в тамбуре соседнего вагона вы слышите плач."}
       - {speaker: narrator, text: "Это Миша. Он пошёл искать папу и заблудился."}
       - {speaker: misha, text: "Я папу потерял… Он ушёл, и я пошёл, а тут всё одинаковое…"}
+      - {speaker: narrator, text: "Миша шмыгает носом и крепко сжимает в кулаке фломастер."}
       - {speaker: player, thought: true, text: "Главное — не отпускать его ни на шаг."}
     timer_seconds: 20
     timeout_next: announcement
@@ -223,7 +224,7 @@ nodes:
           loyalty: 15
           competences: {communication: 10, service: 5}
         reaction:
-          - {speaker: boris, expression: neutral, text: "Ладно… Главное, чтобы мне помогли вернуться."}
+          - {speaker: boris, expression: neutral, text: "Ладно… Главное, чтобы мне помогли вернуться.", sound: sigh_male}
         next: end_success
         best: true
         explanation: "Сообщить начальнику поезда и объяснить дальнейший порядок. И помнить — предупреждать о выходе нужно заранее."

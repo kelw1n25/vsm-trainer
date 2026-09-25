@@ -37,6 +37,7 @@ nodes:
     dialogue:
       - {speaker: narrator, text: "До отправления двенадцать минут. К вагону подъезжает пассажирка на кресле-коляске."}
       - {speaker: sofia, text: "Добрый день! Место 3, выделенное. Поможете с подъёмником? И чемодан у меня тяжёлый."}
+      - {speaker: narrator, text: "Колёса коляски тихо щёлкают по плитке платформы."}
       - {speaker: player, thought: true, text: "Сначала спросить, какая помощь ей нужна, — а не решать за неё."}
     choices:
       - id: ask_needs
@@ -69,7 +70,7 @@ nodes:
           loyalty: -15
           competences: {service: -10}
         reaction:
-          - {speaker: sofia, expression: sad, text: "Опять ждать в конце… Ладно."}
+          - {speaker: sofia, expression: sad, text: "Опять ждать в конце… Ладно.", sound: sigh}
         next: placement
         explanation: "Маломобильному пассажиру помогают так же своевременно, как остальным, а не в последнюю очередь."
 
@@ -82,7 +83,7 @@ nodes:
     situation: "Место для кресла-коляски заставлено чужими сумками."
     dialogue:
       - {speaker: narrator, text: "Выделенное место для кресла-коляски занято: там стоят два чужих чемодана и рюкзак."}
-      - {speaker: sofia, text: "Ну вот. Каждый раз одно и то же."}
+      - {speaker: sofia, text: "Ну вот. Каждый раз одно и то же.", sound: sigh_long}
       - {speaker: player, thought: true, text: "Найти владельцев. И назвать конкретное место для их вещей."}
     choices:
       - id: clear_space

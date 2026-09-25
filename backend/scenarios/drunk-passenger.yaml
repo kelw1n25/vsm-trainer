@@ -47,7 +47,8 @@ nodes:
     dialogue:
       - {speaker: narrator, text: "Вечерний рейс. В салоне приглушённый свет, большинство пассажиров отдыхает."}
       - {speaker: gennady, text: "Ну что, за хорошую дорогу! Девушка, может, с нами?"}
-      - {speaker: irina, text: "Нет, спасибо… Я лучше почитаю."}
+      - {speaker: narrator, text: "Он громко смеётся и стучит бутылкой по столику. Ирина вздрагивает."}
+      - {speaker: irina, text: "Нет, спасибо… Я лучше почитаю.", sound: sigh}
       - {speaker: player, thought: true, text: "Он пьёт своё в салоне. Нужно сказать спокойно — и так, чтобы слышал только он."}
     choices:
       - id: remind_rule
@@ -179,7 +180,7 @@ nodes:
           stats: {tension: -20}
           competences: {communication: 10}
         reaction:
-          - {speaker: gennady, expression: sad, text: "Да… Чаю бы. День тяжёлый был, понимаешь."}
+          - {speaker: gennady, expression: sad, text: "Да… Чаю бы. День тяжёлый был, понимаешь.", sound: sigh_male}
         next: report_chief
         explanation: "Когда напряжение невысокое, мягкое переключение внимания помогает — но начальника поезда всё равно информируют."
 

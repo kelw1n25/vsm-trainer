@@ -30,6 +30,7 @@ class LineOut(BaseModel):
     kind: Literal["speech", "thought", "narration"]
     text: str
     expression: str | None
+    sound: str | None
 
 
 class SceneCharacterOut(BaseModel):

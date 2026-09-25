@@ -38,6 +38,7 @@ nodes:
     dialogue:
       - {speaker: narrator, text: "Кнопка вызова мигает у места 14В."}
       - {speaker: darya, text: "Откройте окно, пожалуйста… Мне нечем дышать… Сердце колотится…"}
+      - {speaker: narrator, text: "Её пальцы побелели на подлокотнике, дыхание частое и поверхностное."}
       - {speaker: player, thought: true, text: "Окна не открываются. Но ей нужно не окно — ей нужно, чтобы кто-то был рядом."}
     timer_seconds: 20
     timeout_next: alone
@@ -120,7 +121,7 @@ nodes:
         - {id: darya, position: right, expression: worried}
     situation: "Пассажирка чуть успокоилась; нужно помочь ей восстановить дыхание."
     dialogue:
-      - {speaker: darya, text: "Со мной такое бывало… но давно. Сейчас так жарко, и я испугалась."}
+      - {speaker: darya, text: "Со мной такое бывало… но давно. Сейчас так жарко, и я испугалась.", sound: sigh}
       - {speaker: player, thought: true, text: "Бывало раньше — значит, это не первый раз. Дышать вместе."}
     choices:
       - id: square_breathing
@@ -131,7 +132,7 @@ nodes:
           stats: {tension: -20}
           competences: {first_aid: 10}
         reaction:
-          - {speaker: darya, expression: neutral, text: "Раз, два, три, четыре… Кажется, отпускает."}
+          - {speaker: darya, expression: neutral, text: "Раз, два, три, четыре… Кажется, отпускает.", sound: sigh_long}
         next: temperature
         best: true
         explanation: "Уточнить, бывало ли такое раньше, и подышать «по квадрату» — рекомендация стандарта при панической атаке."
@@ -204,7 +205,7 @@ nodes:
     situation: "Соседа по ряду укачивает — он едет против хода движения."
     dialogue:
       - {speaker: narrator, text: "Через полчаса Максим бледнеет и закрывает глаза."}
-      - {speaker: maxim, text: "Что-то меня мутит. Я всегда плохо переношу, когда еду спиной вперёд."}
+      - {speaker: maxim, text: "Что-то меня мутит. Я всегда плохо переношу, когда еду спиной вперёд.", sound: sigh_male}
     choices:
       - id: forward_seat
         text: "«Позвольте предложить Вам пересесть по ходу движения» — и принести воду с лимоном"

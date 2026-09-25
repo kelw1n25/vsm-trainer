@@ -4,6 +4,8 @@ import { useAuth } from "../auth";
 import { useNow } from "../hooks";
 import { categoryLabels, firstName, signed } from "../labels";
 import type { Character, Line, RunState } from "../types";
+import { StoryAudio } from "./audio";
+import { loadMuted, saveMuted } from "./persistence";
 import { StoryEnd } from "./StoryEnd";
 import { StoryEngine } from "./StoryEngine";
 import { StoryBackground, StoryCast } from "./StoryStage";
@@ -13,7 +15,10 @@ export function StoryPlayer() {
   const { runId } = useParams() as { runId: string };
   const { session } = useAuth();
   const playerName = session ? firstName(session.fullName) : "Проводник";
-  const engine = useMemo(() => new StoryEngine(runId, session!.employeeId, playerName), [runId, session, playerName]);
+  const employeeId = session!.employeeId;
+  const [muted, setMuted] = useState(() => loadMuted(employeeId));
+  const audio = useMemo(() => new StoryAudio(loadMuted(employeeId)), [employeeId]);
+  const engine = useMemo(() => new StoryEngine(runId, employeeId, playerName, audio), [runId, employeeId, playerName, audio]);
   const view = useSyncExternalStore(engine.subscribe, engine.getSnapshot);
   const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -23,6 +28,26 @@ export function StoryPlayer() {
     engine.startScenario();
     return () => engine.dispose();
   }, [engine]);
+
+  useEffect(() => {
+    audio.startMusic();
+    // Если браузер не дал включить звук сразу, музыка начнётся с первого действия на экране
+    const resume = () => audio.resume();
+    window.addEventListener("pointerdown", resume);
+    window.addEventListener("keydown", resume);
+    return () => {
+      window.removeEventListener("pointerdown", resume);
+      window.removeEventListener("keydown", resume);
+      audio.stop();
+    };
+  }, [audio]);
+
+  function toggleSound() {
+    const next = !muted;
+    setMuted(next);
+    saveMuted(employeeId, next);
+    audio.setMuted(next);
+  }
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
@@ -65,9 +90,23 @@ export function StoryPlayer() {
     <div className="story" data-phase={phase}>
       <StoryBackground name={scene.background} />
       <div className="story__shade" />
-      <StoryCast characters={scene.characters} expressions={view.expressions} cast={cast} speaker={line?.speaker ?? null} />
+      <StoryCast
+        characters={scene.characters}
+        expressions={view.expressions}
+        cast={cast}
+        speaker={line?.speaker ?? null}
+        speaking={view.typing && line?.kind === "speech"}
+      />
 
-      <StoryBar run={run} engine={engine} auto={view.auto} canSkip={view.canSkip} onHistory={() => setHistoryOpen(true)} />
+      <StoryBar
+        run={run}
+        engine={engine}
+        auto={view.auto}
+        canSkip={view.canSkip}
+        muted={muted}
+        onSound={toggleSound}
+        onHistory={() => setHistoryOpen(true)}
+      />
 
       {/* Клик по сцене — то же, что «Далее»: мгновенно допечатывает реплику или листает дальше */}
       {phase === "dialogue" && <button className="story__advance-area" aria-label="Далее" onClick={() => engine.advance()} />}
@@ -103,10 +142,12 @@ interface BarProps {
   engine: StoryEngine;
   auto: boolean;
   canSkip: boolean;
+  muted: boolean;
+  onSound: () => void;
   onHistory: () => void;
 }
 
-function StoryBar({ run, engine, auto, canSkip, onHistory }: BarProps) {
+function StoryBar({ run, engine, auto, canSkip, muted, onSound, onHistory }: BarProps) {
   // Точки истории: пройденные шаги, текущий и ближайший путь до финала — без карты будущих развилок
   const total = run.steps_taken + Math.max(run.steps_left, run.node ? 1 : 0);
   return (
@@ -125,6 +166,9 @@ function StoryBar({ run, engine, auto, canSkip, onHistory }: BarProps) {
       <Scales run={run} />
       <div className="story-bar__tools">
         <button onClick={onHistory}>История</button>
+        <button className={muted ? "" : "is-on"} aria-pressed={!muted} title="Музыка и звуки реплик" onClick={onSound}>
+          {muted ? "Звук выкл." : "Звук"}
+        </button>
         <button className={auto ? "is-on" : ""} aria-pressed={auto} onClick={() => engine.toggleAuto()}>
           Авто
         </button>

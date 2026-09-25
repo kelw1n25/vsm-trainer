@@ -34,6 +34,11 @@ export interface StoryView {
   clockOffsetMs: number;
 }
 
+/** Кто проигрывает звуки реплик — движок не знает, как именно (в браузере это StoryAudio). */
+export interface SoundPlayer {
+  play(name: string): void;
+}
+
 interface Segment {
   scene: Scene;
   /** Узел сценария; у реакции на выбор — null (она звучит в сцене, где был сделан выбор). */
@@ -75,6 +80,7 @@ export class StoryEngine {
     private readonly runId: string,
     private readonly employeeId: number,
     private readonly playerName: string,
+    private readonly sounds: SoundPlayer | null = null,
   ) {
     this.view = {
       phase: "loading",
@@ -198,6 +204,7 @@ export class StoryEngine {
     this.log({ kind: line.kind, speaker: this.speakerName(line), text: line.text });
     this.update({ line, expressions, shownChars: 0, typing: true });
     this.saveProgress();
+    if (line.sound) this.sounds?.play(line.sound);
 
     clearInterval(this.typingTimer);
     clearTimeout(this.autoTimer);

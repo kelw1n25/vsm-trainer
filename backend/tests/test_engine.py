@@ -61,7 +61,8 @@ def test_start_shows_scene_without_choices(client, auth):
     assert node["id"] == "start"
     assert node["scene"]["background"] == "business"
     assert [c["id"] for c in node["scene"]["characters"]] == ["player", "sergey", "lyudmila"]
-    assert [line["kind"] for line in node["dialogue"]] == ["narration", "speech", "speech", "thought"]
+    assert [line["kind"] for line in node["dialogue"]] == ["narration", "speech", "speech", "speech", "thought"]
+    assert node["dialogue"][3]["expression"] == "annoyed"
     assert node["dialogue"][1]["name"] == "Сергей Андреевич"
     # Пока сцена не дочитана, вариантов нет и таймер не идёт
     assert (node["choices_shown"], node["choices"], node["deadline_at"]) == (False, [], None)

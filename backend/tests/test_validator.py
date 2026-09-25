@@ -28,7 +28,7 @@ MINIMAL = {
             "situation": "Ситуация",
             "dialogue": [
                 {"speaker": "narrator", "text": "Поезд в пути."},
-                {"speaker": "guest", "text": "Здравствуйте!", "expression": "happy"},
+                {"speaker": "guest", "text": "Здравствуйте!", "expression": "happy", "sound": "sigh"},
                 {"speaker": "player", "text": "Что ему нужно?", "thought": True},
             ],
             "timer_seconds": 10,
@@ -138,6 +138,11 @@ def test_character_must_be_declared(scenario):
 def test_only_player_thinks(scenario):
     scenario["nodes"][0]["dialogue"][1]["thought"] = True
     assert any("мысли (thought: true) бывают только у проводника" in e for e in validate(scenario))
+
+
+def test_unknown_sound(scenario):
+    scenario["nodes"][0]["dialogue"][1]["sound"] = "scream"
+    assert any("допустимые значения: 'sigh', 'sigh_long' or 'sigh_male'" in e for e in validate(scenario))
 
 
 def test_final_needs_ending_title(scenario):

@@ -46,6 +46,7 @@ nodes:
     dialogue:
       - {speaker: narrator, text: "Поезд идёт 380 км/ч. До Твери — сорок минут."}
       - {speaker: nikolai, text: "Простите… Что-то давит в груди. У вас есть таблетка от сердца? Нитроглицерин?"}
+      - {speaker: narrator, text: "Он расстёгивает ворот рубашки. На лбу выступил пот."}
       - {speaker: player, thought: true, text: "У меня в сумке есть… Нет. Я не знаю, что с ним и что он уже принимал."}
     timer_seconds: 20
     timeout_next: worse
@@ -97,7 +98,7 @@ nodes:
     dialogue:
       - {speaker: narrator, text: "Через пять минут Николай Петрович бледнеет ещё сильнее."}
       - {speaker: nikolai, text: "Голова кружится… Я ведь уже принимал своё лекарство утром…"}
-      - {speaker: player, thought: true, text: "Я не спросил. Теперь — честно и быстро."}
+      - {speaker: player, thought: true, text: "Я не спросил. Теперь — честно и быстро.", sound: sigh}
     choices:
       - id: admit_and_call
         text: "Немедленно вызвать начальника поезда и честно сообщить, какую таблетку дали и когда"
@@ -269,7 +270,7 @@ nodes:
       Проводник остался рядом, не дал чужих лекарств, вызвал начальника поезда и не допустил паники. Врач из числа
       пассажиров помогла до станции, где ждала скорая.
     dialogue:
-      - {speaker: nikolai, text: "Спасибо вам… Если бы не вы…"}
+      - {speaker: nikolai, text: "Спасибо вам… Если бы не вы…", sound: sigh_male}
   - id: end_partial
     scene:
       background: salon

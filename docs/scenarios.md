@@ -58,6 +58,7 @@ nodes:
       - {speaker: narrator, text: "Бизнес-класс, третий вагон."}
       - {speaker: sergey, text: "В моём кресле сидит женщина.", expression: angry}   # эмоция меняется по реплике
       - {speaker: player, thought: true, text: "Не занимать ничью сторону."}         # мысль проводника
+      - {speaker: sergey, text: "Ладно, проверяйте.", sound: sigh_male}              # звук вместе с репликой
     timer_seconds: 20                # необязательно; только вместе с timeout_next
     timeout_next: argument
     timeout_effects: {loyalty: -15}  # обязан снижать хотя бы одну шкалу
@@ -86,6 +87,9 @@ nodes:
     final_text: Сбой продажи урегулирован без спора.
     dialogue: [{speaker: narrator, text: "Эпилог — необязательно."}]
 ```
+
+Звуки реплик: `sigh` и `sigh_long` — выдох без голоса (подходит любому персонажу), `sigh_male` — мужской вздох.
+Во всех сценариях тихо играет фоновая музыка; игрок может выключить звук кнопкой «Звук».
 
 Эмоции персонажей: `neutral`, `happy`, `angry`, `annoyed`, `worried`, `sad`, `surprised`, `thinking`,
 `serious`, `pained`, `tipsy`. Коды компетенций задаются в `backend/config/game.yaml`: `communication`,

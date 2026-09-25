@@ -37,6 +37,7 @@ nodes:
     dialogue:
       - {speaker: narrator, text: "Первый класс. Кнопка вызова загорается у кресла 2А."}
       - {speaker: veniamin, text: "Розетка не работает, экран не включается. И столик липкий. Это первый класс или что?"}
+      - {speaker: narrator, text: "Он демонстративно поднимает ладонь со следом от столика."}
       - {speaker: player, thought: true, text: "Он заплатил за комфорт, а получил неисправность. Это наша вина, а не его придирки."}
     choices:
       - id: thanks_fix
@@ -80,7 +81,7 @@ nodes:
         - {id: veniamin, position: right, expression: angry}
     situation: "Пассажир первого класса возмущён отказом помочь."
     dialogue:
-      - {speaker: veniamin, text: "Позовите старшего. Я буду жаловаться."}
+      - {speaker: veniamin, text: "Позовите старшего. Я буду жаловаться.", sound: sigh_male}
     timer_seconds: 15
     timeout_next: end_complaint
     timeout_effects: {loyalty: -15}
@@ -192,7 +193,7 @@ nodes:
         - {id: lidiya, position: right, expression: pained}
     situation: "Пассажирка жалуется на резкий запах духов от соседа."
     dialogue:
-      - {speaker: lidiya, text: "И ещё… только тихо. От соседа очень резкий парфюм. У меня разболелась голова."}
+      - {speaker: lidiya, text: "И ещё… только тихо. От соседа очень резкий парфюм. У меня разболелась голова.", sound: sigh}
       - {speaker: player, thought: true, text: "Деликатно. Сосед не должен почувствовать себя виноватым на весь вагон."}
     choices:
       - id: delicate_move

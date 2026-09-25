@@ -49,6 +49,7 @@ nodes:
     dialogue:
       - {speaker: igor, text: "Извините… Вон там, у багажной полки, стоит сумка. Уже полчаса никто к ней не подходит."}
       - {speaker: narrator, text: "Тёмная спортивная сумка стоит в проходе. Рядом никого."}
+      - {speaker: narrator, text: "Соседи по ряду делают вид, что ничего не замечают, но то и дело косятся на сумку."}
       - {speaker: player, thought: true, text: "Не трогать. Не пугать вагон. Сообщить."}
     timer_seconds: 20
     timeout_next: ask_around
@@ -202,7 +203,7 @@ nodes:
           stats: {trust: 10}
           competences: {service: 10}
         reaction:
-          - {speaker: tamara, expression: neutral, text: "Хорошо, буду знать, куда звонить. Спасибо."}
+          - {speaker: tamara, expression: neutral, text: "Хорошо, буду знать, куда звонить. Спасибо.", sound: sigh}
         next: parcel
         best: true
         explanation: "Не давать ложных обещаний, но сделать всё возможное — передать сведения и подсказать, куда обращаться."
@@ -237,7 +238,7 @@ nodes:
           loyalty: 5
           competences: {safety_rules: 10, communication: 5}
         reaction:
-          - {speaker: zhenya, expression: sad, text: "Жаль… Ладно, спасибо, что подсказали."}
+          - {speaker: zhenya, expression: sad, text: "Жаль… Ладно, спасибо, что подсказали.", sound: sigh_male}
         next: end_success
         best: true
         explanation: "Работники не принимают посылок ради безопасности. Вежливо отказать и предложить сервис доставки отправлений на вокзале."

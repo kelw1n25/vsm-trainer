@@ -46,6 +46,7 @@ nodes:
     dialogue:
       - {speaker: narrator, text: "Посадка в вагон комфорт-класса. Пассажирка ведёт на поводке небольшую собаку."}
       - {speaker: anna, text: "Здравствуйте! Мы с Бусей едем в Тверь. Она у меня очень спокойная."}
+      - {speaker: narrator, text: "Буся виляет хвостом и тянется обнюхать ваш ботинок."}
       - {speaker: player, thought: true, text: "Переноски нет. А за ней — парень с велосипедом, и велосипед не сложен."}
     choices:
       - id: pet_rule
@@ -104,7 +105,7 @@ nodes:
           set_flags: [pet_in_carrier]
           competences: {communication: 10}
         reaction:
-          - {speaker: anna, expression: thinking, text: "С сеткой… Ну, может, она и правда так будет меня видеть. Ладно."}
+          - {speaker: anna, expression: thinking, text: "С сеткой… Ну, может, она и правда так будет меня видеть. Ладно.", sound: sigh}
         next: bicycle
         best: true
         explanation: "Признать чувства, объяснить правило через заботу и сразу предложить решение — ролевая модель в действии."
@@ -169,7 +170,7 @@ nodes:
           stats: {tension: 15}
           competences: {communication: -5}
         reaction:
-          - {speaker: denis, expression: angry, text: "Ну и ладно. Сам сложу, раз вы такие строгие."}
+          - {speaker: denis, expression: angry, text: "Ну и ладно. Сам сложу, раз вы такие строгие.", sound: sigh_male}
         next: salon_allergy
         explanation: "Отказ допустим только если пассажир не может или не хочет сложить велосипед — сначала нужно предложить вариант."
 
@@ -220,7 +221,7 @@ nodes:
     situation: "Пассажирке с аллергией на животных становится хуже — собака сидит через ряд."
     dialogue:
       - {speaker: narrator, text: "Через двадцать минут пути вас вызывает пассажирка из середины вагона."}
-      - {speaker: elena, text: "Простите… У меня аллергия на собак. Глаза слезятся, и дышать тяжелее."}
+      - {speaker: elena, text: "Простите… У меня аллергия на собак. Глаза слезятся, и дышать тяжелее.", sound: sigh_long}
       - {speaker: player, thought: true, text: "Сначала — самочувствие. Потом — пересадка."}
     timer_seconds: 20
     timeout_next: allergy_worse

@@ -162,10 +162,12 @@ interface CastProps {
   cast: Record<string, Character>;
   /** Кто сейчас говорит — остальные чуть затемняются. */
   speaker: string | null;
+  /** Реплика ещё печатается — говорящий слегка покачивается, будто говорит. */
+  speaking: boolean;
 }
 
 /** Персонажи сцены: появляются и уходят плавно, говорящий выделен. */
-export function StoryCast({ characters, expressions, cast, speaker }: CastProps) {
+export function StoryCast({ characters, expressions, cast, speaker, speaking }: CastProps) {
   const [leaving, setLeaving] = useState<SceneCharacter[]>([]);
   const previous = useRef<SceneCharacter[]>(characters);
 
@@ -192,6 +194,7 @@ export function StoryCast({ characters, expressions, cast, speaker }: CastProps)
           look={lookOf(character.id, cast)}
           expression={expressions[character.id] ?? character.expression}
           state={!someoneSpeaks || speaker === character.id ? "active" : "dimmed"}
+          talking={speaking && speaker === character.id}
         />
       ))}
     </div>
@@ -207,13 +210,22 @@ interface SpriteProps {
   look: Look;
   expression: Expression;
   state: "active" | "dimmed" | "leaving";
+  talking?: boolean;
 }
 
-function Sprite({ character, look, expression, state }: SpriteProps) {
+function Sprite({ character, look, expression, state, talking = false }: SpriteProps) {
   const outfit = look.outfit === "uniform" ? "uniform" : { top: look.top, bottom: look.bottom };
+  const classes = [
+    "story-sprite",
+    `story-sprite--${character.position}`,
+    `story-sprite--${state}`,
+    look.child ? "story-sprite--child" : "",
+    talking ? "story-sprite--talking" : "",
+  ];
   return (
-    <div className={`story-sprite story-sprite--${character.position} story-sprite--${state} ${look.child ? "story-sprite--child" : ""}`}>
-      <svg viewBox="-36 -100 72 104" className="story-sprite__svg">
+    <div className={classes.join(" ")}>
+      {/* key по эмоции: при её смене фигура заново проигрывает короткую реакцию — вздрагивает, подпрыгивает, поникает */}
+      <svg key={expression} viewBox="-36 -100 72 104" className={`story-sprite__svg story-sprite__svg--${expression}`}>
         <ellipse cx="0" cy="1" rx="22" ry="3.5" fill="#0B1222" opacity="0.18" />
         <Person
           x={0}

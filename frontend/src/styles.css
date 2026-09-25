@@ -3394,3 +3394,67 @@ html[data-reduce-motion] .story {
   margin: 10px 0 0;
   font-size: 14px;
 }
+
+/* Живость персонажей: говорящий покачивается, смена эмоции — короткая реакция */
+.story-sprite__svg {
+  transform-origin: 50% 100%;
+}
+
+.story-sprite--talking .story-sprite__svg {
+  animation: sprite-talk 0.5s ease-in-out infinite;
+}
+
+@keyframes sprite-talk {
+  50% {
+    transform: translateY(-1.2%) rotate(-0.6deg);
+  }
+}
+
+.story-sprite__svg--angry {
+  animation: react-shake 0.45s ease-in-out;
+}
+
+.story-sprite__svg--surprised {
+  animation: react-jump 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.story-sprite__svg--happy {
+  animation: react-bounce 0.5s ease-out;
+}
+
+.story-sprite__svg--sad,
+.story-sprite__svg--pained {
+  animation: react-droop 0.7s ease-out;
+}
+
+@keyframes react-shake {
+  20%,
+  60% {
+    transform: translateX(-2.5%);
+  }
+  40%,
+  80% {
+    transform: translateX(2.5%);
+  }
+}
+
+@keyframes react-jump {
+  40% {
+    transform: translateY(-5%);
+  }
+}
+
+@keyframes react-bounce {
+  30% {
+    transform: scaleY(0.97) scaleX(1.02);
+  }
+  60% {
+    transform: translateY(-2%);
+  }
+}
+
+@keyframes react-droop {
+  40% {
+    transform: translateY(1.5%) scaleY(0.98);
+  }
+}

@@ -51,6 +51,7 @@ nodes:
       - {speaker: narrator, text: "На панели мигает жёлтый индикатор: датчик дыма, тамбур седьмого вагона."}
       - {speaker: narrator, text: "В тамбуре — густое облако сладкого пара."}
       - {speaker: stas, text: "О, привет. Я быстро, пару затяжек — и всё."}
+      - {speaker: narrator, text: "Он выпускает облако пара прямо под потолок. Индикатор датчика мигает быстрее."}
       - {speaker: player, thought: true, text: "Если сработает система — экстренное торможение на трёхстах восьмидесяти."}
     timer_seconds: 20
     timeout_next: smoke_spreads
@@ -132,7 +133,7 @@ nodes:
           set_flags: [chief_informed]
           competences: {communication: 10, safety_rules: 5}
         reaction:
-          - {speaker: stas, expression: sad, text: "Ну… ладно, снимаю. Не знал, что всё так серьёзно."}
+          - {speaker: stas, expression: sad, text: "Ну… ладно, снимаю. Не знал, что всё так серьёзно.", sound: sigh_male}
           - {speaker: player, text: "Благодарю за понимание. О датчике я всё равно сообщу бортинженеру — его нужно проверить."}
         next: filming
         explanation: "Если пассажир не агрессивен, объяснение помогает ему понять риск. Но доклад о датчике обязателен."
@@ -191,7 +192,7 @@ nodes:
           set_flags: [security_called, chief_informed]
           competences: {stress_resistance: 15, communication: 5}
         reaction:
-          - {speaker: galina, expression: worried, text: "Не пожар?.. Правда?"}
+          - {speaker: galina, expression: worried, text: "Не пожар?.. Правда?", sound: sigh_long}
         next: filming
         best: true
         explanation: "Сохранять спокойствие, не допускать паники, давать чёткие формулировки и параллельно вызвать помощь."
@@ -223,7 +224,7 @@ nodes:
           stats: {tension: -10}
           competences: {communication: 10}
         reaction:
-          - {speaker: lera, expression: sad, text: "Ладно, выключаю. Я просто хотела показать."}
+          - {speaker: lera, expression: sad, text: "Ладно, выключаю. Я просто хотела показать.", sound: sigh}
           - {speaker: galina, expression: neutral, text: "Спасибо вам."}
         next: chief_arrives
         best: true

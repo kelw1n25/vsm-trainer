@@ -41,6 +41,7 @@ nodes:
     situation: "Пассажир показывает скриншот билета, купленного на стороннем сайте; дата на нём отличается от сегодняшней."
     dialogue:
       - {speaker: narrator, text: "Москва, платформа ВСМ. До отправления семь минут, у дверей вагона выстраивается очередь."}
+      - {speaker: narrator, text: "Из динамиков звучит: «Продолжается посадка на поезд до Санкт-Петербурга». Кто-то в очереди нетерпеливо смотрит на часы."}
       - {speaker: viktor, text: "Добрый день! Вот мой билет — на скриншоте. Покупал на сайте со скидкой."}
       - {speaker: player, thought: true, text: "Сайт незнакомый, и дата… завтрашняя? Очередь за ним растёт."}
       - {speaker: viktor, expression: worried, text: "Что-то не так? Я очень спешу, у меня встреча вечером."}
@@ -189,7 +190,7 @@ nodes:
       - {speaker: narrator, text: "Мобильный терминал думает несколько секунд. Заказа с таким номером нет."}
       - {speaker: viktor, expression: surprised, text: "Как нет? Там же всё было! Сейчас покажу письмо…"}
       - {speaker: narrator, text: "Экран его телефона гаснет: батарея разрядилась."}
-      - {speaker: viktor, expression: sad, text: "Ну конечно. Только этого не хватало."}
+      - {speaker: viktor, expression: sad, text: "Ну конечно. Только этого не хватало.", sound: sigh_male}
     choices:
       - id: check_by_passport
         text: "«Позвольте, я проверю данные по документу, на который Вы оформляли билет»"
@@ -247,7 +248,7 @@ nodes:
           set_flags: [passenger_calmed]
           competences: {communication: 10, service: 10}
         reaction:
-          - {speaker: viktor, expression: sad, text: "Понятно… Касса далеко?"}
+          - {speaker: viktor, expression: sad, text: "Понятно… Касса далеко?", sound: sigh_male}
           - {speaker: player, text: "Прямо у входа на платформу, по указателю ВСМ. И впредь — только официальные каналы продажи."}
         next: late_passenger
         best: true
@@ -302,7 +303,7 @@ nodes:
           safety: 15
           competences: {safety_rules: 10, communication: 5, stress_resistance: 5}
         reaction:
-          - {speaker: marina, expression: sad, text: "Хорошо… Спасибо, что хотя бы подсказали."}
+          - {speaker: marina, expression: sad, text: "Хорошо… Спасибо, что хотя бы подсказали.", sound: sigh_long}
         next: end_calm
         best: true
         explanation: >
@@ -368,7 +369,7 @@ nodes:
       билет, опоздавшая пассажирка знает, куда обратиться. Очередь не почувствовала напряжения.
     dialogue:
       - {speaker: narrator, text: "Поезд мягко трогается. На платформе остаются двое — и оба знают, что делать дальше."}
-      - {speaker: player, thought: true, text: "Проверка, правило, решение. Работает."}
+      - {speaker: player, thought: true, text: "Проверка, правило, решение. Работает.", sound: sigh}
   - id: end_partial
     scene:
       background: platform

@@ -37,6 +37,7 @@ nodes:
     dialogue:
       - {speaker: narrator, text: "Сервисная тележка движется по проходу бизнес-класса."}
       - {speaker: arkady, text: "Мне, пожалуйста, курицу с рисом. Я специально выбирал по меню."}
+      - {speaker: narrator, text: "Он уже развернул салфетку и положил телефон экраном вниз."}
       - {speaker: player, thought: true, text: "Курица закончилась два ряда назад. Он вправе её требовать — значит, сначала извиниться."}
     choices:
       - id: apologize_alternative
@@ -82,7 +83,7 @@ nodes:
         - {id: arkady, position: right, expression: neutral}
     situation: "Пассажир согласился на альтернативу, но разочарован."
     dialogue:
-      - {speaker: arkady, text: "Индейка неплохая. Но я всё равно рассчитывал на курицу."}
+      - {speaker: arkady, text: "Индейка неплохая. Но я всё равно рассчитывал на курицу.", sound: sigh_male}
     choices:
       - id: thank_follow
         text: "Поблагодарить за понимание и позже уточнить, всё ли понравилось"
@@ -124,7 +125,7 @@ nodes:
           stats: {trust: 15}
           competences: {communication: 10}
         reaction:
-          - {speaker: arkady, expression: neutral, text: "Ладно. Индейку — давайте."}
+          - {speaker: arkady, expression: neutral, text: "Ладно. Индейку — давайте.", sound: sigh_male}
         next: portion
         best: true
         explanation: "Признать ошибку и сразу предложить решение — так конфликт гаснет."

@@ -44,6 +44,7 @@ nodes:
       - {speaker: narrator, text: "Бизнес-класс, третий вагон. До отправления пять минут."}
       - {speaker: sergey, text: "Добрый день. В моём кресле 5А сидит женщина, а у меня билет именно на него."}
       - {speaker: lyudmila, text: "Это моё место! Я его выбирала заранее, у окна."}
+      - {speaker: sergey, text: "У меня через два часа встреча, мне нужно поработать в пути. Пожалуйста, давайте быстрее.", expression: annoyed}
       - {speaker: player, thought: true, text: "Не занимать ничью сторону. Сначала — билеты."}
     choices:
       - id: check_both
@@ -75,7 +76,7 @@ nodes:
           stats: {tension: 15}
           competences: {service: -5}
         reaction:
-          - {speaker: sergey, expression: angry, text: "Я заплатил за бизнес-класс, чтобы стоять в тамбуре?"}
+          - {speaker: sergey, expression: angry, text: "Я заплатил за бизнес-класс, чтобы стоять в тамбуре?", sound: sigh_male}
         next: argument
         explanation: "Отложить вопрос — не значит решить его. Пассажиру нужно понять, что с его местом разбираются."
 
@@ -187,7 +188,7 @@ nodes:
           safety: 5
           competences: {service: 15}
         reaction:
-          - {speaker: lyudmila, expression: happy, text: "Спасибо, я подожду."}
+          - {speaker: lyudmila, expression: happy, text: "Спасибо, я подожду.", sound: sigh}
           - {speaker: player, text: "Доплата через мобильную кассу — картой или наличными, сдача у меня есть."}
         next: end_success
         best: true

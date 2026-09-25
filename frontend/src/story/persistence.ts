@@ -27,6 +27,7 @@ interface Store {
   runs: Record<string, RunProgress>;
   scenarios: Record<string, ScenarioMemory>;
   auto: boolean;
+  muted?: boolean;
 }
 
 const KEY_PREFIX = "vsm_story_v1";
@@ -93,6 +94,16 @@ export function rememberEnding(employeeId: number, scenarioId: string, runId: st
 
 export function loadAuto(employeeId: number): boolean {
   return read(employeeId).auto;
+}
+
+export function loadMuted(employeeId: number): boolean {
+  return read(employeeId).muted ?? false;
+}
+
+export function saveMuted(employeeId: number, muted: boolean): void {
+  const store = read(employeeId);
+  store.muted = muted;
+  write(employeeId, store);
 }
 
 export function saveAuto(employeeId: number, auto: boolean): void {

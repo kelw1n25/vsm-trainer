@@ -44,7 +44,8 @@ nodes:
     situation: "Пассажир ночью жалуется, что не может отдохнуть из-за шума в салоне."
     dialogue:
       - {speaker: narrator, text: "23:40. В вагоне приглушили свет, но спать здесь невозможно."}
-      - {speaker: petr, text: "Молодой человек, у меня завтра в девять операция. Я хирург. Мне нужно поспать хотя бы три часа."}
+      - {speaker: narrator, text: "Поезд мягко кренится на кривой. Где-то хлопает откидной столик, у кого-то пищит уведомление."}
+      - {speaker: petr, text: "Молодой человек, у меня завтра в девять операция. Я хирург. Мне нужно поспать хотя бы три часа.", sound: sigh_male}
       - {speaker: petr, text: "Один орёт в телефон, у другого видео на весь вагон. Сделайте что-нибудь."}
       - {speaker: player, thought: true, text: "Каждого — отдельно и тихо. Иначе разбужу тех, кто ещё спит."}
     choices:
@@ -214,7 +215,7 @@ nodes:
     dialogue:
       - {speaker: narrator, text: "Только стало тихо — в конце вагона заплакал малыш."}
       - {speaker: petr, text: "Ну а теперь ещё и это! Может, мамочке стоит его успокоить?"}
-      - {speaker: vera, expression: sad, text: "Я стараюсь… У него режутся зубы, он не спит вторую ночь."}
+      - {speaker: vera, expression: sad, text: "Я стараюсь… У него режутся зубы, он не спит вторую ночь.", sound: sigh_long}
       - {speaker: player, thought: true, text: "Никого не обвинять. Помочь и малышу, и хирургу."}
     choices:
       - id: help_both
@@ -301,7 +302,7 @@ nodes:
           stats: {trust: 10}
           competences: {service: 15}
         reaction:
-          - {speaker: petr, expression: happy, text: "Ну… спасибо. Кажется, теперь я усну."}
+          - {speaker: petr, expression: happy, text: "Ну… спасибо. Кажется, теперь я усну.", sound: sigh_male}
         next: end_success
         best: true
         explanation: >

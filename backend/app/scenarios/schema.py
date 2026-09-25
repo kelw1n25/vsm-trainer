@@ -26,6 +26,8 @@ PLAYER = "player"
 Expression = Literal[
     "neutral", "happy", "angry", "annoyed", "worried", "sad", "surprised", "thinking", "serious", "pained", "tipsy"
 ]
+# Звуки реплик: sigh и sigh_long — выдох без голоса (подходит любому персонажу), sigh_male — мужской вздох
+Sound = Literal["sigh", "sigh_long", "sigh_male"]
 Background = Literal[
     "salon", "salon_evening", "salon_night", "business", "platform", "vestibule", "bistro", "staff_room"
 ]
@@ -80,6 +82,8 @@ class Line(StrictModel):
     thought: bool = False
     # Персонаж меняет выражение лица на этой реплике и сохраняет его до следующей смены
     expression: Expression | None = None
+    # Звук вместе с репликой — например, вздох уставшего или облегчённо выдохнувшего персонажа
+    sound: Sound | None = None
 
     @model_validator(mode="after")
     def thoughts_are_players(self) -> "Line":

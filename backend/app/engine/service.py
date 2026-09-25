@@ -371,6 +371,7 @@ def _lines(definition: ScenarioDefinition, lines: list[Line]) -> list[LineOut]:
             kind=kind,
             text=line.text,
             expression=line.expression,
+            sound=line.sound,
         ))
     return out
 

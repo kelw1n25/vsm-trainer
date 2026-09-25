@@ -57,6 +57,8 @@ export interface Line {
   kind: "speech" | "thought" | "narration";
   text: string;
   expression: Expression | null;
+  /** Звук вместе с репликой: sigh, sigh_long, sigh_male. */
+  sound: string | null;
 }
 
 export interface SceneCharacter {

@@ -41,6 +41,7 @@ nodes:
     situation: "Поезд встал в пути, пассажир требует объяснить причину и срок задержки."
     dialogue:
       - {speaker: narrator, text: "Поезд плавно останавливается. За окном — поле, до Москвы ещё час."}
+      - {speaker: narrator, text: "По вагону прокатывается шёпот. Кто-то встаёт и выглядывает в окно, будто там можно увидеть причину."}
       - {speaker: vadim, text: "Почему стоим? Сколько ещё? У меня пересадка на самолёт через два часа!"}
       - {speaker: player, thought: true, text: "Я не знаю причину. Давать можно только достоверную информацию."}
     choices:
@@ -53,7 +54,7 @@ nodes:
           stats: {trust: 15, tension: -10}
           competences: {communication: 10, safety_rules: 5}
         reaction:
-          - {speaker: vadim, expression: annoyed, text: "Ладно. Но как только узнаете — сразу ко мне."}
+          - {speaker: vadim, expression: annoyed, text: "Ладно. Но как только узнаете — сразу ко мне.", sound: sigh_male}
         next: chief_info
         best: true
         explanation: "Извиниться и давать только достоверную информацию. Сведения о задержке предоставляют машинист и начальник поезда."
@@ -230,7 +231,7 @@ nodes:
           stats: {trust: 10}
           competences: {communication: 10, service: 5}
         reaction:
-          - {speaker: vadim, expression: neutral, text: "Хорошо, хоть буду знать, куда писать. Спасибо."}
+          - {speaker: vadim, expression: neutral, text: "Хорошо, хоть буду знать, куда писать. Спасибо.", sound: sigh_male}
         next: end_success
         best: true
         explanation: "Не давать ложных обещаний: порядок уточняют у начальника поезда, пассажиру подсказывают официальный канал."
