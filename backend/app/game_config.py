@@ -64,10 +64,29 @@ class ScenarioResultRule(BaseModel):
     scales_never_below: int | None = None
 
 
+class RunsCompletedRule(BaseModel):
+    type: Literal["runs_completed"]
+    count: int = Field(ge=1)
+
+
+class CategoriesCoveredRule(BaseModel):
+    type: Literal["categories_covered"]
+    count: int = Field(ge=1)
+
+
+class CompetenceTotalRule(BaseModel):
+    type: Literal["competence_total"]
+    competence: str
+    points: int = Field(ge=1)
+
+
+AchievementRule = FastStreakRule | ScenarioResultRule | RunsCompletedRule | CategoriesCoveredRule | CompetenceTotalRule
+
+
 class Achievement(BaseModel):
     title: str
     description: str
-    rule: Annotated[FastStreakRule | ScenarioResultRule, Field(discriminator="type")]
+    rule: Annotated[AchievementRule, Field(discriminator="type")]
 
 
 class GameConfig(BaseModel):
@@ -84,6 +103,10 @@ class GameConfig(BaseModel):
         thresholds = [level.xp for level in self.levels]
         if thresholds[0] != 0 or thresholds != sorted(set(thresholds)):
             raise ValueError("levels: пороги XP должны начинаться с 0 и строго возрастать")
+        for code, achievement in self.achievements.items():
+            rule = achievement.rule
+            if isinstance(rule, CompetenceTotalRule) and rule.competence not in self.competences:
+                raise ValueError(f"achievements.{code}: неизвестная компетенция {rule.competence}")
         if self.points_burn.warn_days_before >= self.points_burn.inactive_days:
             raise ValueError("points_burn.warn_days_before должно быть меньше inactive_days")
         if set(self.scoring.xp_by_outcome) != {"success", "partial", "failure"}:

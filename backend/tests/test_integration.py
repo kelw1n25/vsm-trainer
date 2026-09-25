@@ -19,7 +19,7 @@ def test_competence_profile(client, auth):
     profile = client.get("/api/integration/employees/100001", headers=KEY).json()
     assert (profile["xp"], profile["level"], profile["runs_completed"], profile["success_rate"]) == (204, 1, 1, 1.0)
     assert profile["competences"]["service"] == 25
-    assert sorted(profile["achievements"]) == ["diplomat", "flawless"]
+    assert sorted(profile["achievements"]) == ["diplomat", "first_trip", "flawless"]
 
 
 def test_unknown_employee(client, employee):

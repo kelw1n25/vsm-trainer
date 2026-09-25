@@ -133,7 +133,7 @@ def test_actions_are_logged(client, auth, db):
     events = db.scalars(select(Event).where(Event.run_id == state["id"]).order_by(Event.id)).all()
     assert [e.type for e in events] == [
         "run_started", "choice_made", "choice_made", "choice_made", "run_finished",
-        "achievement_earned", "achievement_earned",
+        "achievement_earned", "achievement_earned", "achievement_earned",
     ]
     assert events[1].payload["choice_id"] == "ask_tickets"
     assert events[1].payload["elapsed_seconds"] >= 0

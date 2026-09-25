@@ -15,8 +15,7 @@ from app.analytics.models import Event
 from app.engine.models import RunStatus, ScenarioRun
 from app.game_config import game_config
 from app.profiles.models import Employee
-from app.scenarios.models import Scenario
-from app.scenarios.schema import ScenarioDefinition
+from app.scenarios.models import Scenario, parse_definition
 from app.scoring.service import TIMEZONE
 
 WEEKS = 8
@@ -205,7 +204,7 @@ def _recommend(db: Session, employee: Employee, weakest: str | None) -> Recommen
         return Recommendation(scenario_id=first.id, title=first.title, reason="Начните с этого сценария — он самый простой.")
 
     def potential(scenario: Scenario) -> int:
-        definition = ScenarioDefinition.model_validate(scenario.definition)
+        definition = parse_definition(scenario)
         return sum(
             max(0, choice.effects.competences.get(weakest, 0)) for node in definition.nodes for choice in node.choices
         )

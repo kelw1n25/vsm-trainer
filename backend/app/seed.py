@@ -22,8 +22,7 @@ from app.engine.models import RunStatus, ScenarioRun
 from app.engine.service import Rewards, apply_choice, apply_timeout, visible_choices
 from app.profiles.models import Brigade, Depot, Employee, Role
 from app.scenarios.loader import load_scenarios
-from app.scenarios.models import Scenario
-from app.scenarios.schema import ScenarioDefinition
+from app.scenarios.models import Scenario, parse_definition
 
 logger = logging.getLogger(__name__)
 
@@ -134,7 +133,7 @@ def _simulate(
     script: list[str | None] | None = None,
 ) -> None:
     """Проходит сценарий движком: по сценарию решений (script) или случайно с учётом «навыка»."""
-    definition = ScenarioDefinition.model_validate(scenario.definition)
+    definition = parse_definition(scenario)
     nodes = {node.id: node for node in definition.nodes}
     at = finished_at - timedelta(minutes=10)
     run = ScenarioRun(

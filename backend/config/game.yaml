@@ -57,7 +57,30 @@ levels:
 #   fast_streak     — count решений подряд быстрее timer_fraction таймера (таймаут обрывает серию)
 #   scenario_result — итог сценария: category, outcomes, loyalty_above, safety_above,
 #                     no_timeouts, scales_never_below (все указанные условия должны выполниться)
+#   runs_completed  — всего пройдено count сценариев
+#   categories_covered — успех или частичный успех в count разных категориях ситуаций
+#   competence_total — набрано points очков компетенции competence
 achievements:
+  first_trip:
+    title: Первый рейс
+    description: Пройден первый сценарий
+    rule: {type: runs_completed, count: 1}
+  seasoned:
+    title: Опытный проводник
+    description: Пройдено 10 сценариев
+    rule: {type: runs_completed, count: 10}
+  all_rounder:
+    title: Универсал
+    description: Справился с ситуациями всех четырёх типов
+    rule: {type: categories_covered, count: 4}
+  communicator:
+    title: Мастер коммуникации
+    description: 100 очков компетенции «Коммуникация и деэскалация конфликтов»
+    rule: {type: competence_total, competence: communication, points: 100}
+  rules_expert:
+    title: Знаток регламентов
+    description: 100 очков компетенции «Безопасность и регламенты»
+    rule: {type: competence_total, competence: safety_rules, points: 100}
   cool_head:
     title: Хладнокровие
     description: 5 решений подряд в первой трети таймера

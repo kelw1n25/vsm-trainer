@@ -82,7 +82,7 @@ def test_achievement_and_new_scenario_notifications(client, auth):
     assert "new_scenario" in types(notifications(client, auth))
     play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
     data = notifications(client, auth)
-    assert types(data).count("achievement") == 2
+    assert types(data).count("achievement") == 3
     titles = [item["title"] for item in data["items"]]
     assert "Новая ачивка: Дипломат" in titles
 

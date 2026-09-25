@@ -23,9 +23,10 @@ def test_seed_creates_consistent_demo_world(client, db):
     assert analytics["total_runs"] == 3
     assert any("медицинских" in m and "таймер" in m for m in analytics["mistakes"])
 
-    # Ачивки демо-проводника оставлены для живой демонстрации
+    # «Первый рейс» уже есть, а ачивки за конфликт оставлены для живой демонстрации
     profile = client.get("/api/profile", headers=auth).json()
-    assert not any(a["earned_at"] for a in profile["achievements"])
+    earned = {a["code"] for a in profile["achievements"] if a["earned_at"]}
+    assert "first_trip" in earned and not earned & {"diplomat", "flawless"}
 
     # Последняя активность 5,5 дня назад — приходит предупреждение о сгорании
     types = [n["type"] for n in client.get("/api/notifications", headers=auth).json()["items"]]

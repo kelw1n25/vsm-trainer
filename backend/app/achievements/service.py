@@ -3,15 +3,23 @@
 from datetime import datetime
 
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.achievements.models import EmployeeAchievement
 from app.analytics.models import Event
 from app.engine.models import RunStatus, ScenarioRun
-from app.game_config import FastStreakRule, ScenarioResultRule, game_config
+from app.game_config import (
+    CategoriesCoveredRule,
+    CompetenceTotalRule,
+    FastStreakRule,
+    RunsCompletedRule,
+    ScenarioResultRule,
+    game_config,
+)
 from app.notifications.service import notify
+from app.profiles.models import Employee
 from app.scenarios.models import Scenario
 
 
@@ -52,10 +60,14 @@ def evaluate(
         if code in earned:
             continue
         rule = achievement.rule
+        finished = run.status != RunStatus.IN_PROGRESS
         if isinstance(rule, FastStreakRule):
             done = _fast_streak(db, run.employee_id, rule)
+        elif isinstance(rule, ScenarioResultRule):
+            done = finished and _scenario_result(db, run, scenario, rule, initial_scales)
         else:
-            done = run.status != RunStatus.IN_PROGRESS and _scenario_result(db, run, scenario, rule, initial_scales)
+            # Накопительные правила проверяем после финала: к этому моменту очки уже начислены
+            done = finished and _progress_reached(db, run.employee_id, rule)
         if done:
             db.execute(
                 insert(EmployeeAchievement)
@@ -84,6 +96,28 @@ def _fast_streak(db: Session, employee_id: int, rule: FastStreakRule) -> bool:
         e.type == "choice_made" and e.payload["elapsed_seconds"] <= e.payload["timer_seconds"] * rule.timer_fraction
         for e in timed
     )
+
+
+def _progress_reached(
+    db: Session, employee_id: int, rule: RunsCompletedRule | CategoriesCoveredRule | CompetenceTotalRule
+) -> bool:
+    finished = select(ScenarioRun).where(
+        ScenarioRun.employee_id == employee_id, ScenarioRun.status != RunStatus.IN_PROGRESS
+    )
+    if isinstance(rule, RunsCompletedRule):
+        return db.scalar(select(func.count()).select_from(finished.subquery())) >= rule.count
+    if isinstance(rule, CategoriesCoveredRule):
+        covered = db.scalar(
+            select(func.count(func.distinct(Scenario.category)))
+            .join(ScenarioRun, ScenarioRun.scenario_id == Scenario.id)
+            .where(
+                ScenarioRun.employee_id == employee_id,
+                ScenarioRun.status.in_([RunStatus.SUCCESS, RunStatus.PARTIAL]),
+            )
+        )
+        return covered >= rule.count
+    employee = db.get(Employee, employee_id)
+    return employee.competence_points.get(rule.competence, 0) >= rule.points
 
 
 def _scenario_result(

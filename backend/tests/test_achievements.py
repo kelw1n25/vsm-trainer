@@ -27,7 +27,7 @@ def test_level_for():
 def test_diplomat_and_flawless_for_clean_conflict(client, auth):
     # Лучший путь: лояльность 95 > 90, таймеров не истекало, шкалы не опускались ниже 50
     state = play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
-    assert {a["code"] for a in state["new_achievements"]} == {"diplomat", "flawless"}
+    assert {a["code"] for a in state["new_achievements"]} == {"diplomat", "flawless", "first_trip"}
 
 
 def test_achievement_is_given_once(client, auth):
@@ -62,6 +62,13 @@ def test_cool_head_after_five_fast_decisions(client, auth, quick_scenario):
     assert "cool_head" in earned[4]
 
 
+def test_competence_mastery(client, auth, db, employee):
+    employee.competence_points = {"communication": 95}
+    db.commit()
+    state = play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
+    assert "communicator" in {a["code"] for a in state["new_achievements"]}
+
+
 def test_level_up_is_reported(client, auth, db, employee):
     employee.xp = 290
     db.commit()
@@ -76,7 +83,7 @@ def test_profile(client, auth):
     assert profile["competence_points"]["first_aid"] == 0
     assert profile["runs_completed"] == 1
     earned = {a["code"] for a in profile["achievements"] if a["earned_at"]}
-    assert earned == {"diplomat", "flawless"}
-    assert len(profile["achievements"]) == 4
+    assert earned == {"diplomat", "flawless", "first_trip"}
+    assert len(profile["achievements"]) == 9
     assert profile["history"][0]["outcome"] == "success"
     assert profile["brigade"] == "Бригада 1"

@@ -5,6 +5,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
+from app.scenarios.schema import ScenarioDefinition
 
 
 class Scenario(Base):
@@ -23,3 +24,15 @@ class Scenario(Base):
     # Хеш содержимого файла: при старте перезаписываем сценарий, только если файл изменился
     content_hash: Mapped[str] = mapped_column(String(64))
     loaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+# Разобранные графы сценариев: ключ — id и хеш файла, поэтому изменённый сценарий разбирается заново.
+# Кэш живёт в памяти процесса, но backend остаётся stateless: это лишь ускорение, источник истины — БД.
+_parsed: dict[tuple[str, str], ScenarioDefinition] = {}
+
+
+def parse_definition(scenario: Scenario) -> ScenarioDefinition:
+    key = (scenario.id, scenario.content_hash)
+    if key not in _parsed:
+        _parsed[key] = ScenarioDefinition.model_validate(scenario.definition)
+    return _parsed[key]

@@ -11,8 +11,7 @@ from app.engine.models import RunStatus, ScenarioRun
 from app.engine.service import final_text
 from app.errors import api_error
 from app.profiles.models import Employee
-from app.scenarios.models import Scenario
-from app.scenarios.schema import ScenarioDefinition
+from app.scenarios.models import Scenario, parse_definition
 
 
 class DebriefStep(BaseModel):
@@ -60,7 +59,7 @@ def build_debrief(db: Session, employee: Employee, run_id: uuid.UUID) -> Debrief
         raise api_error(409, "run_in_progress", "Разбор доступен после завершения сценария")
 
     scenario = db.get(Scenario, run.scenario_id)
-    definition = ScenarioDefinition.model_validate(scenario.definition)
+    definition = parse_definition(scenario)
     nodes = {node.id: node for node in definition.nodes}
     events = db.scalars(
         select(Event).where(Event.run_id == run.id, Event.type.in_(["choice_made", "timeout"])).order_by(Event.id)

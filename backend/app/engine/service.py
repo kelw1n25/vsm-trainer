@@ -25,7 +25,7 @@ from app.game_config import game_config
 from app.notifications.service import notify
 from app.profiles.models import Employee
 from app.scenarios.conditions import is_satisfied, parse_condition
-from app.scenarios.models import Scenario
+from app.scenarios.models import Scenario, parse_definition
 from app.scenarios.schema import Choice, Effects, Node, ScenarioDefinition
 from app.scoring import service as scoring
 
@@ -66,7 +66,7 @@ def start_run(db: Session, employee: Employee, scenario_id: str) -> RunState:
     if run is not None:
         return get_run(db, employee, run.id)
 
-    definition = ScenarioDefinition.model_validate(scenario.definition)
+    definition = parse_definition(scenario)
     now = db_now(db)
     run = ScenarioRun(
         employee_id=employee.id,
@@ -124,7 +124,7 @@ def _lock_run(db: Session, employee: Employee, run_id: uuid.UUID) -> tuple[Scena
     if run is None or run.employee_id != employee.id:
         raise api_error(404, "run_not_found", "Прохождение не найдено")
     scenario = db.get(Scenario, run.scenario_id)
-    return run, scenario, ScenarioDefinition.model_validate(scenario.definition)
+    return run, scenario, parse_definition(scenario)
 
 
 def _resolve_timeouts(
