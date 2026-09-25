@@ -37,7 +37,7 @@ def test_login_errors(client, employee):
 
 def test_catalog(client, auth):
     catalog = client.get("/api/scenarios", headers=auth).json()
-    assert len(catalog) == 5
+    assert len(catalog) == 9
     assert {s["category"] for s in catalog} == {"conflict", "medical", "service", "safety"}
     assert all(s["demo"] and s["description"] for s in catalog)
 

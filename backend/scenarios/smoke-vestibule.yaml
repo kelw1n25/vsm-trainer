@@ -1,0 +1,157 @@
+# ДЕМО-КОНТЕНТ: написан командой до получения материалов кейсодержателя.
+# Порядок действий условный — сверить с регламентом пожарной безопасности перевозчика.
+id: smoke-vestibule
+title: Задымление в тамбуре
+category: safety
+difficulty: 3
+service_class: Эконом
+route: Москва — Санкт-Петербург
+description: >
+  Из тамбура тянет дымом и срабатывает датчик. Нужно за секунды оценить угрозу,
+  не допустить паники и действовать по правилам пожарной безопасности.
+demo: true
+initial:
+  loyalty: 70
+  safety: 70
+start_node: start
+
+nodes:
+  - id: start
+    situation: >
+      Из тамбура тянет дымом, срабатывает датчик. В тамбуре стоит пассажир с электронной
+      сигаретой, из урны идёт дым.
+    timer_seconds: 15
+    timeout_next: smoke_spreads
+    timeout_effects:
+      safety: -20
+    choices:
+      - id: assess_fire
+        text: >
+          Быстро оценить: небольшое тление в урне — взять огнетушитель и сообщить
+          начальнику поезда по рации
+        effects:
+          safety: 10
+          competences: {safety_rules: 10, stress_resistance: 5}
+        next: extinguish
+        best: true
+        explanation: Сначала — источник огня и связь со старшим, разговор с нарушителем подождёт.
+      - id: scold_smoker
+        text: Сначала отчитать курильщика
+        effects:
+          loyalty: -5
+          safety: -15
+          competences: {communication: -5}
+        next: smoke_spreads
+        explanation: Пока идёт разбирательство, тление разгорается.
+      - id: open_door
+        text: Открыть межвагонную дверь, чтобы проветрить
+        effects:
+          safety: -20
+          competences: {safety_rules: -10}
+        next: smoke_spreads
+        explanation: Приток воздуха раздувает огонь, а дым уходит в соседний вагон.
+
+  - id: extinguish
+    situation: Вы с огнетушителем у урны. Пассажиры из соседних рядов выглядывают в тамбур.
+    timer_seconds: 15
+    timeout_next: smoke_spreads
+    timeout_effects:
+      safety: -15
+    choices:
+      - id: use_extinguisher
+        text: Потушить тление огнетушителем, попросить пассажиров вернуться на места и закрыть дверь тамбура
+        effects:
+          safety: 20
+          competences: {safety_rules: 10, communication: 5}
+        next: aftermath
+        best: true
+        explanation: Огнетушитель рассчитан на такие случаи, а закрытая дверь не пускает дым в вагон.
+      - id: water_bottle
+        text: Залить урну водой из бутылки
+        effects:
+          safety: -10
+        next: aftermath
+        explanation: >
+          В урне может быть аккумулятор электронной сигареты — вода не гарантирует
+          тушения и опасна для электроники.
+
+  - id: smoke_spreads
+    situation: >
+      Дым заполняет тамбур и тянется в вагон, пассажиры кашляют, кто-то тянется к стоп-крану.
+    timer_seconds: 12
+    timeout_next: final_fail
+    timeout_effects:
+      safety: -25
+      loyalty: -10
+    choices:
+      - id: evacuate_car
+        text: >
+          Спокойно перевести пассажиров в соседний вагон, закрыть двери тамбура, доложить
+          начальнику поезда и взять огнетушитель
+        effects:
+          safety: 15
+          loyalty: 5
+          competences: {safety_rules: 15, stress_resistance: 5}
+        next: extinguish
+        best: true
+        explanation: >
+          Люди — в безопасность, дым — за закрытую дверь, старший — в курсе.
+          После этого можно тушить.
+      - id: stop_crane
+        text: Разрешить пассажиру сорвать стоп-кран
+        effects:
+          loyalty: -10
+          safety: -20
+          competences: {safety_rules: -15}
+        next: final_fail
+        explanation: >
+          Экстренное торможение на высокой скорости опасно само по себе. Решение
+          об остановке принимает начальник поезда.
+
+  - id: aftermath
+    situation: Дым рассеивается. Пассажир с электронной сигаретой оправдывается, соседи возмущены.
+    line:
+      speaker: passenger
+      name: Пассажир с электронной сигаретой
+      text: Я не думал, что так получится, это же не настоящая сигарета!
+    choices:
+      - id: document_and_explain
+        condition:
+          - safety >= 60
+        text: >
+          Составить акт вместе с начальником поезда, спокойно объяснить запрет на курение,
+          в том числе электронных сигарет, и успокоить соседей
+        effects:
+          loyalty: 10
+          safety: 10
+          competences: {safety_rules: 10, communication: 5}
+        next: final_success
+        best: true
+        explanation: >
+          Нарушение оформлено, пассажир понимает правило, соседи видят, что экипаж
+          контролирует ситуацию. Вариант доступен, если угрозу удержали под контролем.
+      - id: explain_only
+        text: Объяснить запрет и отпустить без оформления
+        effects:
+          loyalty: 5
+        next: final_partial
+        explanation: Пассажир понял, но нарушение пожарной безопасности не зафиксировано.
+      - id: public_shame
+        text: Отчитать пассажира при всех
+        effects:
+          loyalty: -15
+          competences: {communication: -10}
+        next: final_partial
+        explanation: Публичный разнос не добавляет безопасности, а ухудшает атмосферу в вагоне.
+
+  - id: final_success
+    outcome: success
+    final_text: Возгорание потушено за минуту, пострадавших нет, нарушение оформлено по регламенту.
+
+  - id: final_partial
+    outcome: partial
+    final_text: Опасность устранена, но действия экипажа были не вполне по регламенту. Будет разбор.
+
+  - id: final_fail
+    outcome: failure
+    final_text: Задымление распространилось, поезд экстренно остановлен. Проводится расследование.

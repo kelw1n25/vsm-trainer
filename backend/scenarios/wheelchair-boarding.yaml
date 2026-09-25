@@ -1,0 +1,183 @@
+# ДЕМО-КОНТЕНТ: написан командой до получения материалов кейсодержателя.
+id: wheelchair-boarding
+title: Посадка пассажира на кресле-коляске
+category: service
+difficulty: 1
+service_class: Бизнес
+route: Москва — Санкт-Петербург
+description: >
+  Подъёмник у вагона не работает, до отправления четыре минуты, а маломобильный пассажир
+  заранее заказал сопровождение. Нужно посадить его безопасно и сохранить премиальный сервис.
+demo: true
+initial:
+  loyalty: 60
+  safety: 85
+start_node: start
+
+nodes:
+  - id: start
+    situation: >
+      На станции посадки пассажир на кресле-коляске заранее заказал помощь, но подъёмник
+      у вагона не выдвигается. До отправления четыре минуты.
+    line:
+      speaker: passenger
+      name: Пассажир на кресле-коляске
+      text: Я заказывал сопровождение ещё неделю назад!
+    timer_seconds: 25
+    timeout_next: delay_pressure
+    timeout_effects:
+      loyalty: -15
+    choices:
+      - id: call_station
+        text: >
+          Извиниться, вызвать по рации дежурного по станции с переносным пандусом и предупредить
+          начальника поезда о возможной задержке на минуту
+        effects:
+          loyalty: 10
+          safety: 5
+          set_flags: [chief_warned]
+          competences: {service: 10, safety_rules: 5}
+        next: ramp_arrives
+        best: true
+        explanation: >
+          Безопасная посадка — только с оборудованием. Начальник поезда заранее знает
+          о задержке и может её согласовать.
+      - id: lift_manually
+        text: Попросить двух пассажиров помочь занести коляску на руках
+        effects:
+          loyalty: 5
+          safety: -25
+          competences: {safety_rules: -15}
+        next: risky_lift
+        explanation: >
+          Подъём коляски с человеком по ступеням силами случайных людей — риск падения
+          и травмы для всех.
+      - id: next_train
+        text: Предложить пассажиру поехать следующим поездом
+        effects:
+          loyalty: -25
+          competences: {service: -10}
+        next: final_fail
+        explanation: >
+          Пассажир заранее выполнил всё, что от него требовалось. Отказ в посадке из-за
+          неисправности перевозчика недопустим.
+
+  - id: risky_lift
+    situation: Коляску несут по ступеням, один из помощников оступается.
+    timer_seconds: 10
+    timeout_next: final_fail
+    timeout_effects:
+      safety: -20
+    choices:
+      - id: stop_and_ramp
+        text: Остановить подъём, аккуратно вернуть коляску на платформу и вызвать дежурного с пандусом
+        effects:
+          safety: 15
+          competences: {safety_rules: 10, stress_resistance: 5}
+        next: ramp_arrives
+        best: true
+        explanation: Вовремя признать ошибку и остановиться — лучшее решение, пока никто не пострадал.
+      - id: continue_lift
+        text: Продолжать — осталась всего одна ступенька
+        effects:
+          safety: -20
+        next: final_fail
+        explanation: Одна ступенька — это всё ещё риск падения человека вместе с коляской.
+
+  - id: delay_pressure
+    situation: Пассажир нервничает, двери скоро закроются, начальник поезда торопит.
+    line:
+      speaker: train_chief
+      name: Начальник поезда
+      text: Отправление по графику, решайте быстрее!
+    timer_seconds: 15
+    timeout_next: final_fail
+    timeout_effects:
+      loyalty: -10
+    choices:
+      - id: hold_door
+        text: Коротко доложить о посадке маломобильного пассажира и попросить минуту задержки
+        effects:
+          loyalty: 10
+          set_flags: [chief_warned]
+          competences: {service: 5, communication: 5}
+        next: ramp_arrives
+        best: true
+        explanation: Короткий доклад по делу позволяет начальнику поезда принять решение.
+      - id: rush_lift
+        text: Занести коляску на руках, пока не закрылись двери
+        effects:
+          safety: -20
+        next: risky_lift
+        explanation: Спешка приводит к опасной посадке без оборудования.
+
+  - id: ramp_arrives
+    situation: >
+      Дежурный принёс пандус. Пассажир заехал в вагон, но его место оказалось
+      не у зоны для кресла-коляски.
+    timer_seconds: 20
+    timeout_next: final_partial
+    timeout_effects:
+      loyalty: -10
+    choices:
+      - id: reseat_comfort
+        text: >
+          Проводить к специальному месту, помочь закрепить коляску, показать кнопку вызова
+          и туалет для маломобильных пассажиров
+        effects:
+          loyalty: 15
+          safety: 10
+          competences: {service: 15}
+        next: onboard
+        best: true
+        explanation: Закреплённая коляска безопасна на скорости 400 км/ч, а пассажир знает, как позвать помощь.
+      - id: leave_in_aisle
+        text: Оставить коляску в проходе у двери
+        effects:
+          loyalty: -5
+          safety: -15
+          competences: {safety_rules: -10}
+        next: onboard
+        explanation: Незакреплённая коляска в проходе опасна при торможении и мешает эвакуации.
+
+  - id: onboard
+    situation: Поезд отправился. Через час пассажир просит помочь с обедом — столик неудобно высоко.
+    choices:
+      - id: serve_at_seat
+        text: Принести обед к месту, предложить удобный столик и уточнить, нужна ли помощь при выходе
+        effects:
+          loyalty: 15
+          competences: {service: 10, communication: 5}
+        next: final_success
+        best: true
+        explanation: Сервис без лишних просьб — пассажир чувствует заботу, а не одолжение.
+      - id: arrange_exit
+        condition:
+          - flag chief_warned
+        text: Через начальника поезда передать на станцию прибытия заявку на пандус и сопровождение
+        effects:
+          loyalty: 10
+          safety: 5
+          competences: {safety_rules: 5, service: 5}
+        next: final_success
+        explanation: >
+          Проводник думает на шаг вперёд. Вариант доступен, если начальник поезда
+          участвовал в посадке.
+      - id: only_menu
+        text: Дать меню и предложить самому доехать до бистро
+        effects:
+          loyalty: -10
+        next: final_partial
+        explanation: Формально помощь предложена, но пассажиру неудобно и одиноко.
+
+  - id: final_success
+    outcome: success
+    final_text: Пассажир доехал с комфортом и оставил благодарность экипажу в отзыве.
+
+  - id: final_partial
+    outcome: partial
+    final_text: Пассажир доехал, но поездка оставила неприятное впечатление. Возможна жалоба.
+
+  - id: final_fail
+    outcome: failure
+    final_text: Посадка сорвалась или закончилась травмой. Перевозчик получает официальную жалобу.
