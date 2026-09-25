@@ -25,12 +25,32 @@ interface HeroTrainProps {
   smooth?: boolean;
 }
 
+// Путь уходит вправо и вверх: головка ближнего рельса — railY(x), дальний рельс выше на FAR_RAIL_GAP
+const RAIL_SLOPE = 0.0198;
+const railY = (x: number) => 281 - (x - 100) * RAIL_SLOPE;
+const FAR_RAIL_GAP = 7;
+const SLEEPERS = Array.from({ length: 40 }, (_, i) => 60 + i * 24);
+
+// Колёса стоят точно на головке рельса
 const WHEELS = [
-  { cx: 406, cy: 268, r: 7 },
-  { cx: 450, cy: 267, r: 7 },
-  { cx: 895, cy: 259, r: 6.5 },
-  { cx: 937, cy: 258, r: 6.5 },
-];
+  { cx: 408, r: 8.5 },
+  { cx: 448, r: 8.5 },
+  { cx: 897, r: 8 },
+  { cx: 935, r: 8 },
+].map(({ cx, r }) => ({ cx, r, cy: railY(cx) - r }));
+
+/** Рельс в разрезе: подошва, шейка и светлая головка. */
+function Rail({ lift = 0, scale = 1 }: { lift?: number; scale?: number }) {
+  const line = (dy: number) => `M40 ${railY(40) - lift + dy}L1000 ${railY(1000) - lift + dy}`;
+  return (
+    <g strokeLinecap="round" fill="none">
+      <path d={line(4.2 * scale)} stroke="#7F91AC" strokeWidth={2.6 * scale} />
+      <path d={line(2.2 * scale)} stroke="#98A8BF" strokeWidth={1.8 * scale} />
+      <path d={line(0.6 * scale)} stroke="#D9E2EE" strokeWidth={2.4 * scale} />
+      <path d={line(0)} stroke="#FFFFFF" strokeWidth={0.9 * scale} opacity="0.9" />
+    </g>
+  );
+}
 
 /** Скоростной поезд на фоне города — правая часть hero-блока. */
 export function HeroTrain({ offset = 0, moving = false, smooth = false }: HeroTrainProps) {
@@ -78,6 +98,11 @@ export function HeroTrain({ offset = 0, moving = false, smooth = false }: HeroTr
           <stop offset="0.4" stopColor="#FFF6D8" stopOpacity="0.7" />
           <stop offset="1" stopColor="#FFF6D8" stopOpacity="0" />
         </radialGradient>
+        <linearGradient id={`${id}-ballast`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#C3CFDF" stopOpacity="0.2" />
+          <stop offset="0.45" stopColor="#B7C4D6" stopOpacity="0.75" />
+          <stop offset="1" stopColor="#A9B8CC" stopOpacity="0.15" />
+        </linearGradient>
         <filter id={`${id}-soft`} x="-20%" y="-50%" width="140%" height="200%">
           <feGaussianBlur stdDeviation="6" />
         </filter>
@@ -127,12 +152,34 @@ export function HeroTrain({ offset = 0, moving = false, smooth = false }: HeroTr
         <path d="M560 52V272M560 64H592" strokeWidth="4" opacity="0.8" />
       </g>
 
-      <ellipse cx="700" cy="284" rx="520" ry="10" fill="#7E97BD" opacity="0.28" filter={`url(#${id}-soft)`} />
-      <path d="M100 288L1000 272" stroke="#C3D2E6" strokeWidth="3" />
-      <path d="M200 298L1000 284" stroke="#D3DFEE" strokeWidth="2" />
-      <g className="hero__sleepers" stroke="#D8E2EF" strokeWidth="3">
-        {Array.from({ length: 18 }, (_, i) => 120 + i * 50).map((x) => (
-          <path key={x} d={`M${x} ${291 - (x - 100) * 0.0178}l-14 8`} />
+      {/* Путь: щебёночная насыпь, шпалы с креплениями и два рельса */}
+      <path
+        d={`M40 ${railY(40) - FAR_RAIL_GAP - 5}L1000 ${railY(1000) - FAR_RAIL_GAP - 5}L1000 ${railY(1000) + 16}L40 ${railY(40) + 19}Z`}
+        fill={`url(#${id}-ballast)`}
+      />
+      <ellipse cx="700" cy={railY(700) + 2} rx="520" ry="8" fill="#6F88AE" opacity="0.3" filter={`url(#${id}-soft)`} />
+      <g fill="#A3B2C7" opacity="0.7">
+        {SLEEPERS.map((x, i) => (
+          <circle key={x} cx={x + 14 + (i % 3) * 5} cy={railY(x + 14) + 9 + (i % 2) * 4} r={1 + (i % 3) * 0.3} />
+        ))}
+      </g>
+      {/* Шпала идёт поперёк пути: от дальнего рельса вниз-влево под ближний */}
+      <g fill="#8E9FB6">
+        {SLEEPERS.map((x) => {
+          // Торцы шпалы параллельны рельсам
+          const top = (px: number) => `${px} ${railY(px) - FAR_RAIL_GAP + 1.5}`;
+          const bottom = (px: number) => `${px} ${railY(px) + 8}`;
+          return <path key={x} d={`M${top(x + 0.5)}L${top(x + 6.5)}L${bottom(x - 2.5)}L${bottom(x - 8.5)}Z`} />;
+        })}
+      </g>
+      <Rail lift={FAR_RAIL_GAP} scale={0.8} />
+      <Rail />
+      <g fill="#56677F">
+        {SLEEPERS.map((x) => (
+          <g key={x}>
+            <rect x={x - 4.2} y={railY(x - 1.8) + 3.2} width="4.8" height="2.2" rx="0.6" />
+            <rect x={x + 0.2} y={railY(x + 2.2) - FAR_RAIL_GAP + 2.6} width="4" height="1.8" rx="0.5" />
+          </g>
         ))}
       </g>
 
@@ -144,26 +191,32 @@ export function HeroTrain({ offset = 0, moving = false, smooth = false }: HeroTr
         <path d="M80 150H330" strokeWidth="1.5" />
       </g>
 
-      <g className="hero__train-drive" style={{ transform: `translateX(${-offset}px)` }}>
-        <g className="hero__train-bob">
-          {/* Тележки с колёсами — под юбкой корпуса */}
-          <g fill="#3C4B66">
-            <rect x="390" y="250" width="76" height="18" rx="6" />
-            <rect x="880" y="242" width="72" height="17" rx="6" />
-          </g>
-          {/* Колёса поворачиваются пропорционально пройденному пути */}
-          {WHEELS.map(({ cx, cy, r }) => (
-            <g key={cx} transform={`rotate(${-offset * 4} ${cx} ${cy})`}>
-              <circle cx={cx} cy={cy} r={r} fill="#243047" />
-              <path
-                d={`M${cx - r + 1.5} ${cy}H${cx + r - 1.5}M${cx} ${cy - r + 1.5}V${cy + r - 1.5}`}
-                stroke="#6E819E"
-                strokeWidth="1.4"
-              />
-              <circle cx={cx} cy={cy} r="1.8" fill="#9FB0C8" />
-            </g>
+      <g className="hero__train-drive" style={{ transform: `translate(${-offset}px, ${offset * RAIL_SLOPE}px)` }}>
+        {/* Тележки с колёсами — под юбкой корпуса */}
+        <g fill="#3C4B66">
+          <rect x="390" y="250" width="76" height="18" rx="6" />
+          <rect x="880" y="242" width="72" height="17" rx="6" />
+        </g>
+        <g fill="#1B2438" opacity="0.35">
+          {WHEELS.map(({ cx, r }) => (
+            <ellipse key={cx} cx={cx} cy={railY(cx) + 1.5} rx={r * 0.9} ry="1.6" />
           ))}
+        </g>
+        {/* Колёса поворачиваются пропорционально пройденному пути */}
+        {WHEELS.map(({ cx, cy, r }) => (
+          <g key={cx} transform={`rotate(${-offset * 4} ${cx} ${cy})`}>
+            <circle cx={cx} cy={cy} r={r} fill="#243047" />
+            <path
+              d={`M${cx - r + 1.5} ${cy}H${cx + r - 1.5}M${cx} ${cy - r + 1.5}V${cy + r - 1.5}`}
+              stroke="#6E819E"
+              strokeWidth="1.4"
+            />
+            <circle cx={cx} cy={cy} r="1.8" fill="#9FB0C8" />
+          </g>
+        ))}
 
+        {/* Кузов слегка покачивается на подвеске */}
+        <g className="hero__train-bob">
           <path
             d="M225 232C228 205 262 176 335 160L520 128L1250 67.5V246L300 264C255 265 223 254 225 232Z"
             fill={`url(#${id}-body)`}
