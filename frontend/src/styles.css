@@ -530,6 +530,44 @@ th {
   font-size: 0.9rem;
 }
 
+.bell {
+  position: relative;
+}
+
+.bell__count {
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.8rem;
+}
+
+.bell__panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: min(360px, calc(100vw - 32px));
+  max-height: 420px;
+  overflow-y: auto;
+  z-index: 10;
+  color: var(--text);
+  display: grid;
+  gap: 8px;
+}
+
+.bell__item {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.bell__item--new strong::before {
+  content: "● ";
+  color: var(--accent);
+}
+
 .tabs-row {
   display: flex;
   gap: 16px;

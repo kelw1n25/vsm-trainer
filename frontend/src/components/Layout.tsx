@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router";
 import { useAuth } from "../auth";
+import { NotificationBell } from "./NotificationBell";
 
 export function Layout() {
   const { session, logout } = useAuth();
@@ -15,6 +16,7 @@ export function Layout() {
             <NavLink to="/profile">Профиль</NavLink>
             <NavLink to="/leaderboard">Рейтинг</NavLink>
           </nav>
+          <NotificationBell />
           <span className="header__user">{session?.fullName}</span>
           <button className="button button--ghost" onClick={logout}>
             Выйти

@@ -31,6 +31,17 @@ class ScoringRules(BaseModel):
     fast_answer: FastAnswerRule
 
 
+class PointsBurnRules(BaseModel):
+    inactive_days: int = Field(ge=1)
+    burn_fraction: float = Field(gt=0, lt=1)
+    warn_days_before: int = Field(ge=0)
+
+
+class WeeklyChallenge(BaseModel):
+    scenario_id: str
+    bonus_xp: int = Field(ge=0)
+
+
 class Level(BaseModel):
     level: int
     title: str
@@ -63,6 +74,8 @@ class GameConfig(BaseModel):
     competences: dict[str, str]
     timer: TimerRules
     scoring: ScoringRules
+    points_burn: PointsBurnRules
+    weekly_challenge: WeeklyChallenge | None = None
     levels: list[Level] = Field(min_length=1)
     achievements: dict[str, Achievement]
 
@@ -71,6 +84,8 @@ class GameConfig(BaseModel):
         thresholds = [level.xp for level in self.levels]
         if thresholds[0] != 0 or thresholds != sorted(set(thresholds)):
             raise ValueError("levels: пороги XP должны начинаться с 0 и строго возрастать")
+        if self.points_burn.warn_days_before >= self.points_burn.inactive_days:
+            raise ValueError("points_burn.warn_days_before должно быть меньше inactive_days")
         if set(self.scoring.xp_by_outcome) != {"success", "partial", "failure"}:
             raise ValueError("scoring.xp_by_outcome: нужны значения для success, partial и failure")
         if set(self.scoring.difficulty_multiplier) != {1, 2, 3}:

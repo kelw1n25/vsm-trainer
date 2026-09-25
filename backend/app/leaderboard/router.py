@@ -10,12 +10,11 @@ from app.auth.deps import get_current_employee
 from app.db import get_db
 from app.engine.models import ScenarioRun
 from app.profiles.models import Brigade, Depot, Employee, Role
+from app.scoring.service import TIMEZONE, burn_due_points
 
 router = APIRouter(prefix="/api/leaderboard", tags=["leaderboard"])
 
 TOP_SIZE = 20
-# Неделя и месяц начинаются по московскому времени, а не по часовому поясу сервера БД
-TIMEZONE = "Europe/Moscow"
 
 Scope = Literal["brigade", "depot", "company"]
 Period = Literal["week", "month", "all"]
@@ -47,12 +46,15 @@ def leaderboard(
     me: Employee = Depends(get_current_employee),
     db: Session = Depends(get_db),
 ) -> Leaderboard:
+    # Сначала сжигаем просроченные баллы, чтобы неактивные не занимали верх рейтинга
+    burn_due_points(db, db.scalar(select(func.now())))
+    db.commit()
     if period == "all":
         # За всё время — XP профиля: он уже учитывает сгорание баллов
         points = Employee.xp
         source = select(Employee)
     else:
-        # Неделя и месяц — календарные: рейтинг обнуляется в начале периода
+        # Неделя и месяц — календарные по Москве: рейтинг обнуляется в начале периода
         period_xp = (
             select(ScenarioRun.employee_id, func.sum(ScenarioRun.xp_earned).label("xp"))
             .where(ScenarioRun.finished_at >= func.date_trunc(period, func.now(), TIMEZONE))

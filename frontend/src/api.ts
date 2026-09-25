@@ -5,6 +5,7 @@ import type {
   LeaderboardScope,
   LoginResponse,
   Meta,
+  NotificationList,
   Profile,
   RunState,
   ScenarioSummary,
@@ -87,4 +88,6 @@ export const api = {
   profile: () => request<Profile>("GET", "/api/profile"),
   leaderboard: (scope: LeaderboardScope, period: LeaderboardPeriod) =>
     request<Leaderboard>("GET", `/api/leaderboard?scope=${scope}&period=${period}`),
+  notifications: () => request<NotificationList>("GET", "/api/notifications"),
+  readAllNotifications: () => request<{ status: string }>("POST", "/api/notifications/read-all"),
 };

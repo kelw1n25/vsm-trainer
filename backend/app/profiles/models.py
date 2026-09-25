@@ -48,7 +48,8 @@ class Employee(CreatedAtMixin, Base):
     xp: Mapped[int] = mapped_column(default=0)
     # {"communication": 12, "first_aid": 5, ...} — список компетенций задаётся в конфиге
     competence_points: Mapped[dict[str, int]] = mapped_column(JSONB, default=dict)
-    # Используется для сгорания баллов: считаем дни без прохождений от этой даты
+    # Сгорание баллов: дни без прохождений считаются от более поздней из двух дат
     last_activity_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_burn_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     brigade: Mapped[Brigade] = relationship(back_populates="employees")

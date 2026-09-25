@@ -11,6 +11,7 @@ from app.achievements.models import EmployeeAchievement
 from app.analytics.models import Event
 from app.engine.models import RunStatus, ScenarioRun
 from app.game_config import FastStreakRule, ScenarioResultRule, game_config
+from app.notifications.service import notify
 from app.scenarios.models import Scenario
 
 
@@ -62,6 +63,10 @@ def evaluate(
                 .on_conflict_do_nothing()
             )
             db.add(Event(employee_id=run.employee_id, run_id=run.id, type="achievement_earned", payload={"code": code}))
+            notify(
+                db, run.employee_id, "achievement", f"Новая ачивка: {achievement.title}",
+                achievement.description, f"achievement:{code}",
+            )
             new.append(describe(code))
     return new
 

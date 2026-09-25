@@ -11,6 +11,14 @@ import pytest
 os.environ.setdefault("JWT_SECRET", "test-secret-at-least-32-characters-long")
 
 
+@pytest.fixture(autouse=True)
+def no_weekly_challenge(monkeypatch):
+    """Челлендж недели меняет XP за сценарий — по умолчанию выключен, тесты челленджа включают его сами."""
+    from app.game_config import game_config
+
+    monkeypatch.setattr(game_config, "weekly_challenge", None)
+
+
 @pytest.fixture(scope="session")
 def database():
     if not os.environ.get("POSTGRES_DB", "").endswith("_test"):

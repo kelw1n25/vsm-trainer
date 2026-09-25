@@ -22,6 +22,7 @@ from app.engine.models import RunStatus, ScenarioRun
 from app.engine.schemas import ChoiceOut, FinalOut, LineOut, NodeOut, RunState, StepOut
 from app.errors import api_error
 from app.game_config import game_config
+from app.notifications.service import notify
 from app.profiles.models import Employee
 from app.scenarios.conditions import is_satisfied, parse_condition
 from app.scenarios.models import Scenario
@@ -225,12 +226,18 @@ def _finish(
     run.status = outcome
     run.finish_reason = reason
     run.finished_at = at
-    run.xp_earned = scoring.calculate_xp(outcome, scenario.difficulty, run.loyalty, run.safety)
+    run.xp_earned = scoring.calculate_xp(
+        outcome, scenario.difficulty, run.loyalty, run.safety
+    ) + scoring.weekly_challenge_bonus(db, run.employee_id, run.id, scenario.id, outcome)
     employee = scoring.award(db, run.employee_id, run.xp_earned, run.competence_points, at)
     before, after = achievements.level_for(employee.xp - run.xp_earned), achievements.level_for(employee.xp)
     if after.level > before.level:
         rewards.level_up = after
         _log(db, run, "level_up", {"level": after.level, "title": after.title})
+        notify(
+            db, run.employee_id, "level_up", f"Новый уровень: {after.title}",
+            f"Вы достигли уровня {after.level}. Так держать!", f"level:{after.level}",
+        )
     _log(db, run, "run_finished", {
         "outcome": outcome,
         "reason": reason,

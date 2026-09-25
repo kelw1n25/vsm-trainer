@@ -10,6 +10,7 @@ from app.db import Base
 from app.achievements import models as _achievements  # noqa: F401
 from app.analytics import models as _analytics  # noqa: F401
 from app.engine import models as _engine  # noqa: F401
+from app.notifications import models as _notifications  # noqa: F401
 from app.profiles import models as _profiles  # noqa: F401
 from app.scenarios import models as _scenarios  # noqa: F401
 

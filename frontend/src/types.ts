@@ -140,6 +140,11 @@ export interface Profile {
   history: HistoryItem[];
 }
 
+export interface NotificationList {
+  unread: number;
+  items: { id: number; type: string; title: string; body: string; created_at: string; read: boolean }[];
+}
+
 export type LeaderboardScope = "brigade" | "depot" | "company";
 export type LeaderboardPeriod = "week" | "month" | "all";
 

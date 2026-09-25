@@ -33,6 +33,18 @@ scoring:
     competence: stress_resistance
     points: 3
 
+# Сгорание баллов: если inactive_days дней нет прохождений, сгорает burn_fraction XP,
+# и так за каждые следующие inactive_days дней. Предупреждение — за warn_days_before дней.
+points_burn:
+  inactive_days: 7
+  burn_fraction: 0.1
+  warn_days_before: 2
+
+# Челлендж недели: успешное прохождение сценария даёт бонус один раз за календарную неделю
+weekly_challenge:
+  scenario_id: business-seat-conflict
+  bonus_xp: 50
+
 # Уровни: минимальный XP для каждого уровня (по возрастанию, первый — с 0)
 levels:
   - {level: 1, title: Стажёр, xp: 0}
