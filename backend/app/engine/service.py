@@ -3,6 +3,9 @@
 Всё состояние прохождения лежит в scenario_runs, поэтому любой запрос может
 обработать любая копия backend. Строка прохождения блокируется на время запроса
 (SELECT ... FOR UPDATE), чтобы два одновременных ответа не применились дважды.
+
+Таймер серверный: при каждом обращении к прохождению сначала проверяется, не истекло
+ли время текущего узла (по часам БД). Клиентский таймер только показывает остаток.
 """
 
 import uuid
@@ -15,6 +18,7 @@ from app.analytics.models import Event
 from app.engine.models import RunStatus, ScenarioRun
 from app.engine.schemas import ChoiceOut, FinalOut, LineOut, NodeOut, RunState, StepOut
 from app.errors import api_error
+from app.game_config import game_config
 from app.profiles.models import Employee
 from app.scenarios.conditions import is_satisfied, parse_condition
 from app.scenarios.models import Scenario
@@ -39,34 +43,43 @@ def start_run(db: Session, employee: Employee, scenario_id: str) -> RunState:
             ScenarioRun.status == RunStatus.IN_PROGRESS,
         )
     )
+    if run is not None:
+        return get_run(db, employee, run.id)
+
     definition = ScenarioDefinition.model_validate(scenario.definition)
-    if run is None:
-        run = ScenarioRun(
-            employee_id=employee.id,
-            scenario_id=scenario_id,
-            current_node_id=definition.start_node,
-            loyalty=definition.initial.loyalty,
-            safety=definition.initial.safety,
-            flags=[],
-            competence_points={},
-            node_entered_at=db_now(db),
-        )
-        db.add(run)
-        db.flush()
-        _log(db, run, "run_started", {"scenario_id": scenario_id})
-        db.commit()
-    return _build_state(run, scenario, definition, db_now(db), [])
+    now = db_now(db)
+    run = ScenarioRun(
+        employee_id=employee.id,
+        scenario_id=scenario_id,
+        current_node_id=definition.start_node,
+        loyalty=definition.initial.loyalty,
+        safety=definition.initial.safety,
+        flags=[],
+        competence_points={},
+        node_entered_at=now,
+    )
+    db.add(run)
+    db.flush()
+    _log(db, run, "run_started", {"scenario_id": scenario_id})
+    db.commit()
+    return _build_state(run, scenario, definition, now, [])
 
 
 def get_run(db: Session, employee: Employee, run_id: uuid.UUID) -> RunState:
     run, scenario, definition = _lock_run(db, employee, run_id)
+    now = db_now(db)
+    steps = _resolve_timeouts(db, run, definition, now)
     db.commit()
-    return _build_state(run, scenario, definition, db_now(db), [])
+    return _build_state(run, scenario, definition, now, steps)
 
 
 def choose(db: Session, employee: Employee, run_id: uuid.UUID, node_id: str, choice_id: str) -> RunState:
     run, scenario, definition = _lock_run(db, employee, run_id)
     now = db_now(db)
+    if _resolve_timeouts(db, run, definition, now):
+        # Истечение таймера уже применено и сохраняется, ответ — нет
+        db.commit()
+        raise api_error(409, "time_expired", "Время на решение истекло, ответ не принят")
     if run.status != RunStatus.IN_PROGRESS:
         raise api_error(409, "run_finished", "Сценарий уже завершён")
     if node_id != run.current_node_id:
@@ -97,6 +110,24 @@ def _lock_run(db: Session, employee: Employee, run_id: uuid.UUID) -> tuple[Scena
         raise api_error(404, "run_not_found", "Прохождение не найдено")
     scenario = db.get(Scenario, run.scenario_id)
     return run, scenario, ScenarioDefinition.model_validate(scenario.definition)
+
+
+def _resolve_timeouts(db: Session, run: ScenarioRun, definition: ScenarioDefinition, now: datetime) -> list[StepOut]:
+    """Применяет все истёкшие таймеры по цепочке, если проводник пропустил несколько узлов подряд."""
+    nodes = {node.id: node for node in definition.nodes}
+    grace = timedelta(seconds=game_config.timer.answer_grace_seconds)
+    steps = []
+    while run.status == RunStatus.IN_PROGRESS:
+        node = nodes[run.current_node_id]
+        deadline = _deadline(run, node)
+        if deadline is None or now <= deadline + grace:
+            break
+        step = _apply(run, node.timeout_effects, "Время на решение истекло", "timeout")
+        _log(db, run, "timeout", {"node_id": node.id, **_step_payload(step, run)})
+        steps.append(step)
+        # Следующий узел начинается в момент дедлайна, а не в момент запроса
+        _enter_node(db, run, nodes[node.timeout_next], deadline)
+    return steps
 
 
 def _visible_choices(node: Node, run: ScenarioRun) -> list[Choice]:
