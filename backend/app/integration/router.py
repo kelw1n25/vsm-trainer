@@ -1,8 +1,11 @@
-"""API для внешних систем: HR (сотрудники) и LMS (результаты обучения). Доступ по X-API-Key."""
+"""API для внешних систем: HR (сотрудники), LMS (результаты обучения), биллинг (объём использования).
+
+Доступ по заголовку X-API-Key.
+"""
 
 import hmac
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Header, Path, Query
 from pydantic import BaseModel, Field
@@ -28,6 +31,7 @@ def require_api_key(x_api_key: str | None = Header(None, description="Ключ �
 
 router = APIRouter(prefix="/api/integration", tags=["integration"], dependencies=[Depends(require_api_key)])
 
+MSK = timezone(timedelta(hours=3))
 PersonnelNumber = Path(pattern=r"^\d{4,20}$", description="Табельный номер")
 RESULTS_LIMIT_MAX = 500
 
@@ -71,6 +75,20 @@ class EmployeeUpsert(BaseModel):
 class EmployeeUpsertResult(BaseModel):
     personnel_number: str
     created: bool
+
+
+class DepotUsage(BaseModel):
+    depot: str
+    active_employees: int
+    runs_completed: int
+    xp_awarded: int
+
+
+class BillingUsage(BaseModel):
+    month: str
+    active_employees: int
+    runs_completed: int
+    depots: list[DepotUsage]
 
 
 @router.get("/employees/{personnel_number}", summary="Профиль компетенций сотрудника (для HR/LMS)")
@@ -160,3 +178,34 @@ def upsert_employee(
     employee.brigade = brigade
     db.commit()
     return EmployeeUpsertResult(personnel_number=personnel_number, created=created)
+
+
+@router.get("/billing/usage", summary="Объём использования за месяц по депо (для биллинга)")
+def billing_usage(
+    month: str = Query(pattern=r"^\d{4}-(0[1-9]|1[0-2])$", description="Календарный месяц по Москве, ГГГГ-ММ"),
+    db: Session = Depends(get_db),
+) -> BillingUsage:
+    year, number = map(int, month.split("-"))
+    start = datetime(year, number, 1, tzinfo=MSK)
+    end = datetime(year + number // 12, number % 12 + 1, 1, tzinfo=MSK)
+    rows = db.execute(
+        select(
+            Depot.name,
+            func.count(func.distinct(ScenarioRun.employee_id)),
+            func.count(ScenarioRun.id),
+            func.coalesce(func.sum(ScenarioRun.xp_earned), 0),
+        )
+        .join(Brigade, Brigade.depot_id == Depot.id)
+        .join(Employee, Employee.brigade_id == Brigade.id)
+        .join(ScenarioRun, ScenarioRun.employee_id == Employee.id)
+        .where(ScenarioRun.finished_at >= start, ScenarioRun.finished_at < end)
+        .group_by(Depot.name)
+        .order_by(Depot.name)
+    ).all()
+    depots = [DepotUsage(depot=name, active_employees=active, runs_completed=runs, xp_awarded=xp) for name, active, runs, xp in rows]
+    return BillingUsage(
+        month=month,
+        active_employees=sum(d.active_employees for d in depots),
+        runs_completed=sum(d.runs_completed for d in depots),
+        depots=depots,
+    )

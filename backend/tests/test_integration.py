@@ -61,3 +61,18 @@ def test_hr_upsert_validation(client, employee):
     response = client.put("/api/integration/employees/123456", json={"full_name": "A"}, headers=KEY)
     assert response.status_code == 422
     assert "brigade" in response.json()["detail"]["message"]
+
+
+def test_billing_usage(client, auth, db):
+    from sqlalchemy import func, select
+
+    play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
+    play(client, auth, "demand_leave", "ask_neighbours")
+    month = db.scalar(select(func.to_char(func.timezone("Europe/Moscow", func.now()), "YYYY-MM")))
+    usage = client.get("/api/integration/billing/usage", params={"month": month}, headers=KEY).json()
+    assert (usage["active_employees"], usage["runs_completed"]) == (1, 2)
+    assert usage["depots"][0]["xp_awarded"] > 0
+
+    empty = client.get("/api/integration/billing/usage", params={"month": "2020-01"}, headers=KEY).json()
+    assert (empty["runs_completed"], empty["depots"]) == (0, [])
+    assert client.get("/api/integration/billing/usage", params={"month": "2026-13"}, headers=KEY).status_code == 422
