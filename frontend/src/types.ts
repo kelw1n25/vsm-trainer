@@ -101,6 +101,45 @@ export interface Debrief {
   steps: DebriefStep[];
 }
 
+export interface Achievement {
+  code: string;
+  title: string;
+  description: string;
+}
+
+export interface Level {
+  level: number;
+  title: string;
+  xp: number;
+  level_xp: number;
+  next_level_xp: number | null;
+}
+
+export interface HistoryItem {
+  run_id: string;
+  scenario_id: string;
+  scenario_title: string;
+  category: string;
+  outcome: RunStatus;
+  xp_earned: number;
+  loyalty: number;
+  safety: number;
+  finished_at: string;
+}
+
+export interface Profile {
+  id: number;
+  full_name: string;
+  personnel_number: string;
+  role: Role;
+  brigade: string;
+  depot: string;
+  level: Level;
+  competence_points: Record<string, number>;
+  achievements: (Achievement & { earned_at: string | null })[];
+  history: HistoryItem[];
+}
+
 export interface RunState {
   id: string;
   scenario_id: string;
@@ -111,5 +150,7 @@ export interface RunState {
   node: NodeState | null;
   final: FinalState | null;
   last_steps: Step[];
+  new_achievements: Achievement[];
+  level_up: Level | null;
   server_time: string;
 }

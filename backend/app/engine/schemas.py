@@ -4,6 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from app.achievements.service import AchievementOut, LevelOut
 from app.engine.models import RunStatus
 
 
@@ -68,4 +69,7 @@ class RunState(BaseModel):
     node: NodeOut | None
     final: FinalOut | None
     last_steps: list[StepOut]
+    # Награды, полученные именно этим запросом — чтобы показать их сразу
+    new_achievements: list[AchievementOut]
+    level_up: LevelOut | None
     server_time: datetime

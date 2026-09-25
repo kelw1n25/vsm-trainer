@@ -12,6 +12,7 @@ export function Layout() {
             <NavLink to="/" end>
               Сценарии
             </NavLink>
+            <NavLink to="/profile">Профиль</NavLink>
           </nav>
           <span className="header__user">{session?.fullName}</span>
           <button className="button button--ghost" onClick={logout}>

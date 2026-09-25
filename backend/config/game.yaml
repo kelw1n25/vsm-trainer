@@ -32,3 +32,33 @@ scoring:
     timer_fraction: 0.33
     competence: stress_resistance
     points: 3
+
+# Уровни: минимальный XP для каждого уровня (по возрастанию, первый — с 0)
+levels:
+  - {level: 1, title: Стажёр, xp: 0}
+  - {level: 2, title: Проводник, xp: 300}
+  - {level: 3, title: Старший проводник, xp: 800}
+  - {level: 4, title: Мастер сервиса, xp: 1600}
+  - {level: 5, title: Наставник, xp: 3000}
+
+# Достижения. Типы правил:
+#   fast_streak     — count решений подряд быстрее timer_fraction таймера (таймаут обрывает серию)
+#   scenario_result — итог сценария: category, outcomes, loyalty_above, safety_above,
+#                     no_timeouts, scales_never_below (все указанные условия должны выполниться)
+achievements:
+  cool_head:
+    title: Хладнокровие
+    description: 5 решений подряд в первой трети таймера
+    rule: {type: fast_streak, count: 5, timer_fraction: 0.33}
+  guardian_angel:
+    title: Ангел-хранитель
+    description: Медицинский сценарий пройден с безопасностью выше 80
+    rule: {type: scenario_result, category: medical, outcomes: [success, partial], safety_above: 80}
+  diplomat:
+    title: Дипломат
+    description: Конфликт завершён с лояльностью выше 90
+    rule: {type: scenario_result, category: conflict, outcomes: [success, partial], loyalty_above: 90}
+  flawless:
+    title: Без права на ошибку
+    description: Сценарий пройден без истечения таймера и падения шкал ниже 50
+    rule: {type: scenario_result, outcomes: [success], no_timeouts: true, scales_never_below: 50}

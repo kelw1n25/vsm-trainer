@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 import yaml
 from pydantic import BaseModel, Field, model_validator
@@ -31,13 +31,46 @@ class ScoringRules(BaseModel):
     fast_answer: FastAnswerRule
 
 
+class Level(BaseModel):
+    level: int
+    title: str
+    xp: int = Field(ge=0)
+
+
+class FastStreakRule(BaseModel):
+    type: Literal["fast_streak"]
+    count: int = Field(ge=1)
+    timer_fraction: float = Field(gt=0, le=1)
+
+
+class ScenarioResultRule(BaseModel):
+    type: Literal["scenario_result"]
+    category: str | None = None
+    outcomes: list[Outcome] = ["success", "partial"]
+    loyalty_above: int | None = None
+    safety_above: int | None = None
+    no_timeouts: bool = False
+    scales_never_below: int | None = None
+
+
+class Achievement(BaseModel):
+    title: str
+    description: str
+    rule: Annotated[FastStreakRule | ScenarioResultRule, Field(discriminator="type")]
+
+
 class GameConfig(BaseModel):
     competences: dict[str, str]
     timer: TimerRules
     scoring: ScoringRules
+    levels: list[Level] = Field(min_length=1)
+    achievements: dict[str, Achievement]
 
     @model_validator(mode="after")
     def complete_tables(self) -> "GameConfig":
+        thresholds = [level.xp for level in self.levels]
+        if thresholds[0] != 0 or thresholds != sorted(set(thresholds)):
+            raise ValueError("levels: пороги XP должны начинаться с 0 и строго возрастать")
         if set(self.scoring.xp_by_outcome) != {"success", "partial", "failure"}:
             raise ValueError("scoring.xp_by_outcome: нужны значения для success, partial и failure")
         if set(self.scoring.difficulty_multiplier) != {1, 2, 3}:

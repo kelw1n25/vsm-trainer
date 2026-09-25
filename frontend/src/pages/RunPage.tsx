@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { api, ApiError } from "../api";
 import { CompetenceList } from "../components/CompetenceList";
+import { Rewards } from "../components/Rewards";
 import { ScaleBar } from "../components/ScaleBar";
 import { Timer } from "../components/Timer";
 import { useNow } from "../hooks";
@@ -83,6 +84,7 @@ export function RunPage() {
         <StepFeedback key={index} step={step} />
       ))}
       {notice && <p className="notice">{notice}</p>}
+      <Rewards achievements={run.new_achievements} levelUp={run.level_up} />
 
       {node && (
         <section className="card situation">

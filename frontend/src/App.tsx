@@ -5,6 +5,7 @@ import { Layout } from "./components/Layout";
 import { CatalogPage } from "./pages/CatalogPage";
 import { DebriefPage } from "./pages/DebriefPage";
 import { LoginPage } from "./pages/LoginPage";
+import { ProfilePage } from "./pages/ProfilePage";
 import { RunPage } from "./pages/RunPage";
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="/" element={<CatalogPage />} />
             <Route path="/runs/:runId" element={<RunPage />} />
             <Route path="/runs/:runId/debrief" element={<DebriefPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

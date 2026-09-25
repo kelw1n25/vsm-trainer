@@ -9,11 +9,14 @@
 """
 
 import uuid
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.achievements import service as achievements
+from app.achievements.service import AchievementOut, LevelOut
 from app.analytics.models import Event
 from app.engine.models import RunStatus, ScenarioRun
 from app.engine.schemas import ChoiceOut, FinalOut, LineOut, NodeOut, RunState, StepOut
@@ -31,6 +34,14 @@ DEPLETED_TEXT = {
     "safety_depleted": "Рейтинг безопасности упал до нуля: пассажиры и экипаж подвергнуты недопустимому риску. "
     "Сценарий завершён досрочно.",
 }
+
+
+@dataclass
+class _Rewards:
+    """Ачивки и повышение уровня, полученные в текущем запросе."""
+
+    achievements: list[AchievementOut] = field(default_factory=list)
+    level_up: LevelOut | None = None
 
 
 def db_now(db: Session) -> datetime:
@@ -70,21 +81,23 @@ def start_run(db: Session, employee: Employee, scenario_id: str) -> RunState:
     db.flush()
     _log(db, run, "run_started", {"scenario_id": scenario_id})
     db.commit()
-    return _build_state(run, scenario, definition, now, [])
+    return _build_state(run, scenario, definition, now, [], _Rewards())
 
 
 def get_run(db: Session, employee: Employee, run_id: uuid.UUID) -> RunState:
     run, scenario, definition = _lock_run(db, employee, run_id)
     now = db_now(db)
-    steps = _resolve_timeouts(db, run, scenario, definition, now)
+    rewards = _Rewards()
+    steps = _resolve_timeouts(db, run, scenario, definition, now, rewards)
     db.commit()
-    return _build_state(run, scenario, definition, now, steps)
+    return _build_state(run, scenario, definition, now, steps, rewards)
 
 
 def choose(db: Session, employee: Employee, run_id: uuid.UUID, node_id: str, choice_id: str) -> RunState:
     run, scenario, definition = _lock_run(db, employee, run_id)
     now = db_now(db)
-    if _resolve_timeouts(db, run, scenario, definition, now):
+    rewards = _Rewards()
+    if _resolve_timeouts(db, run, scenario, definition, now, rewards):
         # Истечение таймера уже применено и сохраняется, ответ — нет
         db.commit()
         raise api_error(409, "time_expired", "Время на решение истекло, ответ не принят")
@@ -110,9 +123,9 @@ def choose(db: Session, employee: Employee, run_id: uuid.UUID, node_id: str, cho
         "timer_seconds": node.timer_seconds,
         **_step_payload(step, run),
     })
-    _advance(db, run, scenario, nodes[choice.next], now)
+    _advance(db, run, scenario, definition, nodes[choice.next], now, rewards)
     db.commit()
-    return _build_state(run, scenario, definition, now, [step])
+    return _build_state(run, scenario, definition, now, [step], rewards)
 
 
 def _lock_run(db: Session, employee: Employee, run_id: uuid.UUID) -> tuple[ScenarioRun, Scenario, ScenarioDefinition]:
@@ -125,7 +138,12 @@ def _lock_run(db: Session, employee: Employee, run_id: uuid.UUID) -> tuple[Scena
 
 
 def _resolve_timeouts(
-    db: Session, run: ScenarioRun, scenario: Scenario, definition: ScenarioDefinition, now: datetime
+    db: Session,
+    run: ScenarioRun,
+    scenario: Scenario,
+    definition: ScenarioDefinition,
+    now: datetime,
+    rewards: _Rewards,
 ) -> list[StepOut]:
     """Применяет все истёкшие таймеры по цепочке, если проводник пропустил несколько узлов подряд."""
     nodes = {node.id: node for node in definition.nodes}
@@ -140,7 +158,7 @@ def _resolve_timeouts(
         _log(db, run, "timeout", {"node_id": node.id, **_step_payload(step, run)})
         steps.append(step)
         # Следующий узел начинается в момент дедлайна, а не в момент запроса
-        _advance(db, run, scenario, nodes[node.timeout_next], deadline)
+        _advance(db, run, scenario, definition, nodes[node.timeout_next], deadline, rewards)
     return steps
 
 
@@ -176,24 +194,43 @@ def _apply(run: ScenarioRun, effects: Effects, bonus: dict[str, int], text: str,
     )
 
 
-def _advance(db: Session, run: ScenarioRun, scenario: Scenario, target: Node, at: datetime) -> None:
-    """Переход после шага: досрочный провал при нулевой шкале, иначе вход в следующий узел."""
+def _advance(
+    db: Session,
+    run: ScenarioRun,
+    scenario: Scenario,
+    definition: ScenarioDefinition,
+    target: Node,
+    at: datetime,
+    rewards: _Rewards,
+) -> None:
+    """Переход после шага: досрочный провал при нулевой шкале, иначе вход в следующий узел.
+
+    В конце проверяются ачивки: серия быстрых решений — после каждого шага, итоговые — после финала.
+    """
     if run.loyalty == 0 or run.safety == 0:
         reason = "loyalty_depleted" if run.loyalty == 0 else "safety_depleted"
-        _finish(db, run, scenario, RunStatus.FAILURE, reason, at)
-        return
-    run.current_node_id = target.id
-    run.node_entered_at = at
-    if target.outcome is not None:
-        _finish(db, run, scenario, RunStatus(target.outcome), "final", at)
+        _finish(db, run, scenario, RunStatus.FAILURE, reason, at, rewards)
+    else:
+        run.current_node_id = target.id
+        run.node_entered_at = at
+        if target.outcome is not None:
+            _finish(db, run, scenario, RunStatus(target.outcome), "final", at, rewards)
+    initial = (definition.initial.loyalty, definition.initial.safety)
+    rewards.achievements += achievements.evaluate(db, run, scenario, initial, at)
 
 
-def _finish(db: Session, run: ScenarioRun, scenario: Scenario, outcome: RunStatus, reason: str, at: datetime) -> None:
+def _finish(
+    db: Session, run: ScenarioRun, scenario: Scenario, outcome: RunStatus, reason: str, at: datetime, rewards: _Rewards
+) -> None:
     run.status = outcome
     run.finish_reason = reason
     run.finished_at = at
     run.xp_earned = scoring.calculate_xp(outcome, scenario.difficulty, run.loyalty, run.safety)
-    scoring.award(db, run.employee_id, run.xp_earned, run.competence_points, at)
+    employee = scoring.award(db, run.employee_id, run.xp_earned, run.competence_points, at)
+    before, after = achievements.level_for(employee.xp - run.xp_earned), achievements.level_for(employee.xp)
+    if after.level > before.level:
+        rewards.level_up = after
+        _log(db, run, "level_up", {"level": after.level, "title": after.title})
     _log(db, run, "run_finished", {
         "outcome": outcome,
         "reason": reason,
@@ -230,7 +267,12 @@ def _log(db: Session, run: ScenarioRun, event_type: str, payload: dict) -> None:
 
 
 def _build_state(
-    run: ScenarioRun, scenario: Scenario, definition: ScenarioDefinition, now: datetime, steps: list[StepOut]
+    run: ScenarioRun,
+    scenario: Scenario,
+    definition: ScenarioDefinition,
+    now: datetime,
+    steps: list[StepOut],
+    rewards: _Rewards,
 ) -> RunState:
     node = next(n for n in definition.nodes if n.id == run.current_node_id)
     node_out = final_out = None
@@ -264,5 +306,7 @@ def _build_state(
         node=node_out,
         final=final_out,
         last_steps=steps,
+        new_achievements=rewards.achievements,
+        level_up=rewards.level_up,
         server_time=now,
     )

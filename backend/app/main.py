@@ -12,6 +12,7 @@ from app.db import SessionLocal, get_db
 from app.engine.router import router as runs_router
 from app.errors import validation_error_handler
 from app.game_config import game_config
+from app.profiles.router import router as profile_router
 from app.scenarios.loader import load_scenarios
 from app.scenarios.router import router as scenarios_router
 
@@ -37,6 +38,7 @@ app.add_exception_handler(RequestValidationError, validation_error_handler)
 app.include_router(auth_router)
 app.include_router(scenarios_router)
 app.include_router(runs_router)
+app.include_router(profile_router)
 
 
 @app.get("/api/health", tags=["system"])
