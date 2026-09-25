@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./auth";
 import { Layout } from "./components/Layout";
 import { CatalogPage } from "./pages/CatalogPage";
 import { DebriefPage } from "./pages/DebriefPage";
+import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { RunPage } from "./pages/RunPage";
@@ -30,6 +31,7 @@ export default function App() {
             <Route path="/runs/:runId" element={<RunPage />} />
             <Route path="/runs/:runId/debrief" element={<DebriefPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -530,6 +530,33 @@ th {
   font-size: 0.9rem;
 }
 
+.tabs-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.tabs {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tab {
+  padding: 8px 14px;
+  border: none;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tab--active {
+  background: var(--brand);
+  color: var(--brand-contrast);
+}
+
 tr.me {
   background: color-mix(in srgb, var(--brand) 14%, transparent);
   font-weight: 700;

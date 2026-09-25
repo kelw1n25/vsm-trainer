@@ -1,4 +1,15 @@
-import type { Debrief, LoginResponse, Meta, Profile, RunState, ScenarioSummary, Session } from "./types";
+import type {
+  Debrief,
+  Leaderboard,
+  LeaderboardPeriod,
+  LeaderboardScope,
+  LoginResponse,
+  Meta,
+  Profile,
+  RunState,
+  ScenarioSummary,
+  Session,
+} from "./types";
 
 const SESSION_KEY = "vsm_session";
 
@@ -74,4 +85,6 @@ export const api = {
     request<RunState>("POST", `/api/runs/${runId}/choices`, { node_id: nodeId, choice_id: choiceId }),
   debrief: (runId: string) => request<Debrief>("GET", `/api/runs/${runId}/debrief`),
   profile: () => request<Profile>("GET", "/api/profile"),
+  leaderboard: (scope: LeaderboardScope, period: LeaderboardPeriod) =>
+    request<Leaderboard>("GET", `/api/leaderboard?scope=${scope}&period=${period}`),
 };

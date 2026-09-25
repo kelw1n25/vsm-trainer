@@ -140,6 +140,26 @@ export interface Profile {
   history: HistoryItem[];
 }
 
+export type LeaderboardScope = "brigade" | "depot" | "company";
+export type LeaderboardPeriod = "week" | "month" | "all";
+
+export interface Leaderboard {
+  scope: LeaderboardScope;
+  period: LeaderboardPeriod;
+  title: string;
+  participants: number;
+  rows: {
+    rank: number;
+    employee_id: number;
+    full_name: string;
+    brigade: string;
+    depot: string;
+    level_title: string;
+    points: number;
+    is_me: boolean;
+  }[];
+}
+
 export interface RunState {
   id: string;
   scenario_id: string;
