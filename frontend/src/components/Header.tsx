@@ -1,6 +1,7 @@
 import { Link, NavLink } from "react-router";
 import { useAuth } from "../auth";
 import { LogoMark } from "./icons";
+import { ThemeToggle } from "./ThemeToggle";
 import { UserDropdown } from "./UserDropdown";
 
 export function Header() {
@@ -23,7 +24,10 @@ export function Header() {
         <NavLink to="/analytics">Аналитика</NavLink>
         {session?.role === "instructor" && <NavLink to="/team">Команда</NavLink>}
       </nav>
-      <UserDropdown />
+      <div className="header__actions">
+        <ThemeToggle />
+        <UserDropdown />
+      </div>
     </header>
   );
 }

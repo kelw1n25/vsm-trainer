@@ -125,7 +125,7 @@ export function AnalyticsPage() {
                   <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="week" stroke="var(--muted)" fontSize={12} />
                   <YAxis stroke="var(--muted)" fontSize={12} />
-                  <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--border)" }} />
+                  <Tooltip contentStyle={{ borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)" }} />
                   <Bar dataKey="xp" name="XP" fill="var(--brand)" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>

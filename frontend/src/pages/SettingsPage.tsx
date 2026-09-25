@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import { roleLabels } from "../labels";
-import { applyReduceMotion, loadReduceMotion } from "../preferences";
+import { applyReduceMotion, loadReduceMotion, saveTheme, useTheme } from "../preferences";
 import type { Profile } from "../types";
 
 export function SettingsPage() {
   const { logout } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [reduceMotion, setReduceMotion] = useState(loadReduceMotion);
+  const theme = useTheme();
 
   useEffect(() => {
     api.profile().then(setProfile).catch(() => {});
@@ -40,6 +41,14 @@ export function SettingsPage() {
 
       <section className="card">
         <h2>Интерфейс</h2>
+        <label className="switch">
+          <input type="checkbox" checked={theme === "dark"} onChange={(e) => saveTheme(e.target.checked ? "dark" : "light")} />
+          <span className="switch__track" />
+          <span>
+            <strong>Тёмная тема</strong>
+            <span className="muted"> — то же, что ползунок в шапке</span>
+          </span>
+        </label>
         <label className="switch">
           <input type="checkbox" checked={reduceMotion} onChange={(e) => toggleMotion(e.target.checked)} />
           <span className="switch__track" />
