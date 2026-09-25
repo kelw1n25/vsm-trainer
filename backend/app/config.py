@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     # Для HS256 рекомендуется ключ не короче 32 байт (RFC 7518, 3.2)
     jwt_secret: str = Field(min_length=32)
     jwt_ttl_minutes: int = 720
+    # Ключ для внешних систем (HR, LMS): заголовок X-API-Key
+    integration_api_key: str = Field(min_length=32)
 
     @property
     def database_url(self) -> str:

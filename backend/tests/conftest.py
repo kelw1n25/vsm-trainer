@@ -9,6 +9,7 @@ import os
 import pytest
 
 os.environ.setdefault("JWT_SECRET", "test-secret-at-least-32-characters-long")
+os.environ.setdefault("INTEGRATION_API_KEY", "test-integration-key-at-least-32-chars")
 
 
 @pytest.fixture(autouse=True)
