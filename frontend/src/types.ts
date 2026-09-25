@@ -64,6 +64,43 @@ export interface FinalState {
   competence_points: Record<string, number>;
 }
 
+export interface DebriefStep {
+  kind: "choice" | "timeout";
+  situation: string;
+  chosen_text: string | null;
+  explanation: string | null;
+  was_best: boolean;
+  best_text: string | null;
+  best_explanation: string | null;
+  loyalty_delta: number;
+  safety_delta: number;
+  loyalty_after: number;
+  safety_after: number;
+  competences: Record<string, number>;
+  elapsed_seconds: number | null;
+  timer_seconds: number | null;
+}
+
+export interface Debrief {
+  run_id: string;
+  scenario_id: string;
+  scenario_title: string;
+  outcome: RunStatus;
+  reason: FinishReason;
+  final_text: string;
+  xp_earned: number;
+  competence_points: Record<string, number>;
+  initial_loyalty: number;
+  initial_safety: number;
+  loyalty: number;
+  safety: number;
+  decisions: number;
+  best_decisions: number;
+  timeouts: number;
+  average_reaction_seconds: number | null;
+  steps: DebriefStep[];
+}
+
 export interface RunState {
   id: string;
   scenario_id: string;

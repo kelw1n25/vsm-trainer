@@ -1,4 +1,4 @@
-import type { LoginResponse, Meta, RunState, ScenarioSummary, Session } from "./types";
+import type { Debrief, LoginResponse, Meta, RunState, ScenarioSummary, Session } from "./types";
 
 const SESSION_KEY = "vsm_session";
 
@@ -72,4 +72,5 @@ export const api = {
   getRun: (runId: string) => request<RunState>("GET", `/api/runs/${runId}`),
   choose: (runId: string, nodeId: string, choiceId: string) =>
     request<RunState>("POST", `/api/runs/${runId}/choices`, { node_id: nodeId, choice_id: choiceId }),
+  debrief: (runId: string) => request<Debrief>("GET", `/api/runs/${runId}/debrief`),
 };

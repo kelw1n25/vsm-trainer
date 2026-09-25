@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { api, ApiError } from "../api";
+import { CompetenceList } from "../components/CompetenceList";
 import { ScaleBar } from "../components/ScaleBar";
 import { Timer } from "../components/Timer";
-import { useCompetenceNames, useNow } from "../hooks";
+import { useNow } from "../hooks";
 import { outcomeLabels, signed, speakerLabels } from "../labels";
 import type { RunState, Step } from "../types";
 
@@ -119,6 +120,9 @@ export function RunPage() {
           </p>
           <CompetenceList points={run.final.competence_points} />
           <div className="actions">
+            <Link className="button" to={`/runs/${run.id}/debrief`}>
+              Разбор решений
+            </Link>
             <Link className="button button--ghost" to="/">
               К сценариям
             </Link>
@@ -140,20 +144,5 @@ function StepFeedback({ step }: { step: Step }) {
         Безопасность {signed(step.safety_delta)}
       </span>
     </div>
-  );
-}
-
-export function CompetenceList({ points }: { points: Record<string, number> }) {
-  const names = useCompetenceNames();
-  const entries = Object.entries(points).filter(([, value]) => value !== 0);
-  if (entries.length === 0) return null;
-  return (
-    <ul className="competences">
-      {entries.map(([code, value]) => (
-        <li key={code} className={value < 0 ? "negative" : "positive"}>
-          {names[code] ?? code}: {signed(value)}
-        </li>
-      ))}
-    </ul>
   );
 }

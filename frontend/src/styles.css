@@ -407,3 +407,52 @@ label {
   margin: 8px 0;
   padding-left: 20px;
 }
+
+/* Разбор */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.stat {
+  display: grid;
+}
+
+.stat strong {
+  font-size: 1.3rem;
+}
+
+.review {
+  border-left: 6px solid var(--warning);
+}
+
+.review--best {
+  border-left-color: var(--positive);
+}
+
+.review--timeout {
+  border-left-color: var(--negative);
+}
+
+.review p {
+  margin: 6px 0;
+}
+
+.explanation {
+  color: var(--muted);
+}
+
+.best {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px dashed var(--positive);
+}
+
+.best p {
+  margin: 4px 0 0;
+}

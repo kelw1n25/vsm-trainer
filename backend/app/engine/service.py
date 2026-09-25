@@ -205,6 +205,10 @@ def _finish(db: Session, run: ScenarioRun, scenario: Scenario, outcome: RunStatu
     })
 
 
+def final_text(run: ScenarioRun, final_node: Node) -> str:
+    return final_node.final_text if run.finish_reason == "final" else DEPLETED_TEXT[run.finish_reason]
+
+
 def _deadline(run: ScenarioRun, node: Node) -> datetime | None:
     if node.timer_seconds is None:
         return None
@@ -246,7 +250,7 @@ def _build_state(
         final_out = FinalOut(
             outcome=run.status,
             reason=run.finish_reason,
-            text=node.final_text if run.finish_reason == "final" else DEPLETED_TEXT[run.finish_reason],
+            text=final_text(run, node),
             xp_earned=run.xp_earned,
             competence_points=run.competence_points,
         )

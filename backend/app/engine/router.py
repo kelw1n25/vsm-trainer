@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.auth.deps import get_current_employee
 from app.db import get_db
 from app.engine import service
+from app.engine.debrief import Debrief, build_debrief
 from app.engine.schemas import ChoiceRequest, RunState, StartRunRequest
 from app.profiles.models import Employee
 
@@ -38,3 +39,12 @@ def choose(
     db: Session = Depends(get_db),
 ) -> RunState:
     return service.choose(db, employee, run_id, body.node_id, body.choice_id)
+
+
+@router.get("/{run_id}/debrief", summary="Разбор завершённого сценария")
+def debrief(
+    run_id: uuid.UUID,
+    employee: Employee = Depends(get_current_employee),
+    db: Session = Depends(get_db),
+) -> Debrief:
+    return build_debrief(db, employee, run_id)

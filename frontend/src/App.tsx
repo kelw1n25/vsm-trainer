@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { AuthProvider, useAuth } from "./auth";
 import { Layout } from "./components/Layout";
 import { CatalogPage } from "./pages/CatalogPage";
+import { DebriefPage } from "./pages/DebriefPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RunPage } from "./pages/RunPage";
 
@@ -26,6 +27,7 @@ export default function App() {
           >
             <Route path="/" element={<CatalogPage />} />
             <Route path="/runs/:runId" element={<RunPage />} />
+            <Route path="/runs/:runId/debrief" element={<DebriefPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
