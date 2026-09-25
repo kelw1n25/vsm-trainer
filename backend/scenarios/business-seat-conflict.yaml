@@ -1,315 +1,252 @@
-# ДЕМО-КОНТЕНТ: написан командой до получения материалов кейсодержателя.
-# Персонажи вымышлены, совпадения случайны.
+# Ситуации 33, 13, 9, 8 и 23: два пассажира на одно место, пассажир не на своём месте,
+# спор между пассажирами, пересадка и повышение класса обслуживания.
 id: business-seat-conflict
-title: Конфликт из-за места в бизнес-классе
+title: "Два пассажира на одно место"
 category: conflict
 difficulty: 2
 service_class: Бизнес
 route: Москва — Санкт-Петербург
 description: >
-  Вы сопровождаете поезд Москва — Санкт-Петербург. Пассажир сообщает, что его место в бизнес-классе занято, и спор с другим пассажиром быстро накаляется.
-demo: true
+  В кресле 5А сидит пассажирка, а рядом стоит пассажир с билетом на то же место.
+  Оба уверены, что правы, и оба начинают раздражаться.
+situations: [33, 13, 9, 8, 23]
 initial:
   loyalty: 60
-  safety: 80
+  safety: 90
+stats:
+  trust: 40
+  tension: 40
+characters:
+  sergey:
+    name: "Сергей Андреевич"
+    role: "Пассажир"
+    look: {top: "#56657F", bottom: "#34405A", hair: "#2B2320"}
+  lyudmila:
+    name: "Людмила"
+    role: "Пассажирка в кресле 5А"
+    look: {top: "#E8735A", bottom: "#3A4A6B", hair: "#6B3F2A", hair_style: long}
+  chief:
+    name: "Ольга Николаевна"
+    role: "Начальник поезда"
+    look: {outfit: uniform, hair: "#4A3426", hair_style: bun}
 start_node: start
 
 nodes:
   - id: start
-    situation: >
-      Поезд набирает 400 км/ч. В вагоне бизнес-класса пассажир с билетом на место 5А
-      обнаруживает, что оно занято. Пассажирка на этом месте отказывается пересаживаться.
-      Голоса повышаются, соседи оборачиваются.
-    line:
-      speaker: passenger
-      name: Пассажир с билетом на 5А
-      text: Это моё место! Я за него заплатил, пусть она немедленно встанет!
-    timer_seconds: 20
-    timeout_next: escalation
-    timeout_effects:
-      loyalty: -15
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: sergey, position: center, expression: annoyed}
+        - {id: lyudmila, position: right, expression: annoyed}
+    situation: "Пассажир с билетом на место 5А обнаружил, что в его кресле сидит пассажирка."
+    dialogue:
+      - {speaker: narrator, text: "Бизнес-класс, третий вагон. До отправления пять минут."}
+      - {speaker: sergey, text: "Добрый день. В моём кресле 5А сидит женщина, а у меня билет именно на него."}
+      - {speaker: lyudmila, text: "Это моё место! Я его выбирала заранее, у окна."}
+      - {speaker: player, thought: true, text: "Не занимать ничью сторону. Сначала — билеты."}
     choices:
-      - id: ask_tickets
-        text: Подойти, представиться и спокойно попросить обоих показать билеты
+      - id: check_both
+        text: "«Давайте решим вопрос спокойно. Позвольте ваши билеты — я сверю номер вагона и места»"
         effects:
-          loyalty: 5
-          set_flags: [tickets_checked]
-          competences: {communication: 10, safety_rules: 5}
-        next: check_tickets
+          loyalty: 10
+          stats: {trust: 15, tension: -15}
+          competences: {communication: 10, service: 5}
+        reaction:
+          - {speaker: sergey, expression: neutral, text: "Пожалуйста, вот."}
+          - {speaker: lyudmila, expression: neutral, text: "И мой, в приложении."}
+        next: tickets_checked
         best: true
-        explanation: >
-          Проводник берёт ситуацию под контроль нейтрально, не вставая ни на чью сторону.
-          Проверка билетов — факт, а не мнение: она сразу снимает спор «кто прав».
-      - id: demand_leave
-        text: Сразу потребовать у пассажирки освободить место
+        explanation: "Стандарт — не занимать сторону, внимательно проверить проездные документы обоих пассажиров и уточнить причину."
+      - id: side_with_sergey
+        text: "Попросить женщину освободить кресло — у мужчины же есть билет"
         effects:
           loyalty: -15
-          competences: {communication: -5}
-        next: escalation
-        explanation: >
-          Требование без проверки фактов воспринимается как обвинение. Пассажирка
-          защищается, конфликт разгорается. Лучше сначала проверить билеты у обоих.
-      - id: offer_temp_seat
-        text: Предложить пассажиру временно сесть на свободное место 7C
+          stats: {tension: 25, trust: -10}
+          competences: {communication: -10}
+        reaction:
+          - {speaker: lyudmila, expression: angry, text: "То есть мой билет, по-вашему, ненастоящий?!"}
+        next: argument
+        explanation: "Решение без проверки обоих билетов выглядит несправедливым и превращает спор в конфликт с проводником."
+      - id: tell_wait
+        text: "Попросить мужчину подождать в тамбуре, пока всё уляжется"
         effects:
-          loyalty: -5
-          competences: {service: 5}
-        next: temp_seat
-        explanation: >
-          Конфликт на время затихает, но причина не устранена: пассажира с законным
-          билетом лишили его места. Проблема вернётся на следующей станции.
+          loyalty: -10
+          stats: {tension: 15}
+          competences: {service: -5}
+        reaction:
+          - {speaker: sergey, expression: angry, text: "Я заплатил за бизнес-класс, чтобы стоять в тамбуре?"}
+        next: argument
+        explanation: "Отложить вопрос — не значит решить его. Пассажиру нужно понять, что с его местом разбираются."
 
-  - id: check_tickets
-    situation: >
-      Билеты проверены. У пассажира — место 5А на этот рейс. У пассажирки тоже 5А,
-      но на поезд, который отправляется через два часа: она перепутала рейс.
-      Она смущена, но раздражена.
-    line:
-      speaker: passenger
-      name: Пассажирка на месте 5А
-      text: И что мне теперь, выходить на ходу? Я опаздываю на встречу!
-    timer_seconds: 25
-    timeout_next: escalation
-    timeout_effects:
-      loyalty: -10
-      safety: -5
+  - id: argument
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: sergey, position: center, expression: angry}
+        - {id: lyudmila, position: right, expression: angry}
+    situation: "Пассажиры спорят между собой всё громче, соседи начинают оборачиваться."
+    dialogue:
+      - {speaker: sergey, text: "Встаньте, пожалуйста, вы сидите на чужом месте!"}
+      - {speaker: lyudmila, text: "Не повышайте на меня голос! Я никуда не пойду."}
+      - {speaker: player, thought: true, text: "Нужно развести их, пока это не услышал весь вагон."}
+    timer_seconds: 20
+    timeout_next: chief_resolves
+    timeout_effects: {loyalty: -15, stats: {tension: 20}}
+    timeout_reaction:
+      - {speaker: narrator, text: "Спор слышен в соседнем вагоне. На шум приходит начальник поезда."}
     choices:
-      - id: explain_calmly
-        text: >
-          Спокойно объяснить ошибку, пообещать решить вопрос через начальника поезда
-          и проводить пассажирку на свободное место 3C
+      - id: separate
+        text: "Развести коммуникацию — выслушать каждого отдельно, не занимать сторону и проверить оба билета"
         effects:
-          loyalty: 15
-          competences: {communication: 10, service: 10}
-        next: resolution
+          loyalty: 10
+          stats: {tension: -20, trust: 10}
+          competences: {communication: 15}
+        reaction:
+          - {speaker: sergey, expression: neutral, text: "Хорошо, давайте разберёмся."}
+        next: tickets_checked
         best: true
-        explanation: >
-          Проводник признаёт неловкость пассажирки, даёт решение и сохраняет её лицо
-          перед соседями. Законный владелец места получает его сразу.
-      - id: threaten_fine
-        text: Сообщить, что проезд без билета — нарушение, и пригрозить высадкой на ближайшей станции
+        explanation: "При споре пассажиров проводник разводит коммуникацию, уточняет обстоятельства и предлагает решение обеим сторонам."
+      - id: raise_voice
+        text: "Громко потребовать, чтобы оба немедленно успокоились"
+        effects:
+          loyalty: -15
+          stats: {tension: 20}
+          set_flags: [conflict_started]
+          competences: {communication: -10}
+        next: end_conflict
+        explanation: "Окрик не успокаивает, а добавляет третьего участника в конфликт."
+
+  - id: tickets_checked
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: sergey, position: center, expression: surprised}
+        - {id: lyudmila, position: right, expression: surprised}
+    situation: "Оба билета действительны и выданы на одно и то же место — сбой продажи."
+    dialogue:
+      - {speaker: narrator, text: "Терминал подтверждает: оба билета настоящие. Вагон 3, место 5А — оба."}
+      - {speaker: lyudmila, expression: surprised, text: "Как такое вообще возможно?"}
+      - {speaker: player, thought: true, text: "Это сбой продажи. Решать его я не вправе — но могу подготовить решение."}
+    choices:
+      - id: call_chief
+        text: "«Я вижу, что ситуация требует уточнения. Сейчас я приглашу начальника поезда» — и предложить обоим напиток"
+        effects:
+          loyalty: 10
+          safety: 5
+          stats: {trust: 10, tension: -10}
+          set_flags: [chief_called]
+          competences: {safety_rules: 10, communication: 5}
+        next: chief_resolves
+        best: true
+        explanation: "Два пассажира на одно место — повод пригласить начальника поезда: он уточнит сбой и примет решение о пересадке."
+      - id: first_come
+        text: "Объявить, что место остаётся за тем, кто сел первым"
         effects:
           loyalty: -20
-          competences: {communication: -10, safety_rules: 5}
-        next: escalation
-        explanation: >
-          Формально верно, но угроза человеку, который ошибся по невнимательности,
-          превращает недоразумение в конфликт. Регламент применяется, когда
-          пассажир отказывается сотрудничать, а не с первой фразы.
-      - id: keep_her_seat
-        text: Оставить пассажирку на 5А, а пассажира пересадить на свободное место
+          stats: {trust: -20, tension: 20}
+          competences: {communication: -10, safety_rules: -5}
+        reaction:
+          - {speaker: sergey, expression: angry, text: "Отлично. Я напишу жалобу."}
+        next: end_complaint
+        explanation: "Правила «кто первый сел» нет. Проводник не решает спор сам — это делает начальник поезда по данным о сбое."
+      - id: free_seats
+        text: "Пока идёт начальник поезда — проверить свободные места бизнес-класса и предложить Сергею Андреевичу равноценное"
+        condition: ["trust >= 50"]
+        effects:
+          loyalty: 15
+          stats: {tension: -15}
+          set_flags: [chief_called]
+          competences: {service: 10}
+        reaction:
+          - {speaker: sergey, expression: happy, text: "Место 7А тоже у окна? Меня устроит, спасибо."}
+        next: chief_resolves
+        explanation: "Когда пассажиры доверяют проводнику, можно заранее подготовить решение — окончательно его подтверждает начальник поезда."
+
+  - id: chief_resolves
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: chief, position: center, expression: neutral}
+        - {id: lyudmila, position: right, expression: thinking}
+    situation: "Начальник поезда предлагает повышение класса без доплаты; вторая пассажирка тоже хочет пересесть в первый класс."
+    dialogue:
+      - {speaker: chief, text: "Это сбой при продаже, приношу извинения. В первом классе есть свободное место — пересадим без доплаты."}
+      - {speaker: narrator, text: "Сергей Андреевич соглашается. Людмила задумчиво смотрит ему вслед."}
+      - {speaker: lyudmila, text: "А мне тоже можно в первый класс? Я готова доплатить."}
+    choices:
+      - id: proper_upgrade
+        text: >
+          «Сейчас я уточню наличие свободных мест и возможность оформления повышения класса. До подтверждения прошу
+          Вас оставаться на месте, указанном в билете»
+        effects:
+          loyalty: 15
+          safety: 5
+          competences: {service: 15}
+        reaction:
+          - {speaker: lyudmila, expression: happy, text: "Спасибо, я подожду."}
+          - {speaker: player, text: "Доплата через мобильную кассу — картой или наличными, сдача у меня есть."}
+        next: end_success
+        best: true
+        explanation: "Повышение класса — через проверку мест и доплату в мобильной кассе. До оформления пассажир остаётся на своём месте."
+      - id: promise_now
+        text: "Сразу пообещать место в первом классе — наверняка что-нибудь найдётся"
         effects:
           loyalty: -10
           competences: {service: -5}
-        next: temp_seat
-        explanation: >
-          Пассажир с правильным билетом наказан за чужую ошибку. Это нарушает стандарт
-          обслуживания: место по билету гарантировано.
+        reaction:
+          - {speaker: narrator, text: "Через десять минут выясняется: свободных мест в первом классе больше нет."}
+        next: end_partial
+        explanation: "Обещание без проверки превращается в новое разочарование. Сначала уточнить, потом сообщить."
+      - id: refuse_upgrade
+        text: "Отказать: «Повышение класса в пути не делается»"
+        effects:
+          loyalty: -15
+          competences: {service: -10}
+        next: end_partial
+        explanation: "Повысить класс в пути можно — при наличии мест и с доплатой через утверждённый канал."
 
-  - id: temp_seat
-    situation: >
-      Пассажир пересел на 7C, но на промежуточной станции входит владелец места 7C.
-      Пассажира снова просят встать, и он в ярости.
-    line:
-      speaker: passenger
-      name: Пассажир с билетом на 5А
-      text: Меня второй раз сгоняют! Где начальник поезда? Я напишу жалобу!
-    timer_seconds: 20
-    timeout_next: escalation
-    timeout_effects:
-      loyalty: -15
-    choices:
-      - id: return_seat
-        text: Извиниться, проверить билеты у обоих и вернуть пассажиру его законное место 5А
-        effects:
-          loyalty: 5
-          set_flags: [tickets_checked]
-          competences: {communication: 5, service: 5, safety_rules: 5}
-        next: resolution
-        best: true
-        explanation: >
-          Проводник признаёт свою ошибку и исправляет её по существу — возвращает место
-          по билету. Извинение без исправления пассажира бы не успокоило.
-      - id: offer_meal
-        text: Предложить бесплатный обед из меню бизнес-класса и поискать другое свободное место
-        effects:
-          loyalty: 5
-          competences: {service: 5}
-        next: final_partial
-        explanation: >
-          Компенсация смягчает недовольство, но пассажир так и не получил место,
-          за которое заплатил. Жалоба, скорее всего, всё равно будет.
-
-  - id: escalation
-    situation: >
-      Спор перешёл в крик. Пассажирка толкает пассажира, соседи снимают на телефон,
-      в соседнем ряду плачет ребёнок.
-    timer_seconds: 15
-    timeout_next: final_fail
-    timeout_effects:
-      loyalty: -15
-      safety: -20
-    choices:
-      - id: separate_and_call
-        text: >
-          Встать между пассажирами, громко и спокойно попросить обоих успокоиться
-          и вызвать начальника поезда по рации
-        effects:
-          safety: 10
-          loyalty: 5
-          set_flags: [chief_called]
-          competences: {communication: 10, safety_rules: 10, stress_resistance: 5}
-        next: chief_arrives
-        best: true
-        explanation: >
-          При физическом контакте приоритет — безопасность: разделить участников
-          и вызвать старшего. Спокойный уверенный тон снижает накал у всего вагона.
-      - id: ask_neighbours
-        text: Попросить соседних пассажиров помочь разнять спорящих
-        effects:
-          safety: -20
-          loyalty: -10
-          competences: {safety_rules: -10}
-        next: final_fail
-        explanation: >
-          Вовлечение посторонних пассажиров увеличивает число участников конфликта
-          и риск травм. Разнимать и урегулировать — задача персонала поезда.
-      - id: take_to_vestibule
-        text: Увести пассажирку в тамбур, чтобы поговорить наедине
-        effects:
-          loyalty: 5
-          safety: -15
-          competences: {communication: 5, safety_rules: -5}
-        next: vestibule
-        explanation: >
-          Разговор без свидетелей помогает деэскалации, но оставаться одному
-          с агрессивным пассажиром в тамбуре на скорости 400 км/ч небезопасно.
-          Сначала нужно вызвать начальника поезда.
-
-  - id: vestibule
-    situation: >
-      В тамбуре пассажирка продолжает кричать, но постепенно успокаивается.
-      Связи с начальником поезда пока нет.
-    line:
-      speaker: passenger
-      name: Пассажирка
-      text: Почему все на меня набросились? Я просто села на своё место!
-    timer_seconds: 20
-    timeout_next: final_fail
-    timeout_effects:
-      safety: -15
-    choices:
-      - id: listen_and_check
-        text: Выслушать, признать её раздражение, проверить билет и мягко объяснить ошибку
-        effects:
-          loyalty: 10
-          competences: {communication: 10}
-        next: final_partial
-        best: true
-        explanation: >
-          Активное слушание гасит эмоции: человек успокаивается, когда его услышали.
-          Но ситуация решена с нарушением регламента — без вызова старшего.
-      - id: call_chief_from_vestibule
-        text: Вызвать начальника поезда в тамбур
-        effects:
-          safety: 10
-          loyalty: -5
-          set_flags: [chief_called]
-          competences: {safety_rules: 10}
-        next: chief_arrives
-        explanation: >
-          Безопасно и по регламенту, но пассажирка воспринимает вызов старшего
-          как недоверие — лояльность падает.
-
-  - id: chief_arrives
-    situation: Подходит начальник поезда и просит коротко доложить обстановку.
-    line:
-      speaker: train_chief
-      name: Начальник поезда
-      text: Доложите ситуацию. Что с билетами?
-    timer_seconds: 20
-    timeout_next: final_partial
-    timeout_effects:
-      loyalty: -5
-      safety: -5
-    choices:
-      - id: report_with_facts
-        condition:
-          - flag tickets_checked
-        text: >
-          Коротко доложить: билеты проверены, пассажирка ошиблась рейсом,
-          нужно переоформить билет и выделить свободное место
-        effects:
-          loyalty: 10
-          safety: 5
-          competences: {communication: 5, safety_rules: 10}
-        next: final_success
-        explanation: >
-          Доклад с фактами позволяет начальнику принять решение за секунды.
-          Вариант доступен, только если билеты проверили раньше.
-      - id: check_together
-        text: Предложить начальнику вместе проверить билеты у обоих пассажиров
-        effects:
-          loyalty: 5
-          competences: {safety_rules: 5, service: 5}
-        next: final_success
-        best: true
-        explanation: >
-          Совместная проверка при старшем снимает сомнения у обоих пассажиров
-          и завершает конфликт по регламенту.
-      - id: pass_to_chief
-        text: Сказать, что пассажиры подрались, и попросить начальника разобраться самому
-        effects:
-          loyalty: -5
-          competences: {communication: -5}
-        next: final_partial
-        explanation: >
-          Проводник снимает с себя ответственность и не даёт начальнику фактов.
-          Разбор затягивается, пассажиры остаются недовольны.
-
-  - id: resolution
-    situation: >
-      Пассажир сидит на своём месте, пассажирка — на свободном 3C. Остался вопрос:
-      её билет действителен только на следующий рейс.
-    choices:
-      - id: reissue_ticket
-        text: >
-          Через начальника поезда переоформить билет пассажирки на текущий рейс,
-          пассажиру предложить напиток в знак извинения за неудобство
-        effects:
-          loyalty: 15
-          safety: 5
-          competences: {service: 15, safety_rules: 10}
-        next: final_success
-        best: true
-        explanation: >
-          Все пассажиры едут с действующими проездными документами, а сервисный жест
-          закрывает неприятное впечатление. Это решение и по регламенту, и по стандарту сервиса.
-      - id: leave_as_is
-        text: Оставить пассажирку на свободном месте без оформления — «места всё равно пустые»
-        effects:
-          loyalty: 5
-          safety: -15
-          competences: {safety_rules: -10}
-        next: final_partial
-        explanation: >
-          Пассажирке приятно, но в поезде едет человек без действующего проездного документа.
-          Это нарушение: при проверке или происшествии его не окажется в списках.
-
-  - id: final_success
+  - id: end_success
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left, expression: happy}
+        - {id: lyudmila, position: right, expression: happy}
     outcome: success
+    ending: "Оба пассажира довольны"
     final_text: >
-      Конфликт урегулирован. Оба пассажира едут на законных местах, билет переоформлен,
-      в вагоне спокойно. Отзыв о поездке — положительный.
-
-  - id: final_partial
+      Сбой продажи урегулирован без спора: билеты проверены, начальник поезда пересадил пассажира в первый класс,
+      второй пассажирке оформили повышение класса по правилам.
+  - id: end_partial
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left, expression: worried}
     outcome: partial
+    ending: "Места распределены, но осадок остался"
     final_text: >
-      Конфликт погашен, но осадок остался: решение принято с нарушением регламента
-      или стандарта обслуживания. Возможна жалоба.
-
-  - id: final_fail
+      Конфликт из-за места решён, но просьба о повышении класса обработана неверно — пассажирка разочарована.
+  - id: end_complaint
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left, expression: sad}
+        - {id: sergey, position: right, expression: angry}
     outcome: failure
+    ending: "Жалоба на несправедливое решение"
     final_text: >
-      Конфликт перерос в скандал: пострадавшие, видео в соцсетях, на ближайшей станции
-      вызвана транспортная полиция. Проводника ждёт служебная проверка.
+      Проводник решил спор сам и без оснований. Пассажир с действительным билетом остался без места и оставил жалобу.
+  - id: end_conflict
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left, expression: sad}
+        - {id: sergey, position: center, expression: angry}
+        - {id: lyudmila, position: right, expression: angry}
+    outcome: failure
+    ending: "Скандал в бизнес-классе"
+    final_text: >
+      Спор перерос в скандал, в который оказался втянут и проводник. Отправление прошло под крики, пассажиры бизнес-класса недовольны.

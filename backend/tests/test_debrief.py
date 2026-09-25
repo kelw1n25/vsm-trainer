@@ -1,5 +1,5 @@
-from tests.test_engine import play, start
-from tests.test_timer import rewind
+from tests.test_engine import choose, play, start
+from tests.test_timer import at_timed_node, rewind
 
 
 def test_debrief_requires_finished_run(client, auth):
@@ -10,28 +10,37 @@ def test_debrief_requires_finished_run(client, auth):
 
 
 def test_debrief_shows_each_decision_and_best_option(client, auth):
-    state = play(client, auth, "demand_leave", "separate_and_call", "pass_to_chief")
+    state = play(client, auth, "side_with_sergey", "separate", "call_chief", "promise_now")
     debrief = client.get(f"/api/runs/{state['id']}/debrief", headers=auth).json()
 
-    assert debrief["outcome"] == "partial"
-    assert (debrief["decisions"], debrief["best_decisions"], debrief["timeouts"]) == (3, 1, 0)
-    first, second, third = debrief["steps"]
+    assert (debrief["outcome"], debrief["ending"]) == ("partial", "Места распределены, но осадок остался")
+    assert (debrief["decisions"], debrief["best_decisions"], debrief["timeouts"]) == (4, 2, 0)
+    first, second, _, fourth = debrief["steps"]
     assert first["was_best"] is False
-    assert first["chosen_text"].startswith("Сразу потребовать")
-    assert first["best_text"].startswith("Подойти, представиться")
-    assert "проверки фактов" in first["explanation"]
+    assert first["chosen_text"].startswith("Попросить женщину освободить")
+    assert first["best_text"].startswith("«Давайте решим вопрос спокойно")
+    assert "без проверки обоих билетов" in first["explanation"]
     assert first["loyalty_delta"] == -15 and first["loyalty_after"] == 45
     assert second["was_best"] is True
-    assert third["best_text"].startswith("Предложить начальнику вместе")
+    assert fourth["best_text"].startswith("«Сейчас я уточню наличие")
+
+
+def test_debrief_links_handbook_situations(client, auth):
+    state = play(client, auth, "side_with_sergey", "raise_voice")
+    debrief = client.get(f"/api/runs/{state['id']}/debrief", headers=auth).json()
+    assert [s["number"] for s in debrief["situations"]] == [33, 13, 9, 8, 23]
+    assert debrief["situations"][0]["title"] == "Два пассажира на одно место"
+    assert debrief["situations"][0]["phrases"]
 
 
 def test_debrief_includes_timeouts(client, auth, db):
-    state = start(client, auth)
-    rewind(db, state["id"], 20 + 15 + 2)
-    client.get(f"/api/runs/{state['id']}", headers=auth)
+    state = at_timed_node(client, auth)
+    rewind(db, state["id"], 22)
+    state = client.get(f"/api/runs/{state['id']}", headers=auth).json()
+    choose(client, auth, state, "proper_upgrade")
 
     debrief = client.get(f"/api/runs/{state['id']}/debrief", headers=auth).json()
-    assert [s["kind"] for s in debrief["steps"]] == ["timeout", "timeout"]
-    assert debrief["steps"][0]["chosen_text"] is None
-    assert debrief["steps"][0]["best_text"].startswith("Подойти, представиться")
-    assert debrief["average_reaction_seconds"] is None
+    assert [s["kind"] for s in debrief["steps"]] == ["choice", "timeout", "choice"]
+    assert debrief["steps"][1]["chosen_text"] is None
+    assert debrief["steps"][1]["best_text"].startswith("Развести коммуникацию")
+    assert debrief["average_reaction_seconds"] is not None

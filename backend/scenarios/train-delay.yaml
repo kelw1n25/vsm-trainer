@@ -1,0 +1,274 @@
+# Ситуации 18 и 51: пассажир недоволен задержкой поезда, а другая пассажирка просит пустить её
+# «посмотреть» первый и бизнес-класс, пока поезд стоит.
+id: train-delay
+title: "Задержка поезда в пути"
+category: service
+difficulty: 1
+service_class: Комфорт
+route: Санкт-Петербург — Москва
+description: >
+  Поезд остановился посреди поля. Пассажир опаздывает на пересадку и требует ответов,
+  а у проводника пока нет точной информации.
+situations: [18, 51]
+initial:
+  loyalty: 60
+  safety: 90
+stats:
+  trust: 40
+  tension: 40
+characters:
+  vadim:
+    name: "Вадим"
+    role: "Пассажир"
+    look: {top: "#56657F", bottom: "#34405A", hair: "#2B2320"}
+  kira:
+    name: "Кира"
+    role: "Пассажирка"
+    look: {top: "#F2B84B", bottom: "#3A3550", hair: "#C58B4A", hair_style: long}
+  chief:
+    name: "Ольга Николаевна"
+    role: "Начальник поезда"
+    look: {outfit: uniform, hair: "#4A3426", hair_style: bun}
+start_node: start
+
+nodes:
+  - id: start
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: vadim, position: right, expression: angry}
+    situation: "Поезд встал в пути, пассажир требует объяснить причину и срок задержки."
+    dialogue:
+      - {speaker: narrator, text: "Поезд плавно останавливается. За окном — поле, до Москвы ещё час."}
+      - {speaker: vadim, text: "Почему стоим? Сколько ещё? У меня пересадка на самолёт через два часа!"}
+      - {speaker: player, thought: true, text: "Я не знаю причину. Давать можно только достоверную информацию."}
+    choices:
+      - id: apologize_true_info
+        text: >
+          «Приносим извинения за неудобства. О дальнейшем следовании сообщим сразу после получения информации» —
+          и запросить сведения у начальника поезда
+        effects:
+          loyalty: 10
+          stats: {trust: 15, tension: -10}
+          competences: {communication: 10, safety_rules: 5}
+        reaction:
+          - {speaker: vadim, expression: annoyed, text: "Ладно. Но как только узнаете — сразу ко мне."}
+        next: chief_info
+        best: true
+        explanation: "Извиниться и давать только достоверную информацию. Сведения о задержке предоставляют машинист и начальник поезда."
+      - id: guess
+        text: "«Минут десять, не больше, наверное»"
+        effects:
+          loyalty: 5
+          set_flags: [false_info]
+          competences: {communication: -10}
+        reaction:
+          - {speaker: vadim, expression: neutral, text: "Десять минут — ну ладно, успею."}
+        next: vadim_later
+        explanation: "Догадка вместо достоверной информации — пассажир построит планы на неверных данных."
+      - id: blame
+        text: "«Это не от нас зависит, это инфраструктура»"
+        effects:
+          loyalty: -15
+          stats: {tension: 20}
+          competences: {communication: -10}
+        reaction:
+          - {speaker: vadim, expression: angry, text: "А мне какая разница, от кого зависит?!"}
+        next: vadim_angry
+        explanation: "Перекладывать ответственность — не решение. Бригада извиняется от лица перевозчика."
+
+  - id: vadim_angry
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: vadim, position: right, expression: angry}
+    situation: "Пассажир возмущён ответом и повышает голос."
+    dialogue:
+      - {speaker: vadim, text: "Вы вообще понимаете, что я из-за вас опоздаю на самолёт?"}
+    timer_seconds: 15
+    timeout_next: end_conflict
+    timeout_effects: {loyalty: -15}
+    choices:
+      - id: acknowledge
+        text: "«Понимаю, что ситуация неприятная. Сейчас узнаю у начальника поезда, сколько продлится задержка»"
+        effects:
+          loyalty: 15
+          stats: {tension: -20, trust: 10}
+          competences: {communication: 10}
+        next: chief_info
+        best: true
+        explanation: "Признать ситуацию и предложить реальное действие — ролевая модель снимает напряжение."
+      - id: argue
+        text: "«Не кричите на меня, я тут ни при чём»"
+        effects:
+          loyalty: -15
+          competences: {communication: -10}
+        next: end_conflict
+        explanation: "Спор с пассажиром только добавляет ему поводов для возмущения."
+
+  - id: vadim_later
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: vadim, position: right, expression: angry}
+    situation: "Прошло двадцать пять минут — пассажир напоминает про обещанные «десять минут»."
+    dialogue:
+      - {speaker: narrator, text: "Проходит двадцать пять минут. Поезд стоит."}
+      - {speaker: vadim, text: "Вы сказали — десять минут! Я уже написал, что успеваю!"}
+    choices:
+      - id: apologize_correct
+        text: "Извиниться за неточную информацию, узнать у начальника поезда точные сведения и сообщить их"
+        effects:
+          loyalty: 10
+          stats: {trust: 5}
+          competences: {communication: 10}
+        next: chief_info
+        best: true
+        explanation: "Исправить ошибку честно и вернуться к достоверным данным от начальника поезда."
+      - id: defend
+        text: "«Я же сказал — наверное»"
+        effects:
+          loyalty: -15
+          competences: {communication: -10}
+        next: end_partial
+        explanation: "Оправдание подрывает доверие окончательно."
+
+  - id: chief_info
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: chief, position: right, expression: serious}
+    situation: "Начальник поезда сообщает причину и срок задержки."
+    dialogue:
+      - {speaker: chief, text: "Сбой на соседнем пути, задержка около двадцати пяти минут. Я объявлю по громкой связи. Пройдите по вагону."}
+      - {speaker: player, thought: true, text: "Точные данные есть. Теперь — ровно их и передать."}
+    choices:
+      - id: relay_exact
+        text: "Передать пассажирам точную информацию и выполнить указание — пройти по вагону"
+        effects:
+          loyalty: 10
+          safety: 5
+          stats: {trust: 10}
+          competences: {communication: 10, safety_rules: 5}
+        next: kira
+        best: true
+        explanation: "Строго выполнять указания начальника поезда и передавать только его сведения."
+      - id: add_opinion
+        text: "Добавить от себя, что «такое обычно затягивается на час»"
+        effects:
+          loyalty: -10
+          stats: {tension: 15}
+          competences: {communication: -10}
+        next: kira
+        explanation: "Личные прогнозы — та же недостоверная информация. Они усиливают тревогу."
+
+  - id: kira
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: kira, position: right, expression: happy}
+    situation: "Пассажирка просит пустить её «посмотреть» первый и бизнес-класс, пока поезд стоит."
+    dialogue:
+      - {speaker: kira, text: "Раз уж стоим — можно я схожу посмотрю, как там в первом классе и бизнесе? Интересно же!"}
+      - {speaker: player, thought: true, text: "Там сейчас разносят горячие напитки."}
+    choices:
+      - id: refuse_safety
+        text: >
+          «Я не могу Вас пропустить в вагоны первого и бизнес-класса: там сейчас обслуживание горячими напитками,
+          и мешать ему небезопасно. Спасибо за понимание»
+        effects:
+          safety: 10
+          loyalty: 5
+          competences: {safety_rules: 10, communication: 5}
+        reaction:
+          - {speaker: kira, expression: neutral, text: "А, горячий чай… Понятно, тогда не буду."}
+        next: compensation
+        best: true
+        explanation: "Вежливо отказать с акцентом на безопасности — вы не пускаете не потому, что жалко, а потому что заботитесь."
+      - id: let_her
+        text: "Пропустить — всё равно поезд стоит"
+        effects:
+          safety: -15
+          set_flags: [mistake_made]
+          competences: {safety_rules: -10}
+        reaction:
+          - {speaker: narrator, text: "Через пять минут из бизнес-класса звонят: пассажирка столкнулась с тележкой, пролит чай."}
+        next: end_partial
+        explanation: "Посторонний пассажир в проходе во время подачи горячих напитков — риск ожога и для него, и для других."
+      - id: show_photos
+        text: "Показать фотографии салонов в бортовом журнале и в приложении"
+        condition: ["trust >= 50"]
+        effects:
+          loyalty: 15
+          competences: {service: 10}
+        reaction:
+          - {speaker: kira, expression: happy, text: "О, кресла 2+1! В следующий раз возьму первый."}
+        next: compensation
+        explanation: "Когда отказ сопровождается альтернативой, пассажир не чувствует себя отвергнутым."
+
+  - id: compensation
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: vadim, position: right, expression: worried}
+    situation: "Пассажир спрашивает, компенсируют ли ему опоздание на пересадку."
+    dialogue:
+      - {speaker: narrator, text: "Поезд трогается. Задержка — двадцать семь минут."}
+      - {speaker: vadim, text: "А если я не успею на самолёт — мне это компенсируют?"}
+      - {speaker: player, thought: true, text: "Я не знаю правил компенсации. Обещать нельзя."}
+    choices:
+      - id: no_promises
+        text: "Не давать обещаний, уточнить порядок у начальника поезда и подсказать, куда обратиться с заявлением"
+        effects:
+          loyalty: 15
+          stats: {trust: 10}
+          competences: {communication: 10, service: 5}
+        reaction:
+          - {speaker: vadim, expression: neutral, text: "Хорошо, хоть буду знать, куда писать. Спасибо."}
+        next: end_success
+        best: true
+        explanation: "Не давать ложных обещаний: порядок уточняют у начальника поезда, пассажиру подсказывают официальный канал."
+      - id: promise_money
+        text: "«Вам точно всё компенсируют»"
+        effects:
+          loyalty: -10
+          competences: {communication: -10}
+        next: end_partial
+        explanation: "Обещание, которое проводник не вправе давать, превращается в претензию к перевозчику."
+
+  - id: end_success
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: happy}
+        - {id: vadim, position: right, expression: neutral}
+    outcome: success
+    ending: "Задержка без паники и слухов"
+    final_text: >
+      Пассажиры получили только достоверные сведения от начальника поезда, извинения и понятный порядок действий.
+      Никто не пострадал от любопытства во время подачи горячих напитков.
+  - id: end_partial
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: worried}
+    outcome: partial
+    ending: "Задержку пережили, но доверие пошатнулось"
+    final_text: >
+      Задержка закончилась, но неточная информация, лишние обещания или риск для пассажирки испортили впечатление.
+  - id: end_conflict
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: sad}
+        - {id: vadim, position: right, expression: angry}
+    outcome: failure
+    ending: "Конфликт из-за задержки"
+    final_text: >
+      Пассажир остался без информации и внимания, конфликт перерос в громкую ссору и жалобу.

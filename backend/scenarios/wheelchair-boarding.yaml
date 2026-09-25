@@ -1,183 +1,215 @@
-# ДЕМО-КОНТЕНТ: написан командой до получения материалов кейсодержателя.
+# СТО РЖД 03.014 «Обслуживание маломобильных пассажиров» и ситуации 14 и 9: посадка пассажирки
+# на кресле-коляске, место для коляски занято чужими вещами, пассажир с нарушением слуха.
 id: wheelchair-boarding
-title: Посадка пассажира на кресле-коляске
+title: "Посадка пассажирки на кресле-коляске"
 category: service
 difficulty: 1
-service_class: Бизнес
+service_class: Стандарт
 route: Москва — Санкт-Петербург
 description: >
-  Подъёмник у вагона не работает, до отправления четыре минуты, а маломобильный пассажир
-  заранее заказал сопровождение. Нужно посадить его безопасно и сохранить премиальный сервис.
-demo: true
+  К вагону подъезжает пассажирка на кресле-коляске с чемоданом. Выделенное место уже заставлено чужими сумками,
+  а в салоне пассажир с нарушением слуха не слышит объявлений.
+situations: [14, 9]
 initial:
-  loyalty: 60
-  safety: 85
+  loyalty: 70
+  safety: 80
+stats:
+  trust: 40
+characters:
+  sofia:
+    name: "София"
+    role: "Пассажирка на кресле-коляске"
+    look: {top: "#3E6FD8", bottom: "#34465F", hair: "#2E2622", hair_style: long}
+  gleb:
+    name: "Глеб"
+    role: "Пассажир с нарушением слуха"
+    look: {top: "#7BA05B", bottom: "#2F3B55", hair: "#6B3F2A"}
 start_node: start
 
 nodes:
   - id: start
-    situation: >
-      На станции посадки пассажир на кресле-коляске заранее заказал помощь, но подъёмник
-      у вагона не выдвигается. До отправления четыре минуты.
-    line:
-      speaker: passenger
-      name: Пассажир на кресле-коляске
-      text: Я заказывал сопровождение ещё неделю назад!
-    timer_seconds: 25
-    timeout_next: delay_pressure
-    timeout_effects:
-      loyalty: -15
+    scene:
+      background: platform
+      characters:
+        - {id: player, position: left}
+        - {id: sofia, position: right, expression: neutral}
+    situation: "К вагону подъезжает пассажирка на кресле-коляске с чемоданом."
+    dialogue:
+      - {speaker: narrator, text: "До отправления двенадцать минут. К вагону подъезжает пассажирка на кресле-коляске."}
+      - {speaker: sofia, text: "Добрый день! Место 3, выделенное. Поможете с подъёмником? И чемодан у меня тяжёлый."}
+      - {speaker: player, thought: true, text: "Сначала спросить, какая помощь ей нужна, — а не решать за неё."}
     choices:
-      - id: call_station
-        text: >
-          Извиниться, вызвать по рации дежурного по станции с переносным пандусом и предупредить
-          начальника поезда о возможной задержке на минуту
-        effects:
-          loyalty: 10
-          safety: 5
-          set_flags: [chief_warned]
-          competences: {service: 10, safety_rules: 5}
-        next: ramp_arrives
-        best: true
-        explanation: >
-          Безопасная посадка — только с оборудованием. Начальник поезда заранее знает
-          о задержке и может её согласовать.
-      - id: lift_manually
-        text: Попросить двух пассажиров помочь занести коляску на руках
-        effects:
-          loyalty: 5
-          safety: -25
-          competences: {safety_rules: -15}
-        next: risky_lift
-        explanation: >
-          Подъём коляски с человеком по ступеням силами случайных людей — риск падения
-          и травмы для всех.
-      - id: next_train
-        text: Предложить пассажиру поехать следующим поездом
-        effects:
-          loyalty: -25
-          competences: {service: -10}
-        next: final_fail
-        explanation: >
-          Пассажир заранее выполнил всё, что от него требовалось. Отказ в посадке из-за
-          неисправности перевозчика недопустим.
-
-  - id: risky_lift
-    situation: Коляску несут по ступеням, один из помощников оступается.
-    timer_seconds: 10
-    timeout_next: final_fail
-    timeout_effects:
-      safety: -20
-    choices:
-      - id: stop_and_ramp
-        text: Остановить подъём, аккуратно вернуть коляску на платформу и вызвать дежурного с пандусом
-        effects:
-          safety: 15
-          competences: {safety_rules: 10, stress_resistance: 5}
-        next: ramp_arrives
-        best: true
-        explanation: Вовремя признать ошибку и остановиться — лучшее решение, пока никто не пострадал.
-      - id: continue_lift
-        text: Продолжать — осталась всего одна ступенька
-        effects:
-          safety: -20
-        next: final_fail
-        explanation: Одна ступенька — это всё ещё риск падения человека вместе с коляской.
-
-  - id: delay_pressure
-    situation: Пассажир нервничает, двери скоро закроются, начальник поезда торопит.
-    line:
-      speaker: train_chief
-      name: Начальник поезда
-      text: Отправление по графику, решайте быстрее!
-    timer_seconds: 15
-    timeout_next: final_fail
-    timeout_effects:
-      loyalty: -10
-    choices:
-      - id: hold_door
-        text: Коротко доложить о посадке маломобильного пассажира и попросить минуту задержки
-        effects:
-          loyalty: 10
-          set_flags: [chief_warned]
-          competences: {service: 5, communication: 5}
-        next: ramp_arrives
-        best: true
-        explanation: Короткий доклад по делу позволяет начальнику поезда принять решение.
-      - id: rush_lift
-        text: Занести коляску на руках, пока не закрылись двери
-        effects:
-          safety: -20
-        next: risky_lift
-        explanation: Спешка приводит к опасной посадке без оборудования.
-
-  - id: ramp_arrives
-    situation: >
-      Дежурный принёс пандус. Пассажир заехал в вагон, но его место оказалось
-      не у зоны для кресла-коляски.
-    timer_seconds: 20
-    timeout_next: final_partial
-    timeout_effects:
-      loyalty: -10
-    choices:
-      - id: reseat_comfort
-        text: >
-          Проводить к специальному месту, помочь закрепить коляску, показать кнопку вызова
-          и туалет для маломобильных пассажиров
+      - id: ask_needs
+        text: "Уточнить, какая помощь нужна, подготовить подъёмное устройство и рассказать, как проедем до её места"
         effects:
           loyalty: 15
           safety: 10
-          competences: {service: 15}
-        next: onboard
+          stats: {trust: 20}
+          competences: {service: 15, communication: 5}
+        reaction:
+          - {speaker: sofia, expression: happy, text: "Спасибо, что спросили. Коляску я веду сама, а чемодан — если можно, вы."}
+        next: placement
         best: true
-        explanation: Закреплённая коляска безопасна на скорости 400 км/ч, а пассажир знает, как позвать помощь.
-      - id: leave_in_aisle
-        text: Оставить коляску в проходе у двери
+        explanation: >
+          Получить от пассажира информацию, нужную для безопасной помощи, построить маршрут до места и помочь с
+          техническим оборудованием и багажом — требования стандарта к персоналу.
+      - id: grab_chair
+        text: "Сразу взяться за коляску и закатить её в вагон самому"
         effects:
-          loyalty: -5
-          safety: -15
-          competences: {safety_rules: -10}
-        next: onboard
-        explanation: Незакреплённая коляска в проходе опасна при торможении и мешает эвакуации.
+          safety: -10
+          stats: {trust: -15}
+          competences: {communication: -10}
+        reaction:
+          - {speaker: sofia, expression: annoyed, text: "Подождите! Не надо меня толкать, я сама управляю."}
+        next: placement
+        explanation: "Помощь без вопроса лишает человека контроля и может быть небезопасной. Сначала — спросить."
+      - id: wait_others
+        text: "Попросить подождать, пока зайдут остальные пассажиры"
+        effects:
+          loyalty: -15
+          competences: {service: -10}
+        reaction:
+          - {speaker: sofia, expression: sad, text: "Опять ждать в конце… Ладно."}
+        next: placement
+        explanation: "Маломобильному пассажиру помогают так же своевременно, как остальным, а не в последнюю очередь."
 
-  - id: onboard
-    situation: Поезд отправился. Через час пассажир просит помочь с обедом — столик неудобно высоко.
+  - id: placement
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: sofia, position: right, expression: worried}
+    situation: "Место для кресла-коляски заставлено чужими сумками."
+    dialogue:
+      - {speaker: narrator, text: "Выделенное место для кресла-коляски занято: там стоят два чужих чемодана и рюкзак."}
+      - {speaker: sofia, text: "Ну вот. Каждый раз одно и то же."}
+      - {speaker: player, thought: true, text: "Найти владельцев. И назвать конкретное место для их вещей."}
     choices:
-      - id: serve_at_seat
-        text: Принести обед к месту, предложить удобный столик и уточнить, нужна ли помощь при выходе
+      - id: clear_space
+        text: >
+          Найти владельцев: «В целях безопасности это место должно оставаться свободным. В конце вагона есть
+          специальное место для багажа — позвольте, я помогу переставить»
+        effects:
+          safety: 15
+          loyalty: 10
+          stats: {trust: 10}
+          competences: {safety_rules: 10, service: 10}
+        reaction:
+          - {speaker: sofia, expression: happy, text: "Спасибо. И куртку повесьте, пожалуйста, пониже — чтобы я дотянулась."}
+        next: hearing
+        best: true
+        explanation: >
+          Владельцев находят опросом, просят переставить вещи с акцентом на безопасности и указывают конкретное место.
+          Вещи пассажирки размещают там, где она сама до них дотянется.
+      - id: squeeze
+        text: "Поставить коляску рядом, в проходе, — места же нет"
+        effects:
+          safety: -20
+          set_flags: [mistake_made]
+          competences: {safety_rules: -15}
+        next: end_incident
+        explanation: "Коляска в проходе перекрывает путь эвакуации. Выделенное место освобождают от чужих вещей."
+      - id: offer_transfer
+        text: "Спросить, не хочет ли София пересесть в кресло, а коляску сложить в отведённом месте — если ей так удобнее"
+        condition: ["trust >= 55"]
+        effects:
+          safety: 10
+          loyalty: 15
+          competences: {service: 15}
+        reaction:
+          - {speaker: sofia, expression: happy, text: "Да, в кресле у окна мне даже удобнее. Спасибо, что предложили, а не решили за меня."}
+        next: hearing
+        explanation: "Стандарт предусматривает проезд на пассажирском месте со сложенной коляской — но только по желанию пассажира."
+
+  - id: hearing
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: gleb, position: right, expression: worried}
+    situation: "Пассажир с нарушением слуха не слышит объявлений и спрашивает текстом, какая следующая станция."
+    dialogue:
+      - {speaker: narrator, text: "В пути к вам подходит молодой человек и показывает экран телефона."}
+      - {speaker: narrator, text: "На экране: «Я не слышу объявлений. Какая следующая станция? Мне в Тверь»."}
+      - {speaker: player, thought: true, text: "Объявления он не услышит. Нужен другой канал."}
+    choices:
+      - id: text_reply
+        text: "Ответить текстом на планшете в удобном ему темпе и пообещать подойти заранее перед Тверью"
         effects:
           loyalty: 15
-          competences: {service: 10, communication: 5}
-        next: final_success
+          stats: {trust: 10}
+          competences: {communication: 15}
+        reaction:
+          - {speaker: gleb, expression: happy, text: "(набирает) Спасибо! Буду ждать."}
+        next: meal
         best: true
-        explanation: Сервис без лишних просьб — пассажир чувствует заботу, а не одолжение.
-      - id: arrange_exit
-        condition:
-          - flag chief_warned
-        text: Через начальника поезда передать на станцию прибытия заявку на пандус и сопровождение
-        effects:
-          loyalty: 10
-          safety: 5
-          competences: {safety_rules: 5, service: 5}
-        next: final_success
-        explanation: >
-          Проводник думает на шаг вперёд. Вариант доступен, если начальник поезда
-          участвовал в посадке.
-      - id: only_menu
-        text: Дать меню и предложить самому доехать до бистро
+        explanation: "Использовать альтернативные способы коммуникации — планшет, смартфон, текст — в темпе, приемлемом для пассажира."
+      - id: speak_louder
+        text: "Говорить громче и медленнее"
         effects:
           loyalty: -10
-        next: final_partial
-        explanation: Формально помощь предложена, но пассажиру неудобно и одиноко.
+          competences: {communication: -10}
+        reaction:
+          - {speaker: gleb, expression: sad, text: "(качает головой и снова показывает экран)"}
+        next: meal
+        explanation: "Громкость не помогает пассажиру с нарушением слуха. Нужен текстовый канал."
 
-  - id: final_success
+  - id: meal
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: sofia, position: right, expression: neutral}
+    situation: "Пассажирка на коляске хочет пообедать, но дойти до вагона-бистро ей сложно."
+    dialogue:
+      - {speaker: sofia, text: "Я бы пообедала, но до бистро через три вагона на коляске — целое приключение."}
+    choices:
+      - id: order_to_seat
+        text: "Предложить заказ питания на место и принести меню бистро"
+        effects:
+          loyalty: 15
+          competences: {service: 15}
+        reaction:
+          - {speaker: sofia, expression: happy, text: "А так можно? Отлично! Тогда суп и чай."}
+        next: end_success
+        best: true
+        explanation: "Маломобильным пассажирам, которым трудно передвигаться, должна быть доступна доставка питания на место."
+      - id: point_bistro
+        text: "Подсказать, в каком вагоне бистро"
+        effects:
+          loyalty: -10
+          competences: {service: -5}
+        next: end_partial
+        explanation: "Подсказка формально верна, но стандарт требует предложить заказ питания на пассажирское место."
+
+  - id: end_success
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: happy}
+        - {id: sofia, position: right, expression: happy}
     outcome: success
-    final_text: Пассажир доехал с комфортом и оставил благодарность экипажу в отзыве.
-
-  - id: final_partial
+    ending: "Доступная поездка без барьеров"
+    final_text: >
+      Проводник спросил, какая помощь нужна, освободил выделенное место, нашёл общий язык с пассажиром с нарушением
+      слуха и организовал обед на месте. Спокойная и доброжелательная обстановка — главное требование стандарта.
+  - id: end_partial
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: worried}
     outcome: partial
-    final_text: Пассажир доехал, но поездка оставила неприятное впечатление. Возможна жалоба.
-
-  - id: final_fail
+    ending: "Поездка состоялась, но с барьерами"
+    final_text: >
+      Пассажиры доехали, но им пришлось ждать, объяснять или справляться самим там, где проводник мог помочь.
+  - id: end_incident
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: sad}
+        - {id: sofia, position: right, expression: sad}
     outcome: failure
-    final_text: Посадка сорвалась или закончилась травмой. Перевозчик получает официальную жалобу.
+    ending: "Перекрыт путь эвакуации"
+    final_text: >
+      Коляска в проходе перекрыла путь эвакуации — при проверке бригада получила замечание, а пассажирка ехала
+      в неудобном и небезопасном месте.

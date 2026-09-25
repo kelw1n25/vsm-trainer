@@ -1,0 +1,283 @@
+# Ситуации 16, 27, 34 и 26: не работает розетка и мультимедиа, грязный столик, просьба выключить
+# общее освещение и жалоба на запах от соседа — в первом классе, где ожидание не больше 5 минут.
+id: first-class-comfort
+title: "Претензии в первом классе"
+category: service
+difficulty: 2
+service_class: Первый
+route: Москва — Санкт-Петербург
+description: >
+  Первый класс, персональный сервис. У пассажира не работают розетка и экран, столик липкий,
+  а его соседке мешают свет и резкий запах духов.
+situations: [16, 27, 34, 26]
+initial:
+  loyalty: 60
+  safety: 90
+stats:
+  trust: 40
+characters:
+  veniamin:
+    name: "Вениамин Аркадьевич"
+    role: "Пассажир первого класса"
+    look: {top: "#1B1F2A", bottom: "#1E2636", hair: "#5B5B5B"}
+  lidiya:
+    name: "Лидия"
+    role: "Пассажирка первого класса"
+    look: {top: "#D9C7A7", bottom: "#3A3550", hair: "#2B2320", hair_style: long}
+start_node: start
+
+nodes:
+  - id: start
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: veniamin, position: right, expression: annoyed}
+    situation: "В первом классе у пассажира не работают розетка и мультимедиа, столик грязный."
+    dialogue:
+      - {speaker: narrator, text: "Первый класс. Кнопка вызова загорается у кресла 2А."}
+      - {speaker: veniamin, text: "Розетка не работает, экран не включается. И столик липкий. Это первый класс или что?"}
+      - {speaker: player, thought: true, text: "Он заплатил за комфорт, а получил неисправность. Это наша вина, а не его придирки."}
+    choices:
+      - id: thanks_fix
+        text: >
+          «Спасибо, что сообщили. Сейчас проверим оборудование и предложим решение. Приношу извинения — сейчас
+          приведём место в порядок»
+        effects:
+          loyalty: 15
+          stats: {trust: 15}
+          competences: {service: 15, communication: 5}
+        reaction:
+          - {speaker: veniamin, expression: neutral, text: "Хорошо. Жду."}
+        next: options
+        best: true
+        explanation: >
+          Поблагодарить, извиниться, организовать уборку и проверку оборудования. Любая неисправность — вина перевозчика,
+          поэтому её урегулируют всеми доступными способами.
+      - id: dismiss
+        text: "«Это техническая неисправность, тут я ничего не могу сделать»"
+        effects:
+          loyalty: -20
+          stats: {trust: -20}
+          competences: {service: -10}
+        reaction:
+          - {speaker: veniamin, expression: angry, text: "То есть я еду четыре часа без зарядки, и вам всё равно?"}
+        next: veniamin_angry
+        explanation: "Отказ без альтернатив недопустим. Предложить можно многое — пересадку, другой планшет, комплимент."
+      - id: only_wipe
+        text: "Протереть столик, а про розетку и экран промолчать"
+        effects:
+          loyalty: -5
+          competences: {service: -5}
+        next: options
+        explanation: "Уборка — только часть решения. О неисправности нужно сообщить бортинженеру и начальнику поезда."
+
+  - id: veniamin_angry
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: veniamin, position: right, expression: angry}
+    situation: "Пассажир первого класса возмущён отказом помочь."
+    dialogue:
+      - {speaker: veniamin, text: "Позовите старшего. Я буду жаловаться."}
+    timer_seconds: 15
+    timeout_next: end_complaint
+    timeout_effects: {loyalty: -15}
+    choices:
+      - id: apologize_fix
+        text: "Извиниться, привести столик в порядок и пообещать проверить оборудование с бортинженером"
+        effects:
+          loyalty: 15
+          stats: {trust: 10}
+          competences: {service: 10, communication: 5}
+        next: options
+        best: true
+        explanation: "Признать ошибку и перейти к действиям — лучший способ удержать пассажира от жалобы."
+      - id: call_chief_only
+        text: "Просто позвать начальника поезда и уйти"
+        effects:
+          loyalty: -10
+          competences: {service: -5}
+        next: end_complaint
+        explanation: "Начальник поезда должен быть в курсе, но передать пассажира и уйти — значит бросить обращение."
+
+  - id: options
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: veniamin, position: right, expression: neutral}
+    situation: "Бортинженер сообщил, что розетку можно починить только в депо."
+    dialogue:
+      - {speaker: narrator, text: "Бортинженер по рации: «Розетка и экран на 2А — только в депо. В пути не починим»."}
+      - {speaker: veniamin, text: "И что вы мне предложите?"}
+    choices:
+      - id: offer_seat
+        text: >
+          «Прошу прощения за доставленные неудобства, могу я предложить Вам пересесть?» — на исправное место 3А,
+          а пока — зарядное устройство; сообщить начальнику поезда
+        effects:
+          loyalty: 15
+          stats: {trust: 10}
+          set_flags: [chief_informed]
+          competences: {service: 15}
+        reaction:
+          - {speaker: veniamin, expression: happy, text: "3А тоже у окна? Отлично, так и сделаем."}
+        next: lights
+        best: true
+        explanation: "Выслушать, извиниться, предложить пересесть при возможности и проинформировать начальника поезда и бортинженера."
+      - id: promise_fix
+        text: "Пообещать, что розетку починят минут через десять"
+        effects:
+          loyalty: -10
+          competences: {service: -5}
+        next: lights
+        explanation: "Обещание, которое заведомо не выполнить, разочарует сильнее самой неисправности."
+      - id: loyalty_points
+        text: "Через начальника поезда предложить компенсацию — баллы программы лояльности и комплимент от бистро"
+        condition: ["trust >= 60"]
+        effects:
+          loyalty: 20
+          set_flags: [chief_informed]
+          competences: {service: 15}
+        reaction:
+          - {speaker: veniamin, expression: happy, text: "Вот это уровень. Спасибо, я ценю."}
+        next: lights
+        explanation: "Когда пассажир готов к диалогу, стандарт допускает альтернативы — комплимент, скидку, баллы."
+
+  - id: lights
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: lidiya, position: right, expression: annoyed}
+    situation: "Пассажирка просит выключить общее освещение, чтобы поспать."
+    dialogue:
+      - {speaker: lidiya, text: "Можно выключить свет во всём вагоне? Хочу поспать, а тут как в операционной."}
+      - {speaker: player, thought: true, text: "Дежурное освещение остаётся всегда — ради безопасности."}
+    choices:
+      - id: explain_mask
+        text: >
+          «Освещение регулируется по общему режиму вагона, но я посмотрю, чем могу помочь для Вашего комфорта.
+          Позвольте предложить маску для сна?» — и опустить шторку
+        effects:
+          loyalty: 15
+          competences: {service: 10, communication: 5}
+        reaction:
+          - {speaker: lidiya, expression: happy, text: "Маска — отлично. И индивидуальную подсветку я сама выключу."}
+        next: smell
+        best: true
+        explanation: "Объяснить, что дежурный свет остаётся для безопасности, и предложить элементы комфорта — маску, шторку."
+      - id: turn_off_all
+        text: "Выключить весь свет в вагоне"
+        effects:
+          safety: -15
+          competences: {safety_rules: -10}
+        next: smell
+        explanation: "Дежурное освещение нельзя выключать — это требование безопасности для всех на борту."
+      - id: refuse_light
+        text: "«Свет не выключается, извините»"
+        effects:
+          loyalty: -10
+          competences: {service: -5}
+        next: smell
+        explanation: "Отказ без альтернативы. Стандарт предлагает дополнительные элементы комфорта."
+
+  - id: smell
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: lidiya, position: right, expression: pained}
+    situation: "Пассажирка жалуется на резкий запах духов от соседа."
+    dialogue:
+      - {speaker: lidiya, text: "И ещё… только тихо. От соседа очень резкий парфюм. У меня разболелась голова."}
+      - {speaker: player, thought: true, text: "Деликатно. Сосед не должен почувствовать себя виноватым на весь вагон."}
+    choices:
+      - id: delicate_move
+        text: "«Я понимаю, что Вам некомфортно. Проверю, есть ли возможность подобрать другое место» — предложить обсудить в тамбуре"
+        effects:
+          loyalty: 15
+          stats: {trust: 10}
+          competences: {communication: 15}
+        reaction:
+          - {speaker: lidiya, expression: happy, text: "Спасибо, что без шума. Место 5С меня устроит."}
+        next: follow
+        best: true
+        explanation: "Деликатно, при возможности — в тамбуре, чтобы не смущать соседа, и предложить пересадку."
+      - id: tell_neighbor
+        text: "Попросить соседа при всех больше не пользоваться духами"
+        effects:
+          loyalty: -15
+          competences: {communication: -10}
+        reaction:
+          - {speaker: narrator, text: "Сосед краснеет и отворачивается. Лидия смущена не меньше него."}
+        next: end_partial
+        explanation: "Замечание при всех ставит в неловкое положение обоих пассажиров."
+      - id: ignore_smell
+        text: "Сказать, что с этим ничего не поделать"
+        effects:
+          loyalty: -10
+          competences: {service: -5}
+        next: follow
+        explanation: "Пересадка — простое решение, которое стандарт прямо рекомендует."
+
+  - id: follow
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: veniamin, position: right, expression: neutral}
+    situation: "Прошло полчаса — пора узнать, всё ли в порядке у пассажиров."
+    dialogue:
+      - {speaker: narrator, text: "Поезд проходит Бологое. Салон первого класса затих."}
+      - {speaker: player, thought: true, text: "Обратная связь — обязательно."}
+    choices:
+      - id: ask_comfort
+        text: "Подойти к обоим пассажирам и уточнить, комфортно ли им на новых местах"
+        effects:
+          loyalty: 15
+          competences: {service: 10}
+        reaction:
+          - {speaker: veniamin, expression: happy, text: "Всё отлично, спасибо, что вернулись."}
+        next: end_success
+        best: true
+        explanation: "Позднее обязательно уточнить о комфорте поездки и получить обратную связь."
+      - id: skip_follow
+        text: "Не беспокоить — раз не зовут, значит, всё хорошо"
+        effects:
+          loyalty: -5
+        next: end_partial
+        explanation: "В первом классе особенно важна персональная забота — пассажиры ждут, что о них вспомнят."
+
+  - id: end_success
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left, expression: happy}
+        - {id: veniamin, position: right, expression: happy}
+    outcome: success
+    ending: "Персональный сервис без упрёков"
+    final_text: >
+      Неисправность признали виной перевозчика и компенсировали пересадкой, место привели в порядок, про свет
+      объяснили без отказа, а деликатная жалоба решилась тихо. Пассажиры первого класса довольны.
+  - id: end_partial
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left, expression: worried}
+    outcome: partial
+    ending: "Проблемы решены наполовину"
+    final_text: >
+      Часть обращений решена, но где-то не хватило деликатности, альтернативы или обратной связи.
+  - id: end_complaint
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left, expression: sad}
+        - {id: veniamin, position: right, expression: angry}
+    outcome: failure
+    ending: "Жалоба пассажира первого класса"
+    final_text: >
+      Пассажир первого класса остался с неисправным местом и без внимания. На сайт перевозчика ушла официальная жалоба.

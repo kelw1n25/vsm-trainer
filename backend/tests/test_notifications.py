@@ -3,7 +3,7 @@ from datetime import timedelta
 import pytest
 from sqlalchemy import func, select, update
 
-from tests.test_engine import play
+from tests.test_engine import BEST_PATH, PARTIAL_PATH, play
 
 
 def days_ago(db, employee, days: float) -> None:
@@ -64,10 +64,10 @@ def test_scenario_resets_inactivity(client, auth, db, employee):
     employee.xp = 1000
     db.commit()
     days_ago(db, employee, 6.9)
-    play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
+    play(client, auth, *BEST_PATH)
     notifications(client, auth)
     db.refresh(employee)
-    assert employee.xp == 1204
+    assert employee.xp == 1208
 
 
 def test_leaderboard_applies_burn(client, auth, db, employee):
@@ -80,7 +80,7 @@ def test_leaderboard_applies_burn(client, auth, db, employee):
 
 def test_achievement_and_new_scenario_notifications(client, auth):
     assert "new_scenario" in types(notifications(client, auth))
-    play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
+    play(client, auth, *BEST_PATH)
     data = notifications(client, auth)
     assert types(data).count("achievement") == 3
     titles = [item["title"] for item in data["items"]]
@@ -109,12 +109,12 @@ def test_weekly_challenge_bonus_once_per_week(client, auth, db, weekly_challenge
     from app.analytics.models import Event
 
     assert "weekly_challenge" in types(notifications(client, auth))
-    first = play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
-    second = play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
-    assert (first["final"]["xp_earned"], second["final"]["xp_earned"]) == (254, 204)
+    first = play(client, auth, *BEST_PATH)
+    second = play(client, auth, *BEST_PATH)
+    assert (first["final"]["xp_earned"], second["final"]["xp_earned"]) == (258, 208)
     assert db.scalar(select(func.count()).where(Event.type == "challenge_completed")) == 1
 
 
 def test_weekly_challenge_requires_success(client, auth, weekly_challenge):
-    state = play(client, auth, "ask_tickets", "explain_calmly", "leave_as_is")
-    assert state["final"]["xp_earned"] == 120  # 50 × 1.5 + 85 × 0.3 + 65 × 0.3 = 75 + 25.5 + 19.5, без бонуса
+    state = play(client, auth, *PARTIAL_PATH)
+    assert state["final"]["xp_earned"] == 124  # 50 × 1.5 + 70 × 0.3 + 95 × 0.3 = 75 + 21 + 28,5, без бонуса

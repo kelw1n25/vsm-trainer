@@ -1,0 +1,294 @@
+# Ситуации 7, 49, 43, 31 и 44: блюда нет в наличии, пассажир недоволен порцией, платная услуга
+# без предупреждения, отсутствие товара из каталога и желание написать жалобу.
+id: business-catering
+title: "Обед в бизнес-классе"
+category: service
+difficulty: 1
+service_class: Бизнес
+route: Москва — Санкт-Петербург
+description: >
+  Время обеда. Курицы из меню не осталось, порции кажутся маленькими, а в счёте появился кофе,
+  который пассажирка считала бесплатным.
+situations: [7, 49, 43, 31, 44]
+initial:
+  loyalty: 60
+  safety: 90
+stats:
+  trust: 40
+characters:
+  arkady:
+    name: "Аркадий Борисович"
+    role: "Пассажир"
+    look: {top: "#2E3A4F", bottom: "#1E2636", hair: "#9A9A9A"}
+  marta:
+    name: "Марта"
+    role: "Пассажирка"
+    look: {top: "#E8735A", bottom: "#3A4A6B", hair: "#C58B4A", hair_style: bun}
+start_node: start
+
+nodes:
+  - id: start
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: arkady, position: right, expression: neutral}
+    situation: "Пассажир хочет блюдо из меню, которого не осталось в наличии."
+    dialogue:
+      - {speaker: narrator, text: "Сервисная тележка движется по проходу бизнес-класса."}
+      - {speaker: arkady, text: "Мне, пожалуйста, курицу с рисом. Я специально выбирал по меню."}
+      - {speaker: player, thought: true, text: "Курица закончилась два ряда назад. Он вправе её требовать — значит, сначала извиниться."}
+    choices:
+      - id: apologize_alternative
+        text: >
+          «Приношу извинения за доставленные неудобства» — предложить похожее блюдо из птицы и рассказать, что
+          в личном кабинете доступен предварительный заказ питания
+        effects:
+          loyalty: 10
+          stats: {trust: 20}
+          competences: {service: 15, communication: 5}
+        reaction:
+          - {speaker: arkady, expression: thinking, text: "Индейка с овощами? Ну давайте. Про предзаказ не знал."}
+        next: arkady_after
+        best: true
+        explanation: >
+          Пассажир вправе требовать блюдо из меню — поэтому сначала извинения. Альтернативу предлагают похожую по
+          составу и рассказывают о предзаказе, не обвиняя пассажира.
+      - id: blame_preorder
+        text: "«Надо было делать предзаказ — тогда бы досталось»"
+        effects:
+          loyalty: -20
+          stats: {trust: -20}
+          competences: {communication: -10}
+        reaction:
+          - {speaker: arkady, expression: angry, text: "То есть это я виноват, что у вас нет блюда из вашего же меню?"}
+        next: arkady_angry
+        explanation: "Обвинять пассажира в отсутствии предзаказа запрещено. Нехватка блюда — не его вина."
+      - id: random_alt
+        text: "Предложить рыбу — больше ничего не осталось"
+        effects:
+          loyalty: -5
+          competences: {service: -5}
+        reaction:
+          - {speaker: arkady, expression: annoyed, text: "Я не ем рыбу. Ладно, обойдусь."}
+        next: portion
+        explanation: "Альтернативу подбирают похожую по составу: хотел птицу — сначала предлагают доступные блюда из птицы."
+
+  - id: arkady_after
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: arkady, position: right, expression: neutral}
+    situation: "Пассажир согласился на альтернативу, но разочарован."
+    dialogue:
+      - {speaker: arkady, text: "Индейка неплохая. Но я всё равно рассчитывал на курицу."}
+    choices:
+      - id: thank_follow
+        text: "Поблагодарить за понимание и позже уточнить, всё ли понравилось"
+        effects:
+          loyalty: 10
+          competences: {service: 5}
+        next: portion
+        best: true
+        explanation: "Завершить обращение благодарностью и вернуться за обратной связью — шаг «заверить» ролевой модели."
+      - id: compliment
+        text: "Предложить комплимент от бортового сервиса — десерт к кофе"
+        condition: ["trust >= 55"]
+        effects:
+          loyalty: 20
+          competences: {service: 10}
+        reaction:
+          - {speaker: arkady, expression: happy, text: "О, вот это приятно! Спасибо."}
+        next: portion
+        explanation: "При наличии возможности неприятное впечатление сглаживают комплиментом — десертом или напитком."
+
+  - id: arkady_angry
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: arkady, position: right, expression: angry}
+    situation: "Пассажир возмущён упрёком и повышает голос."
+    dialogue:
+      - {speaker: arkady, text: "Я плачу за бизнес-класс не для того, чтобы меня отчитывали!"}
+      - {speaker: player, thought: true, text: "Я его задел. Нужно признать и исправить."}
+    timer_seconds: 15
+    timeout_next: end_complaint
+    timeout_effects: {loyalty: -15}
+    choices:
+      - id: apologize_offer
+        text: "Извиниться за резкость и предложить блюдо из птицы и информацию о предзаказе"
+        effects:
+          loyalty: 15
+          stats: {trust: 15}
+          competences: {communication: 10}
+        reaction:
+          - {speaker: arkady, expression: neutral, text: "Ладно. Индейку — давайте."}
+        next: portion
+        best: true
+        explanation: "Признать ошибку и сразу предложить решение — так конфликт гаснет."
+      - id: argue
+        text: "Объяснить, что проводник не виноват в нехватке блюд"
+        effects:
+          loyalty: -15
+          competences: {communication: -10}
+        next: end_complaint
+        explanation: "Пассажиру неважно, кто виноват. Спор вместо извинения доводит до жалобы."
+
+  - id: portion
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: marta, position: right, expression: annoyed}
+    situation: "Пассажирка недовольна размером порции."
+    dialogue:
+      - {speaker: marta, text: "Это что, вся порция? Тут на один укус."}
+      - {speaker: player, thought: true, text: "Порции рассчитаны под тележки и логистику. Но спорить — не вариант."}
+    choices:
+      - id: offer_more
+        text: "«Благодарим за обращение, позвольте предложить Вам дополнительные варианты из нашего меню?» — и рассказать о составе рациона"
+        effects:
+          loyalty: 10
+          competences: {service: 10}
+        reaction:
+          - {speaker: marta, expression: neutral, text: "Давайте тогда ещё сырную тарелку. И кофе."}
+        next: paid
+        best: true
+        explanation: "Не спорить, принять обращение, объяснить состав рациона и предложить дополнительную позицию."
+      - id: argue_logistics
+        text: "Подробно объяснить про мобильные тележки и логистику и настаивать, что порция стандартная"
+        effects:
+          loyalty: -10
+          competences: {communication: -5}
+        next: paid
+        explanation: "Объяснение уместно, но без спора и обязательно — с предложением альтернативы."
+
+  - id: paid
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: marta, position: right, expression: surprised}
+    situation: "Пассажирка удивлена счётом — не знала, что дополнительная позиция платная."
+    dialogue:
+      - {speaker: narrator, text: "Коллега приносит сырную тарелку, кофе и чек."}
+      - {speaker: marta, expression: angry, text: "Счёт? Мне никто не сказал, что это за деньги! Я думала, в бизнесе всё включено."}
+      - {speaker: player, thought: true, text: "Цену не озвучили заранее. Это наша ошибка."}
+    choices:
+      - id: refund
+        text: "Извиниться, что стоимость не назвали заранее, и оформить возврат денег"
+        effects:
+          loyalty: 15
+          stats: {trust: 10}
+          competences: {service: 10, communication: 5}
+        reaction:
+          - {speaker: marta, expression: neutral, text: "Спасибо. Кофе я, пожалуй, всё-таки оплачу — но предупреждайте."}
+        next: no_item
+        best: true
+        explanation: >
+          До оказания платной услуги подтверждают цену и согласие пассажира. Если пассажир не был осведомлён — возврат
+          денег и извинения.
+      - id: insist_pay
+        text: "Настаивать на оплате — она ведь уже всё получила"
+        effects:
+          loyalty: -20
+          competences: {service: -10}
+        next: complaint
+        explanation: "Пассажира не предупредили о цене — требовать оплату несправедливо. Правильно вернуть деньги."
+
+  - id: no_item
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: marta, position: right, expression: neutral}
+    situation: "Пассажирка хочет товар из каталога, которого нет в наличии."
+    dialogue:
+      - {speaker: marta, text: "Раз уж так — можно мне шоколад из вашего каталога, фирменный, с поездом на обёртке?"}
+      - {speaker: narrator, text: "Фирменного шоколада на борту нет — закончился ещё утром."}
+    choices:
+      - id: check_alternative
+        text: "«Прошу прощения за доставленные неудобства. Я проверю, что доступно, и предложу альтернативный вариант» — и подсказать, что такой же продаётся на вокзале"
+        effects:
+          loyalty: 10
+          competences: {service: 10}
+        reaction:
+          - {speaker: marta, expression: happy, text: "Куплю на вокзале, спасибо за подсказку."}
+        next: complaint
+        best: true
+        explanation: "Проверить наличие, предложить альтернативу, не спорить. Если товар есть на вокзале — подсказать."
+      - id: just_no
+        text: "«Нет и не будет»"
+        effects:
+          loyalty: -15
+          competences: {communication: -10}
+        next: complaint
+        explanation: "Короткий отказ без извинения и альтернативы оставляет пассажира с ощущением пренебрежения."
+
+  - id: complaint
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: marta, position: right, expression: serious}
+    situation: "Пассажирка хочет оставить жалобу на обслуживание."
+    dialogue:
+      - {speaker: marta, text: "Знаете, я всё-таки хочу оставить отзыв. Где у вас книга жалоб?"}
+      - {speaker: player, thought: true, text: "Это её право. Но, может, вопрос можно решить здесь и сейчас."}
+    choices:
+      - id: offer_channel
+        text: "«Конечно, Вы можете оставить обращение. Я подскажу доступный способ» — уточнить причину и предложить решить вопрос на борту"
+        effects:
+          loyalty: 15
+          competences: {communication: 10, service: 5}
+        reaction:
+          - {speaker: marta, expression: happy, text: "Вообще-то вы уже всё решили. Напишу, пожалуй, благодарность."}
+        next: end_success
+        best: true
+        explanation: "Оставить отзыв — полное право пассажира. Уточнить причину и, если пассажир согласен, урегулировать на борту."
+      - id: dissuade
+        text: "Отговаривать: «Да зачем, мы же всё уладили»"
+        effects:
+          loyalty: -10
+          competences: {communication: -5}
+        next: end_partial
+        explanation: "Отговаривать от отзыва нельзя — это выглядит как попытка скрыть проблему."
+      - id: no_book
+        text: "Сказать, что книги жалоб в поезде нет"
+        effects:
+          loyalty: -25
+          competences: {service: -10}
+        next: end_complaint
+        explanation: "Способ оставить обращение есть всегда — книга отзывов, QR-код, сайт или приложение."
+
+  - id: end_success
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left, expression: happy}
+        - {id: marta, position: right, expression: happy}
+    outcome: success
+    ending: "Сервис на уровне бизнес-класса"
+    final_text: >
+      Нехватку блюда сгладили извинением и похожей альтернативой, о порции не спорили, деньги за непредупреждённую
+      услугу вернули, а пассажирка вместо жалобы оставила благодарность.
+  - id: end_partial
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left, expression: worried}
+    outcome: partial
+    ending: "Обед прошёл, но осадок остался"
+    final_text: >
+      Вопросы с обедом решены, но пассажиры почувствовали, что их отговаривали или не услышали.
+  - id: end_complaint
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left, expression: sad}
+    outcome: failure
+    ending: "Жалоба на обслуживание"
+    final_text: >
+      Упрёки и спор вместо извинений и альтернатив привели к официальной жалобе на обслуживание в бизнес-классе.

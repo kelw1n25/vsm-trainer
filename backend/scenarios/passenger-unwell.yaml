@@ -1,0 +1,301 @@
+# Ситуации 19, 28 и 45: пассажиру стало плохо, он просит лекарство, а соседка начинает паниковать.
+# Алгоритм упрощён для тренажёра и не заменяет обучение первой помощи.
+id: passenger-unwell
+title: "Пассажиру стало плохо"
+category: medical
+difficulty: 3
+service_class: Стандарт
+route: Москва — Санкт-Петербург
+description: >
+  Пожилой пассажир побледнел, держится за грудь и просит таблетку. Рядом начинает паниковать соседка,
+  до ближайшей остановки — сорок минут.
+situations: [19, 28, 45]
+initial:
+  loyalty: 70
+  safety: 70
+stats:
+  trust: 40
+  tension: 40
+characters:
+  nikolai:
+    name: "Николай Петрович"
+    role: "Пассажир"
+    look: {top: "#7DA7D9", bottom: "#34405A", hair: "#B8B8B8"}
+  svetlana:
+    name: "Светлана"
+    role: "Соседка"
+    look: {top: "#F2B84B", bottom: "#3A3550", hair: "#2B2320", hair_style: long}
+  chief:
+    name: "Ольга Николаевна"
+    role: "Начальник поезда"
+    look: {outfit: uniform, hair: "#4A3426", hair_style: bun}
+  doctor:
+    name: "Анна Михайловна"
+    role: "Врач, пассажирка"
+    look: {top: "#FFFFFF", bottom: "#3A4A6B", hair: "#6B3F2A", hair_style: bun}
+start_node: start
+
+nodes:
+  - id: start
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: nikolai, position: right, expression: pained}
+    situation: "Пожилой пассажир побледнел, держится за грудь и просит таблетку от сердца."
+    dialogue:
+      - {speaker: narrator, text: "Поезд идёт 380 км/ч. До Твери — сорок минут."}
+      - {speaker: nikolai, text: "Простите… Что-то давит в груди. У вас есть таблетка от сердца? Нитроглицерин?"}
+      - {speaker: player, thought: true, text: "У меня в сумке есть… Нет. Я не знаю, что с ним и что он уже принимал."}
+    timer_seconds: 20
+    timeout_next: worse
+    timeout_effects: {safety: -20}
+    timeout_reaction:
+      - {speaker: nikolai, expression: pained, text: "Мне… тяжело дышать…"}
+    choices:
+      - id: stay_and_call
+        text: "«Я рядом, сейчас приглашу начальника поезда и организуем помощь» — помочь сесть удобнее и вызвать по рации"
+        effects:
+          safety: 15
+          loyalty: 5
+          stats: {trust: 15}
+          set_flags: [chief_informed]
+          competences: {first_aid: 10, safety_rules: 5}
+        reaction:
+          - {speaker: nikolai, expression: worried, text: "Спасибо… Только не уходите."}
+        next: help_coming
+        best: true
+        explanation: >
+          Остаться рядом, вызвать начальника поезда любым доступным способом и оказать помощь в рамках компетенции.
+          Личные лекарства не выдают — реакция на препарат неизвестна.
+      - id: give_own_pill
+        text: "Дать таблетку из своей аптечки"
+        effects:
+          safety: -25
+          set_flags: [mistake_made]
+          competences: {first_aid: -15, safety_rules: -10}
+        reaction:
+          - {speaker: nikolai, expression: neutral, text: "Спасибо… сейчас станет легче."}
+        next: pill_reaction
+        explanation: "Выдавать личные препараты запрещено: неизвестна реакция пассажира, а ответственность ляжет на проводника."
+      - id: refuse_leave
+        text: "«Сожалею, медикаментов на борту нет» — и вернуться к работе"
+        effects:
+          safety: -20
+          loyalty: -15
+          competences: {first_aid: -10}
+        next: worse
+        explanation: "Фраза про медикаменты верна, но пассажира с болью в груди нельзя оставлять одного — нужно организовать помощь."
+
+  - id: pill_reaction
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: nikolai, position: right, expression: pained}
+    situation: "После чужой таблетки пассажиру стало хуже — кружится голова."
+    dialogue:
+      - {speaker: narrator, text: "Через пять минут Николай Петрович бледнеет ещё сильнее."}
+      - {speaker: nikolai, text: "Голова кружится… Я ведь уже принимал своё лекарство утром…"}
+      - {speaker: player, thought: true, text: "Я не спросил. Теперь — честно и быстро."}
+    choices:
+      - id: admit_and_call
+        text: "Немедленно вызвать начальника поезда и честно сообщить, какую таблетку дали и когда"
+        effects:
+          safety: 10
+          set_flags: [chief_informed]
+          competences: {safety_rules: 10}
+        next: help_coming
+        best: true
+        explanation: "Точная информация о принятом препарате критически важна для врачей. Скрывать её нельзя."
+      - id: hide_pill
+        text: "Промолчать про таблетку и просто принести воды"
+        effects:
+          safety: -25
+          competences: {first_aid: -10}
+        next: end_failure
+        explanation: "Скрытая информация о лекарстве может стоить пассажиру здоровья."
+
+  - id: worse
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: nikolai, position: right, expression: pained}
+    situation: "Пассажиру становится хуже, он оседает в кресле."
+    dialogue:
+      - {speaker: narrator, text: "Николай Петрович оседает в кресле. Пассажиры вокруг замирают."}
+      - {speaker: player, thought: true, text: "Счёт на минуты."}
+    choices:
+      - id: call_everything
+        text: "Вызвать начальника поезда по рации, остаться рядом и уложить пассажира удобнее"
+        effects:
+          safety: 15
+          set_flags: [chief_informed]
+          competences: {first_aid: 10, stress_resistance: 5}
+        next: help_coming
+        best: true
+        explanation: "При ухудшении — не терять время: начальник поезда, первая помощь, поиск медика."
+      - id: panic_run
+        text: "Побежать искать аптечку по вагонам, оставив пассажира"
+        effects:
+          safety: -20
+          competences: {stress_resistance: -10}
+        next: end_failure
+        explanation: "Пассажира в тяжёлом состоянии не оставляют одного. Вызывают помощь по рации."
+
+  - id: help_coming
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: svetlana, position: center, expression: pained}
+        - {id: nikolai, position: right, expression: pained}
+    situation: "Соседка пассажира начинает паниковать, её крик пугает других."
+    dialogue:
+      - {speaker: svetlana, text: "Он умирает! Господи, сделайте же что-нибудь! Помогите!"}
+      - {speaker: narrator, text: "Кто-то встаёт с мест, кто-то снимает на телефон."}
+      - {speaker: player, thought: true, text: "Паника передаётся. Нужны чёткие короткие фразы."}
+    choices:
+      - id: calm_clear
+        text: >
+          «Пожалуйста, сохраняйте спокойствие и следуйте рекомендациям персонала поезда» — и дать Светлане понятное
+          поручение: принести воды
+        effects:
+          safety: 10
+          stats: {tension: -20}
+          competences: {communication: 10, stress_resistance: 10}
+        reaction:
+          - {speaker: svetlana, expression: worried, text: "Воды… да, сейчас, сейчас."}
+        next: doctor_search
+        best: true
+        explanation: "Не допускать паники, давать чёткие и понятные формулировки. Поручение переключает человека с паники на действие."
+      - id: shout_back
+        text: "«Не мешайте! Сядьте на место!»"
+        effects:
+          loyalty: -10
+          stats: {tension: 15}
+          competences: {communication: -5}
+        next: doctor_search
+        explanation: "Окрик усиливает панику в салоне. Спокойный тон — часть помощи."
+      - id: hold_hand
+        text: "Попросить Светлану сесть рядом и держать Николая Петровича за руку, пока вы организуете помощь"
+        condition: ["trust >= 50"]
+        effects:
+          loyalty: 10
+          stats: {tension: -25}
+          competences: {communication: 10}
+        reaction:
+          - {speaker: svetlana, expression: worried, text: "Хорошо. Николай Петрович, я здесь, всё будет хорошо."}
+        next: doctor_search
+        explanation: "Когда пассажиры доверяют проводнику, их можно вовлечь в поддержку — это успокаивает и помогает."
+
+  - id: doctor_search
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: chief, position: right, expression: serious}
+    situation: "Начальник поезда на месте и спрашивает, нужен ли поиск медика по громкой связи."
+    dialogue:
+      - {speaker: chief, text: "Я здесь. Что с пассажиром? Объявлять поиск медика?"}
+      - {speaker: player, thought: true, text: "Громкая связь, скорая к станции — сейчас, а не у перрона."}
+    timer_seconds: 15
+    timeout_next: end_late
+    timeout_effects: {safety: -20}
+    timeout_reaction:
+      - {speaker: chief, expression: serious, text: "Нет времени ждать — объявляю сама."}
+    choices:
+      - id: announce_doctor
+        text: "Попросить объявить по громкой связи о медработниках среди пассажиров и вызвать скорую к ближайшей станции"
+        effects:
+          safety: 15
+          set_flags: [medical_help_called]
+          competences: {first_aid: 10, safety_rules: 10}
+        reaction:
+          - {speaker: narrator, text: "Через минуту в вагон быстрым шагом входит женщина: «Я врач»."}
+        next: doctor
+        best: true
+        explanation: "Громкая связь — чтобы найти медика среди пассажиров; скорая — к ближайшей станции. Оба шага сразу."
+      - id: wait_station
+        text: "Не тревожить пассажиров объявлением, дождаться станции"
+        effects:
+          safety: -20
+          competences: {first_aid: -10}
+        next: end_late
+        explanation: "До станции сорок минут. Поиск медика объявлением — рекомендация стандарта именно для таких случаев."
+
+  - id: doctor
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: doctor, position: center, expression: serious}
+        - {id: nikolai, position: right, expression: worried}
+    situation: "Врач из числа пассажиров просит рассказать, что происходило."
+    dialogue:
+      - {speaker: doctor, text: "Я кардиолог. Что он принимал, когда всё началось?"}
+      - {speaker: player, thought: true, text: "Нужна точная хронология."}
+    choices:
+      - id: report_timeline
+        text: "Доложить хронологию — когда началось, что беспокоит, какие лекарства принимали и какие нет"
+        effects:
+          safety: 15
+          loyalty: 10
+          competences: {first_aid: 10, communication: 10}
+        reaction:
+          - {speaker: doctor, expression: neutral, text: "Спасибо, это очень помогает. Скорую к станции уже вызвали? Отлично."}
+        next: end_success
+        best: true
+        explanation: "Точная хронология помогает врачу и бригаде скорой. Её собирает тот, кто был рядом с самого начала."
+      - id: guess
+        text: "Сказать, что не помните — вроде давали что-то из аптечки"
+        effects:
+          safety: -10
+          competences: {first_aid: -5}
+        next: end_partial
+        explanation: "Неточная информация сбивает врача с толку и тратит драгоценные минуты."
+
+  - id: end_success
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: neutral}
+        - {id: doctor, position: center, expression: neutral}
+        - {id: nikolai, position: right, expression: neutral}
+    outcome: success
+    ending: "Помощь организована вовремя"
+    final_text: >
+      Проводник остался рядом, не дал чужих лекарств, вызвал начальника поезда и не допустил паники. Врач из числа
+      пассажиров помогла до станции, где ждала скорая.
+    dialogue:
+      - {speaker: nikolai, text: "Спасибо вам… Если бы не вы…"}
+  - id: end_partial
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: worried}
+        - {id: doctor, position: right, expression: serious}
+    outcome: partial
+    ending: "Помощь пришла, но с неточной информацией"
+    final_text: >
+      Пассажира передали скорой, но врачам пришлось гадать, что он принимал. Точный доклад — такая же часть помощи, как вызов.
+  - id: end_late
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: sad}
+        - {id: chief, position: right, expression: serious}
+    outcome: failure
+    ending: "Помощь опоздала"
+    final_text: >
+      Поиск медика и вызов скорой откладывали слишком долго. Пассажира экстренно госпитализировали, проводится разбор.
+  - id: end_failure
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: sad}
+    outcome: failure
+    ending: "Ситуация переросла в серьёзный инцидент"
+    final_text: >
+      Пассажир остался без своевременной помощи или получил чужой препарат. Проводится служебная проверка.

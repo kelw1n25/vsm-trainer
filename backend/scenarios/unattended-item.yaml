@@ -1,0 +1,291 @@
+# Ситуации 41, 17, 40 и 39: пассажир сообщает о бесхозной вещи, пассажирка потеряла кошелёк
+# и забыла вещь на платформе, а на станции просят передать посылку.
+id: unattended-item
+title: "Бесхозная сумка в вагоне"
+category: safety
+difficulty: 2
+service_class: Бизнес
+route: Москва — Санкт-Петербург
+description: >
+  Пассажир показывает на сумку в проходе: полчаса к ней никто не подходит. Чья она — пока неизвестно.
+situations: [41, 17, 40, 39]
+initial:
+  loyalty: 70
+  safety: 60
+stats:
+  trust: 40
+  tension: 30
+characters:
+  igor:
+    name: "Игорь"
+    role: "Пассажир"
+    look: {top: "#56657F", bottom: "#34405A", hair: "#2B2320"}
+  tamara:
+    name: "Тамара Викторовна"
+    role: "Пассажирка"
+    look: {top: "#7B5EA7", bottom: "#3A3550", hair: "#B8B8B8", hair_style: bun}
+  zhenya:
+    name: "Женя"
+    role: "Пассажир на платформе"
+    look: {top: "#3E6FD8", bottom: "#2F3B55", hair: "#6B3F2A"}
+  chief:
+    name: "Ольга Николаевна"
+    role: "Начальник поезда"
+    look: {outfit: uniform, hair: "#4A3426", hair_style: bun}
+  roman:
+    name: "Роман"
+    role: "Сотрудник ПТБ"
+    look: {top: "#2E3A4F", bottom: "#1E2636", hair: "#1F1A17"}
+start_node: start
+
+nodes:
+  - id: start
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: igor, position: right, expression: worried}
+    situation: "Пассажир сообщает о сумке, к которой полчаса никто не подходит."
+    dialogue:
+      - {speaker: igor, text: "Извините… Вон там, у багажной полки, стоит сумка. Уже полчаса никто к ней не подходит."}
+      - {speaker: narrator, text: "Тёмная спортивная сумка стоит в проходе. Рядом никого."}
+      - {speaker: player, thought: true, text: "Не трогать. Не пугать вагон. Сообщить."}
+    timer_seconds: 20
+    timeout_next: ask_around
+    timeout_effects: {safety: -15, stats: {tension: 15}}
+    timeout_reaction:
+      - {speaker: narrator, text: "Любопытные пассажиры начинают подходить к сумке и разглядывать её."}
+    choices:
+      - id: thank_and_keep_away
+        text: >
+          «Благодарю за бдительность, сейчас я уточню, кому принадлежит оставленная вещь» — и попросить пассажиров
+          не приближаться к предмету
+        effects:
+          safety: 15
+          loyalty: 5
+          stats: {trust: 15}
+          competences: {safety_rules: 10, communication: 5}
+        reaction:
+          - {speaker: igor, expression: neutral, text: "Хорошо. Я прослежу, чтобы никто не подходил."}
+        next: ask_around
+        best: true
+        explanation: "Поблагодарить пассажира, не трогать вещь и не допускать к ней людей — первый шаг алгоритма."
+      - id: open_bag
+        text: "Открыть сумку и посмотреть, что внутри"
+        effects:
+          safety: -30
+          set_flags: [mistake_made]
+          competences: {safety_rules: -20}
+        next: end_incident
+        explanation: "Бесхозную вещь нельзя трогать и тем более открывать — это прямая угроза жизни."
+      - id: move_bag
+        text: "Отнести сумку в служебное купе, чтобы не мешала"
+        effects:
+          safety: -20
+          set_flags: [mistake_made]
+          competences: {safety_rules: -15}
+        next: chief_angry
+        explanation: "Перемещать бесхозную вещь запрещено. Её оставляют на месте и вызывают начальника поезда и ПТБ."
+
+  - id: chief_angry
+    scene:
+      background: staff_room
+      characters:
+        - {id: player, position: left}
+        - {id: chief, position: right, expression: angry}
+    situation: "Начальник поезда узнаёт, что сумку переносили."
+    dialogue:
+      - {speaker: chief, text: "Вы её переносили? Руками?!"}
+      - {speaker: player, thought: true, text: "Врать бессмысленно — это только хуже."}
+    choices:
+      - id: admit
+        text: "Честно подтвердить и указать, где сумка стояла и где она сейчас"
+        effects:
+          safety: 10
+          set_flags: [security_called]
+          competences: {safety_rules: 5}
+        reaction:
+          - {speaker: chief, expression: serious, text: "Понятно. Больше к ней не подходить. Вызываю ПТБ."}
+        next: ptb_check
+        best: true
+        explanation: "Точная информация о том, где была и где сейчас вещь, нужна сотрудникам ПТБ."
+      - id: lie
+        text: "Сказать, что сумка сама оказалась в купе"
+        effects:
+          safety: -20
+          competences: {communication: -10}
+        next: end_incident
+        explanation: "Искажённые сведения мешают ПТБ оценить угрозу."
+
+  - id: ask_around
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: igor, position: right, expression: worried}
+    situation: "Никто в вагоне не признаёт сумку своей."
+    dialogue:
+      - {speaker: narrator, text: "Вы спрашиваете ближайших пассажиров. Все качают головами: не наша."}
+      - {speaker: player, thought: true, text: "Хозяина нет. Дальше — по алгоритму."}
+    choices:
+      - id: radio_chief_ptb
+        text: "Не трогая вещь, сообщить начальнику поезда и сотрудникам ПТБ по поездной радиосвязи"
+        effects:
+          safety: 15
+          set_flags: [security_called, chief_informed]
+          competences: {safety_rules: 15}
+        next: ptb_check
+        best: true
+        explanation: "Бесхозную вещь не трогают и сразу сообщают начальнику поезда и ПТБ по поездной радиосвязи."
+      - id: ask_loud
+        text: "Громко спросить на весь вагон «Чья сумка?» и подождать"
+        effects:
+          safety: -10
+          stats: {tension: 15}
+          competences: {safety_rules: -5}
+        reaction:
+          - {speaker: narrator, text: "Пассажиры тревожно оглядываются. Хозяин не находится, время уходит."}
+        next: ptb_check
+        explanation: "Объявление по вагону без доклада ПТБ тратит время и тревожит пассажиров."
+
+  - id: ptb_check
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: roman, position: center, expression: serious}
+        - {id: tamara, position: right, expression: surprised}
+    situation: "Сотрудник ПТБ проверяет вещь, и в этот момент появляется её хозяйка — она потеряла ещё и кошелёк."
+    dialogue:
+      - {speaker: roman, text: "Уважаемые пассажиры, просьба не приближаться к предмету. Мы уточняем принадлежность вещи."}
+      - {speaker: tamara, text: "Ой, это же моя сумка! Я ходила в бистро и забыла…"}
+      - {speaker: roman, expression: neutral, text: "Документы, пожалуйста. …Всё в порядке, забирайте."}
+      - {speaker: tamara, expression: worried, text: "Спасибо… Только кошелька нет! Я, наверное, выронила его где-то в поезде."}
+    choices:
+      - id: record_description
+        text: "«Давайте зафиксируем описание вещи, я сразу передам информацию начальнику поезда» — уточнить, какой, где и когда"
+        effects:
+          loyalty: 15
+          stats: {trust: 15}
+          set_flags: [chief_informed]
+          competences: {service: 10, communication: 5}
+        reaction:
+          - {speaker: tamara, expression: neutral, text: "Красный, кожаный. Последний раз — в бистро, минут сорок назад."}
+        next: platform_item
+        best: true
+        explanation: "Уточнить описание, место и время, организовать поиск и сообщить начальнику поезда — он может сделать объявление."
+      - id: promise_find
+        text: "«Не волнуйтесь, обязательно найдём!»"
+        effects:
+          loyalty: -5
+          competences: {service: -5}
+        next: platform_item
+        explanation: "Обещание без описания вещи ничего не даёт — искать нечего. Сначала зафиксировать приметы."
+
+  - id: platform_item
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left}
+        - {id: tamara, position: right, expression: sad}
+    situation: "Пассажирка вспоминает, что забыла ещё одну вещь на платформе в Москве."
+    dialogue:
+      - {speaker: narrator, text: "Кошелёк нашёлся в бистро через десять минут — после объявления начальника поезда."}
+      - {speaker: tamara, expression: sad, text: "Спасибо! Но я, кажется, ещё и шарф на платформе в Москве оставила, на скамейке…"}
+    choices:
+      - id: pass_no_promise
+        text: >
+          «Я передам информацию начальнику поезда, чтобы он связался со службами вокзала. Подскажу, куда обратиться
+          для поиска вещи при её обнаружении»
+        effects:
+          loyalty: 10
+          stats: {trust: 10}
+          competences: {service: 10}
+        reaction:
+          - {speaker: tamara, expression: neutral, text: "Хорошо, буду знать, куда звонить. Спасибо."}
+        next: parcel
+        best: true
+        explanation: "Не давать ложных обещаний, но сделать всё возможное — передать сведения и подсказать, куда обращаться."
+      - id: promise_back
+        text: "«Шарф обязательно вернут к Вашему приезду»"
+        effects:
+          loyalty: -10
+          competences: {service: -5}
+        next: parcel
+        explanation: "Вернуть вещь с платформы к приезду никто не гарантирует. Ложное обещание обернётся разочарованием."
+
+  - id: parcel
+    scene:
+      background: platform
+      characters:
+        - {id: player, position: left}
+        - {id: zhenya, position: right, expression: happy}
+    situation: "На стоянке пассажир с платформы просит передать посылку в Санкт-Петербург."
+    dialogue:
+      - {speaker: narrator, text: "Стоянка в Твери — одна минута. К двери подбегает молодой человек с пакетом."}
+      - {speaker: zhenya, text: "Выручите, пожалуйста! Передайте сестре в Питере — она вас встретит у вагона. Там просто подарок."}
+    timer_seconds: 15
+    timeout_next: end_partial
+    timeout_effects: {loyalty: -10}
+    timeout_reaction:
+      - {speaker: narrator, text: "Двери закрываются. Женя растерянно остаётся на платформе с пакетом."}
+    choices:
+      - id: refuse_mpo
+        text: "«Сожалею, но мы не принимаем к передаче личные вещи пассажиров. Вы можете воспользоваться услугой МПО на вокзале»"
+        effects:
+          safety: 15
+          loyalty: 5
+          competences: {safety_rules: 10, communication: 5}
+        reaction:
+          - {speaker: zhenya, expression: sad, text: "Жаль… Ладно, спасибо, что подсказали."}
+        next: end_success
+        best: true
+        explanation: "Работники не принимают посылок ради безопасности. Вежливо отказать и предложить сервис доставки отправлений на вокзале."
+      - id: accept_parcel
+        text: "Взять пакет — человек просит по-хорошему"
+        effects:
+          safety: -25
+          set_flags: [mistake_made]
+          competences: {safety_rules: -15}
+        next: end_incident
+        explanation: "Содержимое посылки неизвестно — принимать любые передачи запрещено."
+      - id: accept_if_show
+        text: "Взять, если он покажет, что внутри"
+        effects:
+          safety: -15
+          set_flags: [mistake_made]
+          competences: {safety_rules: -10}
+        next: end_partial
+        explanation: "Даже «проверенную» посылку проводник не принимает — правило действует для любых передач."
+
+  - id: end_success
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left, expression: happy}
+        - {id: igor, position: right, expression: happy}
+    outcome: success
+    ending: "Бдительность без паники"
+    final_text: >
+      Бесхозную вещь не трогали, пассажиров отвели, ПТБ и начальник поезда были вызваны по радиосвязи. Хозяйке помогли
+      найти кошелёк и не дали ложных обещаний о шарфе, а посылку вежливо не приняли.
+  - id: end_partial
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left, expression: worried}
+    outcome: partial
+    ending: "Правила соблюдены не до конца"
+    final_text: >
+      Угрозы не случилось, но часть решений отошла от алгоритма: промедление, ложное обещание или «проверенная» посылка.
+  - id: end_incident
+    scene:
+      background: business
+      characters:
+        - {id: player, position: left, expression: sad}
+        - {id: chief, position: right, expression: angry}
+    outcome: failure
+    ending: "Нарушен алгоритм безопасности"
+    final_text: >
+      С неизвестным предметом обращались без соблюдения алгоритма: трогали, переносили или приняли на борт.
+      В реальной ситуации это могло стоить жизни. Проводится служебная проверка.

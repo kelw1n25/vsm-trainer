@@ -4,8 +4,8 @@ import pytest
 import yaml
 
 from app.scoring.service import calculate_xp, clamp_scale, fast_answer_bonus
-from tests.test_engine import choose, play, start
-from tests.test_timer import rewind
+from tests.test_engine import BEST_PATH, choose, play
+from tests.test_timer import at_timed_node, rewind
 from tests.test_validator import MINIMAL
 
 
@@ -28,26 +28,25 @@ def test_fast_answer_bonus():
 
 
 def test_finish_awards_xp_and_competences(client, auth, db, employee):
-    state = play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
-    assert state["final"]["xp_earned"] == 204
+    state = play(client, auth, *BEST_PATH)
+    # success: 100 × 1.5 + 95 × 0.3 + 100 × 0.3 = 208,5 → 208
+    assert state["final"]["xp_earned"] == 208
     db.refresh(employee)
-    assert employee.xp == 204
-    # communication 10 + 10, safety_rules 5 + 10, service 10 + 15, плюс бонусы за быстрые ответы
-    assert employee.competence_points == {
-        "communication": 20, "safety_rules": 15, "service": 25, "stress_resistance": 6,
-    }
+    assert employee.xp == 208
+    # communication 10 + 5, service 5 + 15, safety_rules 10; на этих шагах таймера нет — бонуса за скорость тоже
+    assert employee.competence_points == {"communication": 15, "safety_rules": 10, "service": 20}
     assert employee.last_activity_at is not None
 
 
 def test_slow_answer_gets_no_speed_bonus(client, auth, db):
-    state = start(client, auth)
+    state = at_timed_node(client, auth)
     rewind(db, state["id"], 10)  # половина 20-секундного таймера
-    step = choose(client, auth, state, "ask_tickets").json()["last_steps"][0]
-    assert step["competences"] == {"communication": 10, "safety_rules": 5}
+    step = choose(client, auth, state, "separate", reveal_first=False).json()["last_steps"][0]
+    assert step["competences"] == {"communication": 15}
 
 
 def test_negative_points_do_not_make_profile_negative(client, auth, db, employee):
-    play(client, auth, "demand_leave", "ask_neighbours")
+    play(client, auth, "side_with_sergey", "raise_voice")
     db.refresh(employee)
     assert all(value >= 0 for value in employee.competence_points.values())
 

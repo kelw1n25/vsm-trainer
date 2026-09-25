@@ -1,0 +1,367 @@
+# Ситуации 4, 5, 11 и 14: питомец без переноски, велосипед не в разобранном виде,
+# ручная кладь в проходе и пассажирка с аллергией на животных.
+id: pet-and-bicycle
+title: "Питомец без переноски и велосипед в проходе"
+category: safety
+difficulty: 2
+service_class: Комфорт
+route: Москва — Тверь
+description: >
+  На посадке — пассажирка с собакой на поводке и велосипедист с несложенным велосипедом.
+  А в салоне кто-то уже начинает чихать.
+situations: [4, 5, 11, 14]
+initial:
+  loyalty: 70
+  safety: 70
+stats:
+  trust: 40
+  tension: 20
+characters:
+  anna:
+    name: "Анна"
+    role: "Пассажирка с собакой"
+    look: {top: "#7BA05B", bottom: "#3A3550", hair: "#C58B4A", hair_style: long}
+  denis:
+    name: "Денис"
+    role: "Пассажир с велосипедом"
+    look: {top: "#F2B84B", bottom: "#2F3B55", hair: "#3A2E2A"}
+  elena:
+    name: "Елена Сергеевна"
+    role: "Пассажирка"
+    look: {top: "#7B5EA7", bottom: "#3A3550", hair: "#4A3426", hair_style: bun}
+  chief:
+    name: "Ольга Николаевна"
+    role: "Начальник поезда"
+    look: {outfit: uniform, hair: "#4A3426", hair_style: bun}
+start_node: start
+
+nodes:
+  - id: start
+    scene:
+      background: platform
+      characters:
+        - {id: player, position: left}
+        - {id: anna, position: right, expression: happy}
+    situation: "Пассажирка заходит на посадку с собакой на поводке, без переноски."
+    dialogue:
+      - {speaker: narrator, text: "Посадка в вагон комфорт-класса. Пассажирка ведёт на поводке небольшую собаку."}
+      - {speaker: anna, text: "Здравствуйте! Мы с Бусей едем в Тверь. Она у меня очень спокойная."}
+      - {speaker: player, thought: true, text: "Переноски нет. А за ней — парень с велосипедом, и велосипед не сложен."}
+    choices:
+      - id: pet_rule
+        text: >
+          «Обращаю Ваше внимание: провоз питомцев — только в переноске, это нужно для безопасности Буси на борту.
+          Переноску можно приобрести у нас на борту»
+        effects:
+          safety: 10
+          loyalty: 5
+          stats: {trust: 15}
+          set_flags: [pet_in_carrier]
+          competences: {service: 10, communication: 5}
+        reaction:
+          - {speaker: anna, expression: surprised, text: "Ой, я не знала. Хорошо, давайте купим переноску."}
+        next: bicycle
+        best: true
+        explanation: >
+          Стандарт: вежливо напомнить правило, предложить переноску, в том числе с продажей на борту, и сделать
+          акцент на безопасности — пассажир должен понимать, что о нём заботятся, а не отчитывают.
+      - id: let_both
+        text: "Пропустить обоих — в пути разберёмся"
+        effects:
+          safety: -20
+          set_flags: [mistake_made, dog_loose]
+          competences: {safety_rules: -10}
+        next: aisle_blocked
+        explanation: "Правила провоза животных и ручной клади проверяют на посадке — в салоне это уже угроза безопасности."
+      - id: scold
+        text: "Отчитать: «Собака без переноски — это нарушение. Вы правила вообще читали?»"
+        effects:
+          loyalty: -15
+          stats: {tension: 25, trust: -15}
+          competences: {communication: -10}
+        reaction:
+          - {speaker: anna, expression: angry, text: "Не надо со мной так разговаривать! Она в переноске плачет, я её не посажу!"}
+        next: pet_refuses
+        explanation: "Упрёк вместо заботы превращает правило в конфликт. Акцент — на безопасности питомца, а не на вине хозяйки."
+
+  - id: pet_refuses
+    scene:
+      background: platform
+      characters:
+        - {id: player, position: left}
+        - {id: anna, position: right, expression: angry}
+    situation: "Пассажирка отказывается сажать собаку в переноску."
+    dialogue:
+      - {speaker: anna, text: "Буся боится закрытых мест. Мы всегда так ездим — и ничего!"}
+      - {speaker: player, thought: true, text: "Не перегружать правилами. Показать, что я на её стороне."}
+    choices:
+      - id: care_accent
+        text: "«Я Вас понимаю. В переноске Бусе будет безопаснее при торможении — давайте подберём удобную, с сеткой»"
+        effects:
+          safety: 10
+          loyalty: 10
+          stats: {tension: -20, trust: 15}
+          set_flags: [pet_in_carrier]
+          competences: {communication: 10}
+        reaction:
+          - {speaker: anna, expression: thinking, text: "С сеткой… Ну, может, она и правда так будет меня видеть. Ладно."}
+        next: bicycle
+        best: true
+        explanation: "Признать чувства, объяснить правило через заботу и сразу предложить решение — ролевая модель в действии."
+      - id: call_chief
+        text: "При отказе — «Я приглашу начальника поезда»"
+        effects:
+          safety: 5
+          stats: {tension: 5}
+          set_flags: [chief_called, pet_in_carrier]
+          competences: {safety_rules: 5}
+        reaction:
+          - {speaker: narrator, text: "Начальник поезда спокойно повторяет правило — и Анна нехотя соглашается на переноску."}
+        next: bicycle
+        explanation: "Вызвать начальника поезда при отказе — по регламенту, но сначала стоит попробовать объяснить через заботу."
+      - id: give_up
+        text: "Махнуть рукой и пропустить с собакой на поводке"
+        effects:
+          safety: -15
+          set_flags: [mistake_made, dog_loose]
+          competences: {safety_rules: -10}
+        next: salon_allergy
+        explanation: "Уступив, проводник оставляет в салоне животное без переноски — риск для него и для других пассажиров."
+
+  - id: bicycle
+    scene:
+      background: platform
+      characters:
+        - {id: player, position: left}
+        - {id: denis, position: right, expression: neutral}
+    situation: "Пассажир хочет завезти велосипед в салон, не сложив его."
+    dialogue:
+      - {speaker: denis, text: "Я с великом. Поставлю у дверей, он никому не помешает."}
+      - {speaker: player, thought: true, text: "Руль и педали перегородят весь тамбур."}
+    choices:
+      - id: fold_offer
+        text: >
+          «Обращаю Ваше внимание: велосипед перевозится в сложенном виде и не должен мешать проходу. Если сложите
+          его сейчас — подскажу безопасное место»
+        effects:
+          safety: 10
+          stats: {trust: 10}
+          set_flags: [bike_packed]
+          competences: {safety_rules: 10, service: 5}
+        reaction:
+          - {speaker: denis, expression: thinking, text: "Колесо снимается за минуту. Давайте, где у вас место для багажа?"}
+          - {speaker: player, text: "В конце вагона — стеллаж для крупной клади. Я покажу."}
+        next: salon_allergy
+        best: true
+        explanation: "Объяснить условия, предложить сложить и указать конкретное место размещения — так проход останется свободным."
+      - id: aisle_ok
+        text: "Разрешить поставить велосипед в проходе у дверей"
+        effects:
+          safety: -15
+          set_flags: [mistake_made]
+          competences: {safety_rules: -10}
+        next: aisle_blocked
+        explanation: "Велосипед в проходе блокирует эвакуационный путь. Если сложить его нельзя, в перевозке в таком виде отказывают."
+      - id: refuse_outright
+        text: "Отказать без объяснений и вариантов"
+        effects:
+          loyalty: -15
+          stats: {tension: 15}
+          competences: {communication: -5}
+        reaction:
+          - {speaker: denis, expression: angry, text: "Ну и ладно. Сам сложу, раз вы такие строгие."}
+        next: salon_allergy
+        explanation: "Отказ допустим только если пассажир не может или не хочет сложить велосипед — сначала нужно предложить вариант."
+
+  - id: aisle_blocked
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: chief, position: right, expression: serious}
+    situation: "В салоне проход перекрыт велосипедом и сумками, собака без переноски бегает между креслами."
+    dialogue:
+      - {speaker: narrator, text: "Поезд тронулся. В проходе — велосипед и чьи-то сумки, между кресел носится собака."}
+      - {speaker: chief, text: "Кто разрешил перекрыть проход? Если будет экстренное торможение — кто-нибудь упадёт."}
+    timer_seconds: 20
+    timeout_next: end_incident
+    timeout_effects: {safety: -20}
+    timeout_reaction:
+      - {speaker: narrator, text: "Поезд притормаживает на стрелке. Пожилой пассажир спотыкается о колесо велосипеда."}
+    choices:
+      - id: clear_aisle
+        text: >
+          Найти владельцев и попросить убрать вещи: «В целях безопасности проход должен оставаться свободным.
+          В конце вагона есть место для багажа — позвольте, я помогу»
+        effects:
+          safety: 20
+          stats: {trust: 10}
+          set_flags: [bike_packed, pet_in_carrier]
+          competences: {safety_rules: 10, service: 5}
+        reaction:
+          - {speaker: chief, expression: neutral, text: "Так. И впредь такие вопросы — на посадке."}
+        next: salon_allergy
+        best: true
+        explanation: "Владельцев находят опросом пассажиров, просят переставить вещи с акцентом на безопасности и называют конкретное место."
+      - id: leave_it
+        text: "Сказать начальнику: «Ничего страшного, доедем»"
+        effects:
+          safety: -20
+          competences: {safety_rules: -10}
+        next: end_incident
+        explanation: "Перекрытый проход — прямая угроза при торможении и эвакуации, откладывать нельзя."
+
+  - id: salon_allergy
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: elena, position: right, expression: pained}
+    situation: "Пассажирке с аллергией на животных становится хуже — собака сидит через ряд."
+    dialogue:
+      - {speaker: narrator, text: "Через двадцать минут пути вас вызывает пассажирка из середины вагона."}
+      - {speaker: elena, text: "Простите… У меня аллергия на собак. Глаза слезятся, и дышать тяжелее."}
+      - {speaker: player, thought: true, text: "Сначала — самочувствие. Потом — пересадка."}
+    timer_seconds: 20
+    timeout_next: allergy_worse
+    timeout_effects: {safety: -15, loyalty: -5}
+    timeout_reaction:
+      - {speaker: elena, expression: pained, text: "Мне… правда плохо. Кхе-кхе…"}
+    choices:
+      - id: check_and_move
+        text: >
+          «Понимаю, аллергия может доставлять серьёзный дискомфорт. Сейчас проверю возможность пересадки. Если станет
+          хуже — сразу нажмите кнопку вызова персонала»
+        effects:
+          loyalty: 10
+          safety: 10
+          stats: {trust: 15}
+          competences: {first_aid: 5, service: 10, communication: 5}
+        reaction:
+          - {speaker: elena, expression: worried, text: "Спасибо. Мне бы подальше, в другой конец вагона."}
+        next: allergy_follow
+        best: true
+        explanation: "Уточнить самочувствие, проверить пересадку дальше от животных или в другой вагон и рассказать про кнопку вызова."
+      - id: ask_owner_leave
+        text: "Попросить хозяйку собаки перейти в другой вагон"
+        effects:
+          loyalty: -10
+          stats: {tension: 20}
+          competences: {communication: -5}
+        reaction:
+          - {speaker: narrator, text: "Анна обиженно собирает вещи. Пассажиры вокруг начинают перешёптываться."}
+        next: end_partial
+        explanation: "Пассажирка с собакой не нарушает правила — пересаживают того, кому некомфортно, если есть места."
+      - id: booklet_and_seat
+        text: "Буся уже в переноске — пересадить Елену Сергеевну в другой конец вагона и дать буклет со схемой вагонов для животных"
+        condition: ["flag pet_in_carrier"]
+        effects:
+          loyalty: 15
+          safety: 5
+          stats: {trust: 20}
+          competences: {service: 10}
+        reaction:
+          - {speaker: elena, expression: happy, text: "Какой полезный буклет! В следующий раз возьму билет в другой вагон."}
+        next: allergy_follow
+        explanation: "Когда питомец в переноске, достаточно пересадки. Буклет со схемой вагонов для животных — по стандарту."
+
+  - id: allergy_worse
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: elena, position: right, expression: pained}
+    situation: "Аллергическая реакция усиливается, пассажирка кашляет."
+    dialogue:
+      - {speaker: narrator, text: "Елена Сергеевна закрывает лицо ладонями и кашляет всё сильнее."}
+      - {speaker: player, thought: true, text: "Я промедлил. Теперь — только помощь."}
+    choices:
+      - id: first_aid
+        text: "Вызвать начальника поезда, пересадить подальше от животного и спросить по громкой связи о медиках среди пассажиров"
+        effects:
+          safety: 15
+          set_flags: [medical_help_called]
+          competences: {first_aid: 10, safety_rules: 5}
+        next: end_help
+        best: true
+        explanation: "При ухудшении — начальник поезда и первая помощь; медика ищут объявлением по громкой связи."
+      - id: only_water
+        text: "Принести воды и попросить потерпеть до станции"
+        effects:
+          safety: -20
+          competences: {first_aid: -10}
+        next: end_incident
+        explanation: "Аллергическая реакция может быстро нарастать — ждать станции без помощи нельзя."
+
+  - id: allergy_follow
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: elena, position: right, expression: neutral}
+    situation: "Пассажирку пересадили; нужно проверить, как она себя чувствует."
+    dialogue:
+      - {speaker: narrator, text: "Елена Сергеевна сидит у окна в другом конце вагона. Поезд проходит Клин."}
+      - {speaker: player, thought: true, text: "Пересадить — половина дела."}
+    choices:
+      - id: follow_up
+        text: "Через десять минут подойти, уточнить самочувствие и предложить воды"
+        effects:
+          loyalty: 10
+          stats: {trust: 10}
+          competences: {service: 10}
+        reaction:
+          - {speaker: elena, expression: happy, text: "Гораздо лучше, спасибо, что не забыли про меня."}
+        next: end_success
+        best: true
+        explanation: "Обязательно брать обратную связь и интересоваться комфортом пассажира позже."
+      - id: forget
+        text: "Заняться другими делами — раз пересадили, значит, всё в порядке"
+        effects:
+          loyalty: -5
+          competences: {service: -5}
+        next: end_partial
+        explanation: "Без обратной связи неизвестно, помогла ли пересадка, — и пассажир чувствует себя забытым."
+
+  - id: end_success
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: happy}
+        - {id: elena, position: right, expression: happy}
+    outcome: success
+    ending: "Все доехали с комфортом"
+    final_text: >
+      Собака путешествует в переноске, велосипед сложен и стоит на багажном стеллаже, проход свободен.
+      Пассажирке с аллергией нашли место подальше от животных и не забыли спросить о самочувствии.
+  - id: end_partial
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: worried}
+    outcome: partial
+    ending: "Комфорт восстановлен не для всех"
+    final_text: >
+      Безопасность удалось сохранить, но кто-то из пассажиров остался обиженным или без внимания.
+      Пересаживают того, кому некомфортно, и обязательно возвращаются узнать, как он.
+  - id: end_help
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: worried}
+        - {id: elena, position: right, expression: sad}
+    outcome: partial
+    ending: "Потребовалась первая помощь"
+    final_text: >
+      Среди пассажиров нашёлся врач, реакция пошла на спад. Помощь пришла вовремя, но её можно было не доводить
+      до такого — пересадка сразу после жалобы решила бы всё.
+  - id: end_incident
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: sad}
+        - {id: chief, position: right, expression: angry}
+    outcome: failure
+    ending: "Пострадал пассажир"
+    final_text: >
+      Перекрытый проход или промедление с помощью привели к травме пассажира. Проводится служебная проверка.

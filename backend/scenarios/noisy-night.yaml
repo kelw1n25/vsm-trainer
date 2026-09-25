@@ -1,0 +1,349 @@
+# Ситуации 12, 22, 10, 37 и 48: громкий разговор по телефону, видео без наушников, дети в проходе,
+# плачущий малыш и шум в сервисной зоне — ночью, когда пассажиры хотят отдохнуть.
+id: noisy-night
+title: "Шумный вагон ночью"
+category: conflict
+difficulty: 1
+service_class: Комфорт
+route: Санкт-Петербург — Москва
+description: >
+  Без двадцати полночь. Пассажир у окна просит тишины, а вагон будто нарочно становится всё громче.
+situations: [12, 22, 10, 37, 48]
+initial:
+  loyalty: 60
+  safety: 90
+stats:
+  trust: 40
+  tension: 30
+characters:
+  petr:
+    name: "Пётр Ильич"
+    role: "Пассажир"
+    look: {top: "#8A6D5A", bottom: "#34405A", hair: "#9A9A9A"}
+  kirill:
+    name: "Кирилл"
+    role: "Пассажир с телефоном"
+    look: {top: "#3E6FD8", bottom: "#2F3B55", hair: "#2B2320"}
+  artyom:
+    name: "Артём"
+    role: "Пассажир-подросток"
+    look: {top: "#F2B84B", bottom: "#2F3B55", hair: "#6B3F2A", child: true}
+  vera:
+    name: "Вера"
+    role: "Мама с малышом"
+    look: {top: "#E0A0B4", bottom: "#3A3550", hair: "#C58B4A", hair_style: bun}
+start_node: start
+
+nodes:
+  - id: start
+    scene:
+      background: salon_night
+      characters:
+        - {id: player, position: left}
+        - {id: petr, position: right, expression: annoyed}
+    situation: "Пассажир ночью жалуется, что не может отдохнуть из-за шума в салоне."
+    dialogue:
+      - {speaker: narrator, text: "23:40. В вагоне приглушили свет, но спать здесь невозможно."}
+      - {speaker: petr, text: "Молодой человек, у меня завтра в девять операция. Я хирург. Мне нужно поспать хотя бы три часа."}
+      - {speaker: petr, text: "Один орёт в телефон, у другого видео на весь вагон. Сделайте что-нибудь."}
+      - {speaker: player, thought: true, text: "Каждого — отдельно и тихо. Иначе разбужу тех, кто ещё спит."}
+    choices:
+      - id: acknowledge
+        text: "«Понимаю, что Вам важно отдохнуть. Я постараюсь помочь» — и пойти к источникам шума"
+        effects:
+          loyalty: 10
+          stats: {trust: 15}
+          competences: {communication: 10}
+        reaction:
+          - {speaker: petr, expression: neutral, text: "Спасибо. Буду очень признателен."}
+        next: phone
+        best: true
+        explanation: "Признать потребность пассажира и пообещать реальное действие — первый шаг ролевой модели."
+      - id: announce
+        text: "Объявить на весь вагон: «Пассажиры, соблюдайте тишину!»"
+        effects:
+          loyalty: -10
+          stats: {tension: 20}
+          competences: {communication: -10}
+        reaction:
+          - {speaker: narrator, text: "Проснувшиеся пассажиры недовольно ворочаются. Разговор по телефону не прекращается."}
+        next: phone
+        explanation: "Общее замечание будит спящих и не адресовано нарушителю. Обращаться нужно индивидуально."
+      - id: dismiss
+        text: "«Ночью все устали, потерпите немного»"
+        effects:
+          loyalty: -15
+          stats: {trust: -15}
+          competences: {service: -10}
+        reaction:
+          - {speaker: petr, expression: angry, text: "Потерпеть? Прекрасно. Я запомню."}
+        next: phone
+        explanation: "Отмахнуться от жалобы — значит оставить ситуацию без внимания, а это запрещает стандарт."
+
+  - id: phone
+    scene:
+      background: salon_night
+      characters:
+        - {id: player, position: left}
+        - {id: kirill, position: right, expression: neutral}
+    situation: "Пассажир громко разговаривает по телефону в ночном салоне."
+    dialogue:
+      - {speaker: kirill, text: "Да! Нет! Я тебе говорю, отгрузка в понедельник! Ты меня слышишь вообще?!"}
+      - {speaker: player, thought: true, text: "Я не знаю, что у него за разговор. Моя задача — комфорт для всех."}
+    choices:
+      - id: individual
+        text: >
+          Подойти и негромко, только ему: «Будьте добры, разговаривайте чуть тише. Если нужно — можно спокойно
+          продолжить разговор в тамбуре»
+        effects:
+          loyalty: 10
+          stats: {trust: 10}
+          competences: {communication: 10}
+        reaction:
+          - {speaker: kirill, expression: surprised, text: "Ой… простите, увлёкся. Выйду в тамбур."}
+        next: video
+        best: true
+        explanation: "Обратиться индивидуально, не привлекая внимания, вежливо попросить и предложить тамбур — так конфликт не возникает."
+      - id: public_shame
+        text: "Громко, при всех: «Мужчина, вы не один в вагоне!»"
+        effects:
+          loyalty: -10
+          stats: {tension: 25}
+          competences: {communication: -10}
+        reaction:
+          - {speaker: kirill, expression: angry, text: "А вам какое дело? Это рабочий звонок!"}
+        next: phone_conflict
+        explanation: "Замечание при всех задевает и провоцирует спор. «Замечания» — только вежливо и корректно."
+      - id: wait_end
+        text: "Подождать — разговор скоро закончится сам"
+        effects:
+          loyalty: -10
+          competences: {service: -5}
+        next: video
+        explanation: "Ситуацию нельзя оставлять без внимания — пассажиры ждут реакции проводника."
+
+  - id: phone_conflict
+    scene:
+      background: salon_night
+      characters:
+        - {id: player, position: left}
+        - {id: kirill, position: right, expression: angry}
+    situation: "Пассажир с телефоном обиделся на замечание и спорит."
+    dialogue:
+      - {speaker: kirill, text: "Вы мне ещё указывать будете, когда разговаривать?"}
+      - {speaker: player, thought: true, text: "Я сам его завёл. Надо вернуть разговор в спокойное русло."}
+    timer_seconds: 15
+    timeout_next: video
+    timeout_effects: {loyalty: -10, stats: {tension: 10}}
+    timeout_reaction:
+      - {speaker: narrator, text: "Кирилл демонстративно продолжает разговор, ещё громче."}
+    choices:
+      - id: apologize_offer
+        text: "«Прошу прощения, если прозвучало резко. В тамбуре Вам будет удобнее говорить — и никто не помешает»"
+        effects:
+          loyalty: 10
+          stats: {tension: -20}
+          competences: {communication: 10, stress_resistance: 5}
+        reaction:
+          - {speaker: kirill, expression: neutral, text: "Ладно. Пойду туда."}
+        next: video
+        best: true
+        explanation: "Признать свою резкость и предложить решение — достойный выход, который сохраняет лицо обоим."
+      - id: insist
+        text: "«Я сказал — тише. Иначе позову начальника»"
+        effects:
+          loyalty: -15
+          stats: {tension: 20}
+          set_flags: [conflict_started]
+          competences: {communication: -10}
+        next: end_conflict
+        explanation: "Угроза вместо решения доводит спор до ссоры на весь вагон."
+
+  - id: video
+    scene:
+      background: salon_night
+      characters:
+        - {id: player, position: left}
+        - {id: artyom, position: right, expression: happy}
+    situation: "Подросток смотрит видео без наушников на полной громкости."
+    dialogue:
+      - {speaker: narrator, text: "Через проход подросток смотрит ролики. Динамик телефона — на полную."}
+      - {speaker: artyom, text: "Ха-ха-ха! Вот это он упал!"}
+    choices:
+      - id: soft_request
+        text: "«Будьте добры, используйте наушники, чтобы сохранить комфорт других пассажиров. Спасибо за понимание»"
+        effects:
+          loyalty: 10
+          stats: {trust: 5}
+          competences: {communication: 10}
+        reaction:
+          - {speaker: artyom, expression: surprised, text: "А, да, извините. Сейчас."}
+        next: baby
+        best: true
+        explanation: "Мягкая просьба, а не требование, — именно так рекомендует стандарт."
+      - id: demand_off
+        text: "Потребовать выключить телефон совсем"
+        effects:
+          loyalty: -10
+          stats: {tension: 10}
+          competences: {communication: -5}
+        reaction:
+          - {speaker: artyom, expression: sad, text: "Ну и ладно…"}
+        next: baby
+        explanation: "Требовать выключить телефон — лишнее. Достаточно наушников или меньшей громкости."
+      - id: offer_earphones
+        text: "Предложить одноразовые наушники из дорожного набора"
+        condition: ["trust >= 55"]
+        effects:
+          loyalty: 15
+          stats: {trust: 5}
+          competences: {service: 10}
+        reaction:
+          - {speaker: artyom, expression: happy, text: "О, спасибо! Свои дома забыл."}
+        next: baby
+        explanation: "Когда есть возможность, помочь решить проблему — ещё лучше, чем просто попросить."
+
+  - id: baby
+    scene:
+      background: salon_night
+      characters:
+        - {id: player, position: left}
+        - {id: vera, position: center, expression: worried}
+        - {id: petr, position: right, expression: angry}
+    situation: "Плачет маленький ребёнок; уставший пассажир жалуется."
+    dialogue:
+      - {speaker: narrator, text: "Только стало тихо — в конце вагона заплакал малыш."}
+      - {speaker: petr, text: "Ну а теперь ещё и это! Может, мамочке стоит его успокоить?"}
+      - {speaker: vera, expression: sad, text: "Я стараюсь… У него режутся зубы, он не спит вторую ночь."}
+      - {speaker: player, thought: true, text: "Никого не обвинять. Помочь и малышу, и хирургу."}
+    choices:
+      - id: help_both
+        text: >
+          «Понимаю, что ситуация непростая. Давайте посмотрим, чем мы можем помочь ребёнку» — предложить Вере воду
+          и тихое место, а Петру Ильичу — пересесть подальше
+        effects:
+          loyalty: 15
+          stats: {trust: 15, tension: -15}
+          competences: {communication: 10, service: 10}
+        reaction:
+          - {speaker: vera, expression: happy, text: "Спасибо вам большое…"}
+          - {speaker: petr, expression: neutral, text: "В начале вагона? Хорошо, так даже лучше."}
+        next: service_zone
+        best: true
+        explanation: >
+          Не обвинять родителей, мягко предложить помощь, а тем, кому некомфортно, — пересесть при наличии мест.
+          Напомнить, что это общий вагон, и всё-таки маленький ребёнок.
+      - id: blame_mother
+        text: "Попросить маму поскорее успокоить ребёнка — люди отдыхают"
+        effects:
+          loyalty: -20
+          stats: {tension: 15}
+          set_flags: [mistake_made]
+          competences: {communication: -10}
+        reaction:
+          - {speaker: vera, expression: sad, text: "Вы думаете, я не пытаюсь?.."}
+        next: mother_upset
+        explanation: "Обвинять родителей маленького ребёнка запрещено: это обижает и не помогает малышу."
+      - id: ignore_baby
+        text: "«Ребёнок есть ребёнок, ничего не поделаешь»"
+        effects:
+          loyalty: -10
+          competences: {service: -5}
+        next: service_zone
+        explanation: "Помощь маме и пересадка пассажира — реальные действия. Промолчать значит оставить обоих без поддержки."
+
+  - id: mother_upset
+    scene:
+      background: salon_night
+      characters:
+        - {id: player, position: left}
+        - {id: vera, position: right, expression: sad}
+    situation: "Мама малыша расстроена замечанием проводника."
+    dialogue:
+      - {speaker: narrator, text: "Вера отворачивается к окну, прижимая малыша. У неё дрожат плечи."}
+      - {speaker: player, thought: true, text: "Я сделал хуже. Можно ещё исправить."}
+    choices:
+      - id: apologize
+        text: "Извиниться и предложить помощь — воду, подогрев детского питания, место потише"
+        effects:
+          loyalty: 15
+          stats: {trust: 10}
+          competences: {communication: 10, service: 5}
+        reaction:
+          - {speaker: vera, expression: neutral, text: "Ничего… Если можно, подогрейте бутылочку."}
+        next: service_zone
+        best: true
+        explanation: "Признать ошибку и перейти к помощи — лучший способ вернуть доверие. Подогрев детского питания — по стандарту."
+      - id: walk_away
+        text: "Отойти, ничего не добавляя"
+        effects:
+          loyalty: -10
+        next: end_partial
+        explanation: "Молча уйти — значит оставить пассажирку с обидой до конца поездки."
+
+  - id: service_zone
+    scene:
+      background: salon_night
+      characters:
+        - {id: player, position: left}
+        - {id: petr, position: right, expression: annoyed}
+    situation: "Пассажир жалуется на грохот посуды в сервисной зоне."
+    dialogue:
+      - {speaker: narrator, text: "Из сервисной зоны раздаётся звон — коллега уронила поднос с чашками."}
+      - {speaker: petr, text: "И у вас там тоже гремит! Это какой-то заговор."}
+    choices:
+      - id: thank_and_quiet
+        text: >
+          «Благодарим Вас за обращение, мы сделаем всё возможное, чтобы вести работу тише» — проверить сервисную
+          зону, а через полчаса спросить, удалось ли отдохнуть
+        effects:
+          loyalty: 15
+          stats: {trust: 10}
+          competences: {service: 15}
+        reaction:
+          - {speaker: petr, expression: happy, text: "Ну… спасибо. Кажется, теперь я усну."}
+        next: end_success
+        best: true
+        explanation: >
+          Работать в сервисной зоне нужно тихо, а у пассажиров рядом — выборочно брать обратную связь.
+      - id: blame_colleague
+        text: "«Это не я, это коллега уронила»"
+        effects:
+          loyalty: -10
+          competences: {communication: -5}
+        next: end_partial
+        explanation: "Пассажиру неважно, кто уронил поднос. Бригада отвечает вместе — извиниться и устранить шум."
+
+  - id: end_success
+    scene:
+      background: salon_night
+      characters:
+        - {id: player, position: left, expression: happy}
+        - {id: petr, position: right, expression: happy}
+    outcome: success
+    ending: "В вагоне снова тихо"
+    final_text: >
+      Каждому нарушителю тишины проводник сказал пару тихих слов — без замечаний на весь вагон. Малышу помогли,
+      уставшего пассажира пересадили, в сервисной зоне стало тише. Пётр Ильич проспал до самой Москвы.
+    dialogue:
+      - {speaker: narrator, text: "Вагон погружается в сон. Только за окном мелькают огни."}
+  - id: end_partial
+    scene:
+      background: salon_night
+      characters:
+        - {id: player, position: left, expression: worried}
+    outcome: partial
+    ending: "Тишина восстановлена не для всех"
+    final_text: >
+      Стало тише, но кто-то из пассажиров остался с обидой. Замечания работают, когда звучат индивидуально,
+      вежливо и с предложением решения.
+  - id: end_conflict
+    scene:
+      background: salon_night
+      characters:
+        - {id: player, position: left, expression: sad}
+        - {id: kirill, position: right, expression: angry}
+    outcome: failure
+    ending: "Ночная ссора в салоне"
+    final_text: >
+      Замечание переросло в громкую ссору. Проснулся весь вагон, двое пассажиров оставили жалобы.

@@ -1,7 +1,7 @@
 import os
 from datetime import UTC, datetime, timedelta
 
-from tests.test_engine import play
+from tests.test_engine import BEST_PATH, play
 
 KEY = {"X-API-Key": os.environ["INTEGRATION_API_KEY"]}
 
@@ -15,10 +15,10 @@ def test_api_key_is_required(client, employee):
 
 
 def test_competence_profile(client, auth):
-    play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
+    play(client, auth, *BEST_PATH)
     profile = client.get("/api/integration/employees/100001", headers=KEY).json()
-    assert (profile["xp"], profile["level"], profile["runs_completed"], profile["success_rate"]) == (204, 1, 1, 1.0)
-    assert profile["competences"]["service"] == 25
+    assert (profile["xp"], profile["level"], profile["runs_completed"], profile["success_rate"]) == (208, 1, 1, 1.0)
+    assert profile["competences"]["service"] == 20
     assert sorted(profile["achievements"]) == ["diplomat", "first_trip", "flawless"]
 
 
@@ -30,8 +30,8 @@ def test_unknown_employee(client, employee):
 
 def test_results_since(client, auth):
     before = (datetime.now(UTC) - timedelta(minutes=1)).isoformat()
-    play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
-    play(client, auth, "demand_leave", "ask_neighbours")
+    play(client, auth, *BEST_PATH)
+    play(client, auth, "side_with_sergey", "raise_voice")
 
     results = client.get("/api/integration/results", params={"since": before}, headers=KEY).json()
     assert [r["outcome"] for r in results] == ["success", "failure"]
@@ -66,8 +66,8 @@ def test_hr_upsert_validation(client, employee):
 def test_billing_usage(client, auth, db):
     from sqlalchemy import func, select
 
-    play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
-    play(client, auth, "demand_leave", "ask_neighbours")
+    play(client, auth, *BEST_PATH)
+    play(client, auth, "side_with_sergey", "raise_voice")
     month = db.scalar(select(func.to_char(func.timezone("Europe/Moscow", func.now()), "YYYY-MM")))
     usage = client.get("/api/integration/billing/usage", params={"month": month}, headers=KEY).json()
     assert (usage["active_employees"], usage["runs_completed"]) == (1, 2)

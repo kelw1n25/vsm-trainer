@@ -1,0 +1,268 @@
+# Ситуации 47, 36, 30 и 38: просьба присмотреть за ребёнком, место для ухода за малышом,
+# потерявшийся ребёнок и пассажир, проспавший свою станцию.
+id: lost-child
+title: "Потерявшийся ребёнок"
+category: safety
+difficulty: 2
+service_class: Комфорт
+route: Москва — Санкт-Петербург
+description: >
+  Отец просит присмотреть за сыном, мама с младенцем ищет тихое место, а через полчаса в тамбуре
+  соседнего вагона плачет мальчик.
+situations: [47, 36, 30, 38]
+initial:
+  loyalty: 70
+  safety: 70
+stats:
+  trust: 40
+characters:
+  pavel:
+    name: "Павел"
+    role: "Отец"
+    look: {top: "#4F7F52", bottom: "#34405A", hair: "#3A2E2A"}
+  misha:
+    name: "Миша"
+    role: "Мальчик, 7 лет"
+    look: {top: "#3E6FD8", bottom: "#2F3B55", hair: "#6B3F2A", child: true}
+  yulia:
+    name: "Юлия"
+    role: "Мама с младенцем"
+    look: {top: "#E0A0B4", bottom: "#3A3550", hair: "#2B2320", hair_style: long}
+  boris:
+    name: "Борис Семёнович"
+    role: "Пассажир"
+    look: {top: "#8A6D5A", bottom: "#34405A", hair: "#9A9A9A"}
+  chief:
+    name: "Ольга Николаевна"
+    role: "Начальник поезда"
+    look: {outfit: uniform, hair: "#4A3426", hair_style: bun}
+start_node: start
+
+nodes:
+  - id: start
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: pavel, position: center, expression: neutral}
+        - {id: misha, position: right, expression: happy}
+    situation: "Отец просит присмотреть за сыном, пока он сходит в вагон-бистро."
+    dialogue:
+      - {speaker: pavel, text: "Извините, можно я на пять минут в бистро? Присмотрите за Мишей? Он спокойный."}
+      - {speaker: misha, text: "Я буду рисовать!"}
+      - {speaker: player, thought: true, text: "Помочь можно. Но ответственность за ребёнка — у отца."}
+    choices:
+      - id: situational_help
+        text: "«Да, конечно, я побуду рядом, только отмечу, что мне необходимо продолжить обслуживание»"
+        effects:
+          loyalty: 10
+          safety: 5
+          stats: {trust: 10}
+          competences: {service: 10, communication: 5}
+        reaction:
+          - {speaker: pavel, expression: happy, text: "Понял, я мигом. Миша, сиди на месте!"}
+        next: mother_care
+        best: true
+        explanation: "Не брать ответственность вместо сопровождающего, но оказать ситуативную помощь и честно обозначить свои обязанности."
+      - id: full_responsibility
+        text: "«Конечно, идите спокойно, я за ним прослежу, сколько нужно»"
+        effects:
+          loyalty: 5
+          safety: -10
+          set_flags: [promised_watch]
+          competences: {safety_rules: -5}
+        reaction:
+          - {speaker: pavel, expression: happy, text: "Спасибо огромное! Тогда я ещё и позвоню, пока там."}
+        next: mother_care
+        explanation: "Проводник не может следить за ребёнком вместо родителя — у него есть обязанности по обслуживанию вагона."
+      - id: refuse_flat
+        text: "«Это не входит в мои обязанности»"
+        effects:
+          loyalty: -15
+          stats: {trust: -10}
+          competences: {communication: -10}
+        reaction:
+          - {speaker: pavel, expression: annoyed, text: "Ну ладно… Миша, пойдём со мной."}
+        next: mother_care
+        explanation: "Вежливый ответ с ситуативной помощью сохраняет доверие — резкий отказ его разрушает."
+
+  - id: mother_care
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: yulia, position: right, expression: worried}
+    situation: "Мама с младенцем спрашивает, где можно спокойно покормить и переодеть ребёнка."
+    dialogue:
+      - {speaker: yulia, text: "Подскажите, где можно покормить малыша? Тут люди, мне неловко…"}
+      - {speaker: player, thought: true, text: "Комнаты матери и ребёнка нет. Но варианты есть."}
+    choices:
+      - id: explain_and_ask
+        text: >
+          «Прошу прощения, отдельной комнаты матери и ребёнка на борту нет, но я уточню, где Вам будет удобнее» —
+          показать санитарную комнату с пеленальным столиком и спросить начальника поезда о свободном купе
+        effects:
+          loyalty: 15
+          stats: {trust: 10}
+          set_flags: [chief_informed]
+          competences: {service: 15}
+        reaction:
+          - {speaker: yulia, expression: happy, text: "Купе было бы идеально. Спасибо!"}
+        next: lost_child
+        best: true
+        explanation: "Рассказать об оснащении поезда, а для уединённого кормления — сообщить начальнику и предложить купе при возможности."
+      - id: feed_here
+        text: "«Отдельной комнаты нет, кормите на месте»"
+        effects:
+          loyalty: -15
+          competences: {service: -10}
+        reaction:
+          - {speaker: yulia, expression: sad, text: "Понятно…"}
+        next: lost_child
+        explanation: "Отказ без вариантов. Стандарт требует создать комфортную обстановку — плед, отдельное место при наличии."
+
+  - id: lost_child
+    scene:
+      background: vestibule
+      characters:
+        - {id: player, position: left}
+        - {id: misha, position: right, expression: sad}
+    situation: "В тамбуре соседнего вагона плачет потерявшийся мальчик."
+    dialogue:
+      - {speaker: narrator, text: "Через полчаса в тамбуре соседнего вагона вы слышите плач."}
+      - {speaker: narrator, text: "Это Миша. Он пошёл искать папу и заблудился."}
+      - {speaker: misha, text: "Я папу потерял… Он ушёл, и я пошёл, а тут всё одинаковое…"}
+      - {speaker: player, thought: true, text: "Главное — не отпускать его ни на шаг."}
+    timer_seconds: 20
+    timeout_next: announcement
+    timeout_effects: {safety: -20}
+    timeout_reaction:
+      - {speaker: narrator, text: "Миша, не дождавшись ответа, убегает в следующий вагон. Вы с трудом догоняете его."}
+    choices:
+      - id: stay_with_child
+        text: >
+          Присесть рядом: «Не волнуйся, я помогу тебе найти папу. Побудь, пожалуйста, рядом со мной» — и сообщить
+          начальнику поезда
+        effects:
+          safety: 15
+          loyalty: 10
+          stats: {trust: 15}
+          set_flags: [chief_informed]
+          competences: {safety_rules: 10, communication: 10}
+        reaction:
+          - {speaker: misha, expression: worried, text: "А вы правда найдёте?"}
+          - {speaker: player, text: "Правда. Сейчас мы пойдём к начальнику поезда — она поможет."}
+        next: announcement
+        best: true
+        explanation: "Оставаться с ребёнком, сообщить начальнику поезда и проводить ребёнка до купе начальника."
+      - id: send_back
+        text: "Показать ему дорогу обратно и сказать идти к своему месту"
+        effects:
+          safety: -25
+          set_flags: [mistake_made]
+          competences: {safety_rules: -15}
+        next: end_incident
+        explanation: "Потерявшегося ребёнка нельзя отпускать одного — он может снова заблудиться."
+      - id: search_alone
+        text: "Посадить мальчика у бистро и бегом искать отца по вагонам"
+        effects:
+          safety: -15
+          competences: {safety_rules: -10}
+        next: announcement
+        explanation: "Ребёнок остаётся без присмотра. Правильно — быть с ним и искать отца через начальника поезда."
+
+  - id: announcement
+    scene:
+      background: staff_room
+      characters:
+        - {id: player, position: left}
+        - {id: chief, position: center, expression: serious}
+        - {id: misha, position: right, expression: worried}
+    situation: "Начальник поезда готова сделать объявление о найденном ребёнке."
+    dialogue:
+      - {speaker: chief, text: "Объявлю по громкой связи. Что говорим?"}
+      - {speaker: player, thought: true, text: "Весь поезд услышит. Лишние данные о ребёнке — ни к чему."}
+    choices:
+      - id: no_personal_data
+        text: "Объявить без лишних данных: «Сопровождающего мальчика в синей куртке просим подойти к купе начальника поезда»"
+        effects:
+          safety: 15
+          loyalty: 5
+          competences: {safety_rules: 10}
+        reaction:
+          - {speaker: narrator, text: "Через три минуты в купе вбегает Павел: «Миша! Спасибо вам… Я заговорился по телефону»."}
+        next: station_missed
+        best: true
+        explanation: "Объявление делают без лишних персональных данных — достаточно приметы и места встречи."
+      - id: full_data
+        text: "Назвать в объявлении имя, фамилию, возраст мальчика и номер места"
+        effects:
+          safety: -10
+          competences: {safety_rules: -10}
+        reaction:
+          - {speaker: narrator, text: "Павел приходит, но весь поезд теперь знает, кто и где едет с маленьким ребёнком."}
+        next: station_missed
+        explanation: "Персональные данные ребёнка в объявлении на весь поезд — лишние. Хватит примет."
+
+  - id: station_missed
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: boris, position: right, expression: surprised}
+    situation: "Пассажир проснулся и понял, что проспал свою станцию."
+    dialogue:
+      - {speaker: boris, text: "Это что, уже Бологое? Я же в Твери выходил! Почему меня никто не разбудил?!"}
+      - {speaker: player, thought: true, text: "Предупреждать о выходе — моя обязанность. Пока я искал отца Миши, я пропустил обход."}
+    choices:
+      - id: options_via_chief
+        text: >
+          «Понимаю Ваше беспокойство. Сейчас уточню, какие варианты возможны дальше» — сообщить начальнику поезда
+          и объяснить порядок обратного выезда
+        effects:
+          loyalty: 15
+          competences: {communication: 10, service: 5}
+        reaction:
+          - {speaker: boris, expression: neutral, text: "Ладно… Главное, чтобы мне помогли вернуться."}
+        next: end_success
+        best: true
+        explanation: "Сообщить начальнику поезда и объяснить дальнейший порядок. И помнить — предупреждать о выходе нужно заранее."
+      - id: blame_sleep
+        text: "«Надо было ставить будильник»"
+        effects:
+          loyalty: -15
+          competences: {communication: -10}
+        next: end_partial
+        explanation: "Предупреждение о выходе — обязанность проводника, если пассажир на своём месте. Упрёк здесь неуместен."
+
+  - id: end_success
+    scene:
+      background: staff_room
+      characters:
+        - {id: player, position: left, expression: happy}
+        - {id: pavel, position: center, expression: happy}
+        - {id: misha, position: right, expression: happy}
+    outcome: success
+    ending: "Ребёнок нашёлся, никто не остался без помощи"
+    final_text: >
+      Проводник помог отцу, не взяв на себя его ответственность, нашёл маме с малышом тихое место, остался
+      с потерявшимся ребёнком и помог пассажиру, проспавшему станцию.
+  - id: end_partial
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: worried}
+    outcome: partial
+    ending: "Всё обошлось, но не без ошибок"
+    final_text: >
+      Ребёнок нашёлся, но кто-то из пассажиров остался недоволен отношением. Помощь — это и дело, и слова.
+  - id: end_incident
+    scene:
+      background: vestibule
+      characters:
+        - {id: player, position: left, expression: sad}
+        - {id: chief, position: right, expression: angry}
+    outcome: failure
+    ending: "Ребёнок остался без присмотра"
+    final_text: >
+      Потерявшегося ребёнка отпустили одного. Его нашли через сорок минут в хвосте поезда — напуганным. Проводится проверка.

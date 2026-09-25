@@ -1,0 +1,423 @@
+# Ситуации 1, 2, 3 и 32 из «Ситуаций на борту»: билет со стороннего сайта, разряженный телефон,
+# проверка по документу и опоздавшая пассажирка у закрытых дверей.
+id: boarding-ticket
+title: "Посадка без действительного билета"
+category: service
+difficulty: 1
+service_class: Стандарт
+route: Москва — Санкт-Петербург
+description: >
+  До отправления семь минут. Пассажир показывает скриншот билета с незнакомого сайта,
+  а у дверей вагона собирается очередь.
+situations: [1, 2, 3, 32]
+initial:
+  loyalty: 70
+  safety: 80
+stats:
+  trust: 40
+  tension: 30
+characters:
+  viktor:
+    name: "Виктор Павлович"
+    role: "Пассажир"
+    look: {top: "#7A8699", bottom: "#2F3B55", hair: "#5B5B5B"}
+  marina:
+    name: "Марина"
+    role: "Опоздавшая пассажирка"
+    look: {top: "#E8735A", bottom: "#3A4A6B", hair: "#6B3F2A", hair_style: long}
+  chief:
+    name: "Ольга Николаевна"
+    role: "Начальник поезда"
+    look: {outfit: uniform, hair: "#4A3426", hair_style: bun}
+start_node: start
+
+nodes:
+  - id: start
+    scene:
+      background: platform
+      characters:
+        - {id: player, position: left}
+        - {id: viktor, position: right, expression: neutral}
+    situation: "Пассажир показывает скриншот билета, купленного на стороннем сайте; дата на нём отличается от сегодняшней."
+    dialogue:
+      - {speaker: narrator, text: "Москва, платформа ВСМ. До отправления семь минут, у дверей вагона выстраивается очередь."}
+      - {speaker: viktor, text: "Добрый день! Вот мой билет — на скриншоте. Покупал на сайте со скидкой."}
+      - {speaker: player, thought: true, text: "Сайт незнакомый, и дата… завтрашняя? Очередь за ним растёт."}
+      - {speaker: viktor, expression: worried, text: "Что-то не так? Я очень спешу, у меня встреча вечером."}
+    timer_seconds: 30
+    timeout_next: angry_passenger
+    timeout_effects: {loyalty: -10, stats: {tension: 20}}
+    timeout_reaction:
+      - {speaker: narrator, text: "Пауза затягивается. В очереди начинают громко вздыхать."}
+      - {speaker: viktor, expression: angry, text: "Вы вообще будете меня пропускать или нет?!"}
+    choices:
+      - id: check_details
+        text: "«Позвольте уточнить, на каком ресурсе Вы приобретали билет?» — сверить номер заказа, дату и время отправления"
+        effects:
+          loyalty: 5
+          safety: 10
+          stats: {trust: 15, tension: -10}
+          set_flags: [documents_checked]
+          competences: {service: 10, communication: 5}
+        reaction:
+          - {speaker: viktor, expression: thinking, text: "На каком-то… «Билеты-Экспресс», кажется. Вот номер заказа."}
+          - {speaker: player, text: "Благодарю. Сейчас проверю по нашей системе, это займёт минуту."}
+        next: check_result
+        best: true
+        explanation: >
+          Стандарт требует проверить билет, номер заказа, ресурс покупки, дату и время отправления. Спокойный
+          вопрос не обвиняет пассажира и сразу даёт данные для проверки.
+      - id: let_board
+        text: "Пропустить — главное не задерживать посадку, разберёмся в пути"
+        effects:
+          safety: -20
+          stats: {trust: 5}
+          set_flags: [mistake_made]
+          competences: {safety_rules: -10}
+        reaction:
+          - {speaker: viktor, expression: happy, text: "Спасибо! Я знал, что всё в порядке."}
+        next: onboard_problem
+        explanation: >
+          Контроль проездного документа проводится до посадки. Пропустив пассажира без проверки,
+          проводник переносит проблему в салон и нарушает порядок посадки.
+      - id: refuse_rough
+        text: "Сразу отказать: «Со скриншотами не пускаем, отойдите в сторону»"
+        effects:
+          loyalty: -20
+          stats: {tension: 30, trust: -20}
+          competences: {communication: -10}
+        reaction:
+          - {speaker: viktor, expression: angry, text: "Что значит «отойдите»? Я заплатил за этот билет!"}
+        next: angry_passenger
+        explanation: >
+          Отказ без проверки и объяснения провоцирует конфликт. Сначала нужно разобраться: билет может
+          оказаться действительным, а пассажиру — нужна подсказка, куда обратиться.
+
+  - id: angry_passenger
+    scene:
+      background: platform
+      characters:
+        - {id: player, position: left}
+        - {id: viktor, position: right, expression: angry}
+    situation: "Пассажир раздражён и повышает голос, очередь на посадку ждёт."
+    dialogue:
+      - {speaker: viktor, text: "Вы понимаете, что я опаздываю? Я сейчас напишу жалобу!"}
+      - {speaker: narrator, text: "Пассажиры в очереди переглядываются. Кто-то достаёт телефон, чтобы снимать."}
+      - {speaker: player, thought: true, text: "Если начну спорить — конфликт выйдет из-под контроля."}
+    choices:
+      - id: acknowledge
+        text: "Признать ситуацию: «Понимаю, что ситуация неприятная. Давайте вместе проверим Ваш билет»"
+        effects:
+          loyalty: 10
+          stats: {tension: -25, trust: 15}
+          set_flags: [passenger_calmed, documents_checked]
+          competences: {communication: 10}
+        reaction:
+          - {speaker: viktor, expression: worried, text: "Ладно… Проверяйте. Вот номер заказа."}
+        next: check_result
+        best: true
+        explanation: >
+          Ролевая модель: признать ситуацию, обозначить правило, предложить решение. Признание снимает
+          напряжение и возвращает разговор к фактам.
+      - id: call_chief
+        text: "«Я приглашу начальника поезда» — вызвать по рации"
+        effects:
+          safety: 5
+          stats: {tension: -5}
+          set_flags: [chief_called]
+          competences: {safety_rules: 5}
+        next: chief_platform
+        explanation: >
+          Вызвать начальника поезда можно, но сначала проводник сам проверяет документы: это его зона
+          ответственности и самый быстрый путь к решению.
+      - id: argue
+        text: "Спорить: «Правила есть правила, не я их придумал»"
+        effects:
+          loyalty: -20
+          stats: {tension: 25, trust: -15}
+          set_flags: [conflict_started]
+          competences: {communication: -10}
+        reaction:
+          - {speaker: viktor, expression: angry, text: "Да вы издеваетесь! Где тут ваш начальник?!"}
+        next: end_conflict
+        explanation: "Спор с пассажиром запрещён стандартом общения — он не решает вопрос с билетом и только обостряет конфликт."
+
+  - id: chief_platform
+    scene:
+      background: platform
+      characters:
+        - {id: player, position: left}
+        - {id: chief, position: center, expression: serious}
+        - {id: viktor, position: right, expression: worried}
+    situation: "Начальник поезда пришла на платформу и просит доложить обстановку."
+    dialogue:
+      - {speaker: chief, text: "Что у вас? Коротко, у нас посадка."}
+      - {speaker: viktor, text: "У меня билет, а меня не пускают!"}
+      - {speaker: player, thought: true, text: "Нужно дать ей факты, а не эмоции."}
+    choices:
+      - id: report_facts
+        text: "Доложить по фактам — скриншот со стороннего сайта, номер заказа, дата — и проверить билет вместе"
+        effects:
+          safety: 10
+          stats: {trust: 10}
+          set_flags: [documents_checked]
+          competences: {communication: 5, safety_rules: 5}
+        reaction:
+          - {speaker: chief, expression: neutral, text: "Хорошо. Проверьте по номеру заказа, я постою рядом."}
+        next: check_result
+        best: true
+        explanation: "Короткий доклад по фактам помогает начальнику поезда принять решение и не тратить время посадки."
+      - id: hand_over
+        text: "Передать пассажира начальнику и вернуться к очереди"
+        effects:
+          loyalty: -10
+          stats: {trust: -10}
+          competences: {communication: -5}
+        reaction:
+          - {speaker: chief, expression: serious, text: "Я разберусь. Но проверку документов не бросайте — это ваша работа."}
+        next: late_passenger
+        explanation: "Проводник остаётся участником ситуации: начальник поезда помогает урегулировать, а не заменяет проверку."
+
+  - id: check_result
+    scene:
+      background: platform
+      characters:
+        - {id: player, position: left}
+        - {id: viktor, position: right, expression: worried}
+    situation: "Заказ не находится по номеру, а телефон пассажира разрядился."
+    dialogue:
+      - {speaker: narrator, text: "Мобильный терминал думает несколько секунд. Заказа с таким номером нет."}
+      - {speaker: viktor, expression: surprised, text: "Как нет? Там же всё было! Сейчас покажу письмо…"}
+      - {speaker: narrator, text: "Экран его телефона гаснет: батарея разрядилась."}
+      - {speaker: viktor, expression: sad, text: "Ну конечно. Только этого не хватало."}
+    choices:
+      - id: check_by_passport
+        text: "«Позвольте, я проверю данные по документу, на который Вы оформляли билет»"
+        effects:
+          loyalty: 10
+          safety: 5
+          stats: {trust: 15, tension: -10}
+          competences: {service: 10}
+        reaction:
+          - {speaker: viktor, expression: neutral, text: "Паспорт? Да, конечно, вот он."}
+        next: id_check
+        best: true
+        explanation: "Если телефон разрядился, билет ищут по документу, на который он оформлен, — через мобильный терминал."
+      - id: charge_onboard
+        text: "Предложить подняться в вагон и зарядить телефон, чтобы найти билет"
+        effects:
+          safety: -20
+          set_flags: [mistake_made]
+          competences: {safety_rules: -10}
+        reaction:
+          - {speaker: viktor, expression: happy, text: "О, отличная идея, спасибо!"}
+        next: onboard_problem
+        explanation: "В целях безопасности пассажира не допускают на борт, чтобы зарядить телефон, — билет проверяют по документу."
+      - id: send_away
+        text: "Сразу направить в кассу, не проверяя другие способы"
+        effects:
+          loyalty: -15
+          stats: {trust: -10}
+          competences: {service: -5}
+        reaction:
+          - {speaker: viktor, expression: angry, text: "То есть вы даже не попробуете? Прекрасно."}
+        next: end_cashier
+        explanation: "В кассу направляют, когда действительного билета точно нет. Сначала стоит проверить по паспорту."
+
+  - id: id_check
+    scene:
+      background: platform
+      characters:
+        - {id: player, position: left}
+        - {id: viktor, position: right, expression: worried}
+    situation: "По паспорту найден билет, но на завтрашний поезд — сторонний сайт перепутал дату."
+    dialogue:
+      - {speaker: narrator, text: "По паспортным данным терминал находит заказ. Билет настоящий — но на завтра, на то же время."}
+      - {speaker: viktor, expression: surprised, text: "Завтра?! Я выбирал сегодняшнее число, клянусь!"}
+      - {speaker: player, thought: true, text: "Билет не на этот поезд. Посадить я не могу, но могу помочь."}
+    choices:
+      - id: explain_and_redirect
+        text: >
+          «Сожалею, но без действительного проездного документа посадка не осуществляется. Я подскажу, куда
+          обратиться: в кассе помогут переоформить билет на ближайший поезд»
+        effects:
+          loyalty: 10
+          safety: 10
+          stats: {trust: 10, tension: -10}
+          set_flags: [passenger_calmed]
+          competences: {communication: 10, service: 10}
+        reaction:
+          - {speaker: viktor, expression: sad, text: "Понятно… Касса далеко?"}
+          - {speaker: player, text: "Прямо у входа на платформу, по указателю ВСМ. И впредь — только официальные каналы продажи."}
+        next: late_passenger
+        best: true
+        explanation: >
+          Отказ по стандарту звучит вежливо и сразу с решением: куда обратиться и как переоформить.
+          Важно напомнить про официальные каналы продажи.
+      - id: ask_chief
+        text: "Пассажир на взводе — пригласить начальника поезда уточнить, можно ли помочь"
+        condition: ["tension >= 40"]
+        effects:
+          loyalty: 5
+          safety: 5
+          set_flags: [chief_called]
+          competences: {safety_rules: 5}
+        reaction:
+          - {speaker: narrator, text: "Начальник поезда подтверждает: посадка по завтрашнему билету невозможна, но в кассе переоформят с учётом тарифа."}
+        next: late_passenger
+        explanation: "При напряжённом пассажире привлечь начальника поезда уместно — решение то же, но пассажир услышит его от старшего."
+      - id: bend_rules
+        text: "Посадить: «Езжайте, завтрашний билет — почти то же самое»"
+        effects:
+          safety: -25
+          set_flags: [mistake_made]
+          competences: {safety_rules: -15}
+        next: onboard_problem
+        explanation: "Билет на другую дату не даёт права на проезд. Такое «одолжение» — нарушение и риск для места другого пассажира."
+
+  - id: late_passenger
+    scene:
+      background: platform
+      characters:
+        - {id: player, position: left}
+        - {id: marina, position: right, expression: worried}
+    situation: "Двери закрыты, поезд отправляется; опоздавшая пассажирка просит открыть."
+    dialogue:
+      - {speaker: narrator, text: "Звучит объявление об отправлении. Двери закрываются."}
+      - {speaker: narrator, text: "По платформе бежит женщина с чемоданом."}
+      - {speaker: marina, expression: pained, text: "Подождите! Откройте, пожалуйста! Мне очень нужно на этот поезд!"}
+      - {speaker: player, thought: true, text: "Двери закрыты. Секунда промедления — и поезд задержится."}
+    timer_seconds: 15
+    timeout_next: end_partial
+    timeout_effects: {loyalty: -10}
+    timeout_reaction:
+      - {speaker: narrator, text: "Поезд трогается. Марина остаётся на платформе одна, не зная, куда идти."}
+    choices:
+      - id: keep_closed_empathy
+        text: >
+          Не открывать двери: «Понимаю Ваше волнение. Поезд отправляется по расписанию — обратитесь в кассу
+          или к информационной стойке, Вам подскажут ближайший рейс»
+        effects:
+          loyalty: 5
+          safety: 15
+          competences: {safety_rules: 10, communication: 5, stress_resistance: 5}
+        reaction:
+          - {speaker: marina, expression: sad, text: "Хорошо… Спасибо, что хотя бы подсказали."}
+        next: end_calm
+        best: true
+        explanation: >
+          Поезд не задерживают и двери после закрытия не открывают. Проводник проявляет сочувствие и
+          направляет в кассу или приложение для переоформления.
+      - id: open_doors
+        text: "Открыть двери — это всего несколько секунд"
+        effects:
+          safety: -30
+          set_flags: [mistake_made]
+          competences: {safety_rules: -15}
+        next: end_incident
+        explanation: "Открывать двери после закрытия запрещено: это угроза безопасности и срыв расписания."
+      - id: ignore
+        text: "Отвернуться — отправление важнее"
+        effects:
+          loyalty: -15
+          competences: {communication: -5}
+        next: end_partial
+        explanation: "Поезд задерживать нельзя, но пассажирку нельзя оставлять без ответа — достаточно одной фразы с подсказкой."
+
+  - id: onboard_problem
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: chief, position: right, expression: serious}
+    situation: "В салоне выяснилось, что пассажир едет без действительного билета; начальник поезда спрашивает, как это произошло."
+    dialogue:
+      - {speaker: narrator, text: "Поезд уже набирает скорость. В салон заходит начальник поезда."}
+      - {speaker: chief, text: "В шестом вагоне пассажир без действительного билета. Посадку проводили вы?"}
+      - {speaker: player, thought: true, text: "Можно промолчать… но это только усугубит."}
+    choices:
+      - id: admit
+        text: "Честно доложить, что пропустил пассажира без проверки, и помочь оформить ситуацию установленным порядком"
+        effects:
+          safety: 10
+          stats: {trust: 10}
+          competences: {safety_rules: 5, communication: 5}
+        reaction:
+          - {speaker: chief, expression: neutral, text: "Спасибо, что сказали сразу. На ближайшей станции разберёмся. И на посадке — только полная проверка."}
+        next: end_chief
+        best: true
+        explanation: "Об ошибке сообщают сразу — так начальник поезда успеет урегулировать ситуацию на ближайшей станции."
+      - id: hide
+        text: "Сказать: «Билет был в порядке, наверное, пассажир пересел»"
+        effects:
+          safety: -20
+          loyalty: -10
+          competences: {communication: -10}
+        next: end_incident
+        explanation: "Скрытая ошибка всплывает позже и превращается в нарушение с разбирательством."
+
+  - id: end_calm
+    scene:
+      background: platform
+      characters:
+        - {id: player, position: left, expression: happy}
+    outcome: success
+    ending: "Посадка прошла спокойно"
+    final_text: >
+      Поезд отправился по расписанию. Пассажир со спорным билетом получил понятный ответ и ушёл переоформлять
+      билет, опоздавшая пассажирка знает, куда обратиться. Очередь не почувствовала напряжения.
+    dialogue:
+      - {speaker: narrator, text: "Поезд мягко трогается. На платформе остаются двое — и оба знают, что делать дальше."}
+      - {speaker: player, thought: true, text: "Проверка, правило, решение. Работает."}
+  - id: end_partial
+    scene:
+      background: platform
+      characters:
+        - {id: player, position: left, expression: worried}
+    outcome: partial
+    ending: "Проблемы решены, но не для всех"
+    final_text: >
+      Поезд ушёл по расписанию, но одна из пассажирок осталась на платформе без подсказки, куда обратиться.
+      Сочувствие и одна фраза о кассе могли бы сохранить её доверие.
+  - id: end_chief
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: sad}
+        - {id: chief, position: right, expression: serious}
+    outcome: partial
+    ending: "Потребовалось вмешательство начальника поезда"
+    final_text: >
+      Начальник поезда урегулировала ситуацию на ближайшей станции. Ошибку признали вовремя, но её можно было
+      избежать полной проверкой документа на посадке.
+  - id: end_cashier
+    scene:
+      background: platform
+      characters:
+        - {id: player, position: left, expression: worried}
+    outcome: partial
+    ending: "Пассажир ушёл в кассу раздражённым"
+    final_text: >
+      Пассажира направили в кассу, но без попытки найти билет по паспорту. Решение было, а ощущения заботы — нет.
+  - id: end_incident
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: sad}
+        - {id: chief, position: right, expression: angry}
+    outcome: failure
+    ending: "Нарушение порядка посадки"
+    final_text: >
+      Правила посадки нарушены: пассажир оказался на борту без действительного билета или двери открыли после
+      закрытия. Проводится служебная проверка.
+  - id: end_conflict
+    scene:
+      background: platform
+      characters:
+        - {id: player, position: left, expression: sad}
+        - {id: viktor, position: right, expression: angry}
+    outcome: failure
+    ending: "Конфликт на платформе"
+    final_text: >
+      Спор перерос в скандал на глазах у очереди, посадка задержалась. Пассажир оставил жалобу, а вопрос с билетом
+      так и не решён.

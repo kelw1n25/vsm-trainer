@@ -4,7 +4,7 @@ import pytest
 import yaml
 
 from app.achievements.service import level_for
-from tests.test_engine import choose, play
+from tests.test_engine import BEST_PATH, PARTIAL_PATH, choose, play
 from tests.test_validator import MINIMAL
 
 
@@ -26,18 +26,18 @@ def test_level_for():
 
 def test_diplomat_and_flawless_for_clean_conflict(client, auth):
     # Лучший путь: лояльность 95 > 90, таймеров не истекало, шкалы не опускались ниже 50
-    state = play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
+    state = play(client, auth, *BEST_PATH)
     assert {a["code"] for a in state["new_achievements"]} == {"diplomat", "flawless", "first_trip"}
 
 
 def test_achievement_is_given_once(client, auth):
-    play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
-    state = play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
+    play(client, auth, *BEST_PATH)
+    state = play(client, auth, *BEST_PATH)
     assert state["new_achievements"] == []
 
 
 def test_partial_result_is_not_flawless(client, auth):
-    state = play(client, auth, "ask_tickets", "explain_calmly", "leave_as_is")
+    state = play(client, auth, *PARTIAL_PATH)
     assert "flawless" not in {a["code"] for a in state["new_achievements"]}
 
 
@@ -65,21 +65,21 @@ def test_cool_head_after_five_fast_decisions(client, auth, quick_scenario):
 def test_competence_mastery(client, auth, db, employee):
     employee.competence_points = {"communication": 95}
     db.commit()
-    state = play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
+    state = play(client, auth, *BEST_PATH)
     assert "communicator" in {a["code"] for a in state["new_achievements"]}
 
 
 def test_level_up_is_reported(client, auth, db, employee):
     employee.xp = 290
     db.commit()
-    state = play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
+    state = play(client, auth, *BEST_PATH)
     assert state["level_up"]["title"] == "Проводник"
 
 
 def test_profile(client, auth):
-    play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
+    play(client, auth, *BEST_PATH)
     profile = client.get("/api/profile", headers=auth).json()
-    assert profile["level"] == {"level": 1, "title": "Стажёр", "xp": 204, "level_xp": 0, "next_level_xp": 300}
+    assert profile["level"] == {"level": 1, "title": "Стажёр", "xp": 208, "level_xp": 0, "next_level_xp": 300}
     assert profile["competence_points"]["first_aid"] == 0
     assert profile["runs_completed"] == 1
     earned = {a["code"] for a in profile["achievements"] if a["earned_at"]}

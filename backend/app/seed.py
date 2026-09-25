@@ -48,9 +48,10 @@ PATRONYMICS = ["Александров", "Сергеев", "Андреев", "Н
 # («часто истекает таймер в медицинских сценариях»), а ачивки остались для живой демонстрации.
 # None — дать таймеру истечь.
 DEMO_HISTORY = [
-    ("medical-heart-attack", [None, "start_cpr", None]),
-    ("drunk-passenger", ["calm_approach", "sell_beer", "chief_and_police", "leave_him"]),
-    ("train-delay-compensation", [None, "stop_door", "back_to_routine"]),
+    ("passenger-unwell", [None, "call_everything", "calm_clear", None]),
+    ("panic-attack", [None, "return_stay", "square_breathing", "pass_engineer", "forward_seat", "notify_and_check"]),
+    ("drunk-passenger", ["remind_rule", "bring_cognac", "radio_neutral", "demand_police"]),
+    ("train-delay", ["guess", "apologize_correct", "relay_exact", "let_her"]),
 ]
 
 
@@ -143,6 +144,7 @@ def _simulate(
         loyalty=definition.initial.loyalty,
         safety=definition.initial.safety,
         flags=[],
+        stats=dict(definition.stats),
         competence_points={},
         node_entered_at=at,
         started_at=at,

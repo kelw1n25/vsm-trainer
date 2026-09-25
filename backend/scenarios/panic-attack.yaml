@@ -1,0 +1,286 @@
+# Ситуации 29, 35, 15 и 46: паническая атака, просьба открыть окно, спор о температуре в салоне
+# и пассажир, которого укачивает.
+id: panic-attack
+title: "Паническая атака в пути"
+category: medical
+difficulty: 2
+service_class: Комфорт
+route: Москва — Великий Новгород
+description: >
+  Молодая пассажирка часто дышит, вцепилась в подлокотник и просит открыть окно. Одному в салоне жарко,
+  другому холодно, а третьего начинает укачивать.
+situations: [29, 35, 15, 46]
+initial:
+  loyalty: 70
+  safety: 80
+stats:
+  trust: 40
+  tension: 40
+characters:
+  darya:
+    name: "Дарья"
+    role: "Пассажирка"
+    look: {top: "#7B5EA7", bottom: "#3A3550", hair: "#C58B4A", hair_style: long}
+  maxim:
+    name: "Максим"
+    role: "Сосед по ряду"
+    look: {top: "#3D8C9E", bottom: "#2F3B55", hair: "#6B3F2A"}
+start_node: start
+
+nodes:
+  - id: start
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: darya, position: right, expression: pained}
+    situation: "У пассажирки паническая атака — она часто дышит и просит открыть окно."
+    dialogue:
+      - {speaker: narrator, text: "Кнопка вызова мигает у места 14В."}
+      - {speaker: darya, text: "Откройте окно, пожалуйста… Мне нечем дышать… Сердце колотится…"}
+      - {speaker: player, thought: true, text: "Окна не открываются. Но ей нужно не окно — ей нужно, чтобы кто-то был рядом."}
+    timer_seconds: 20
+    timeout_next: alone
+    timeout_effects: {safety: -10, stats: {tension: 20}}
+    timeout_reaction:
+      - {speaker: darya, expression: pained, text: "Пожалуйста… кто-нибудь…"}
+    choices:
+      - id: stay_and_breathe
+        text: >
+          Присесть рядом: «Постарайтесь дышать спокойно. Я рядом, сейчас помогу Вам и принесу воды». Окна не
+          открываются, но воздух поступает через систему очистки
+        effects:
+          safety: 10
+          loyalty: 10
+          stats: {trust: 20, tension: -15}
+          competences: {first_aid: 10, communication: 10}
+        reaction:
+          - {speaker: darya, expression: worried, text: "Хорошо… Только не уходите."}
+        next: breathing
+        best: true
+        explanation: >
+          Спокойно общаться, не паниковать, усадить, дать воды и не оставлять без внимания. Про окно — объяснить
+          техническую невозможность и то, как поступает воздух.
+      - id: window_and_go
+        text: "Объяснить, что окна не открываются, и уйти за водой"
+        effects:
+          loyalty: -5
+          stats: {tension: 15}
+          competences: {communication: -5}
+        next: alone
+        explanation: "Объяснение верное, но уйти от пассажирки в панике — значит оставить её одну в самый тяжёлый момент."
+      - id: ask_crowd
+        text: "Громко спросить у вагона, нет ли среди пассажиров врача"
+        effects:
+          safety: 5
+          stats: {tension: 20}
+          competences: {stress_resistance: -5}
+        reaction:
+          - {speaker: darya, expression: pained, text: "Не надо… все смотрят…"}
+        next: breathing
+        explanation: "При панической атаке главное — спокойствие вокруг. Поиск медика объявляют, если состояние ухудшается."
+
+  - id: alone
+    scene:
+      background: salon
+      characters:
+        - {id: darya, position: right, expression: pained}
+    situation: "Пассажирка осталась одна, её паника нарастает."
+    dialogue:
+      - {speaker: narrator, text: "Дарья одна. Она пытается встать, но ноги не слушаются."}
+      - {speaker: darya, text: "Я не могу… мне страшно…"}
+    timer_seconds: 15
+    timeout_next: end_failure
+    timeout_effects: {safety: -20}
+    timeout_reaction:
+      - {speaker: narrator, text: "Дарья падает в проходе. Пассажиры вскакивают с мест."}
+    choices:
+      - id: return_stay
+        text: "Вернуться с водой, сесть рядом и не уходить"
+        effects:
+          safety: 10
+          stats: {trust: 10, tension: -10}
+          competences: {first_aid: 5, communication: 5}
+        next: breathing
+        best: true
+        explanation: "Пассажира с панической атакой не оставляют без внимания."
+      - id: pass_to_colleague
+        text: "Попросить коллегу присмотреть, а самому вернуться к обслуживанию"
+        effects:
+          loyalty: -10
+          competences: {service: -5}
+        next: end_partial
+        explanation: "Смена человека рядом в момент паники тревожит ещё сильнее. Лучше остаться, пока приступ не пройдёт."
+
+  - id: breathing
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: darya, position: right, expression: worried}
+    situation: "Пассажирка чуть успокоилась; нужно помочь ей восстановить дыхание."
+    dialogue:
+      - {speaker: darya, text: "Со мной такое бывало… но давно. Сейчас так жарко, и я испугалась."}
+      - {speaker: player, thought: true, text: "Бывало раньше — значит, это не первый раз. Дышать вместе."}
+    choices:
+      - id: square_breathing
+        text: "Подышать вместе «по квадрату» — вдох на четыре счёта, пауза, выдох, пауза"
+        effects:
+          safety: 10
+          loyalty: 10
+          stats: {tension: -20}
+          competences: {first_aid: 10}
+        reaction:
+          - {speaker: darya, expression: neutral, text: "Раз, два, три, четыре… Кажется, отпускает."}
+        next: temperature
+        best: true
+        explanation: "Уточнить, бывало ли такое раньше, и подышать «по квадрату» — рекомендация стандарта при панической атаке."
+      - id: just_calm_down
+        text: "«Успокойтесь, всё нормально, это просто нервы»"
+        effects:
+          loyalty: -10
+          stats: {tension: 15}
+          competences: {communication: -10}
+        reaction:
+          - {speaker: darya, expression: sad, text: "Я не могу просто взять и успокоиться…"}
+        next: temperature
+        explanation: "Фраза «успокойтесь» обесценивает состояние человека. Помогают конкретные действия и сочувствие."
+      - id: distract
+        text: "Предложить планшет с музыкой и журнал, чтобы отвлечься"
+        condition: ["trust >= 55"]
+        effects:
+          loyalty: 15
+          stats: {tension: -20}
+          competences: {first_aid: 5, service: 10}
+        reaction:
+          - {speaker: darya, expression: happy, text: "Музыка… да, это помогает. Спасибо."}
+        next: temperature
+        explanation: "Отвлечь разговором, чтением или музыкой — ещё один приём из стандарта, когда пассажир уже доверяет."
+
+  - id: temperature
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: darya, position: center, expression: worried}
+        - {id: maxim, position: right, expression: annoyed}
+    situation: "Одной пассажирке в салоне жарко, её соседу — холодно."
+    dialogue:
+      - {speaker: darya, text: "А можно как-то сделать прохладнее? Тут правда душно."}
+      - {speaker: maxim, text: "А мне наоборот холодно. Кондиционер дует прямо на меня."}
+      - {speaker: player, thought: true, text: "Двум людям — два решения."}
+    choices:
+      - id: pass_engineer
+        text: >
+          «Благодарю за обращение. Сейчас передам информацию бортинженеру, и мы сделаем температуру комфортнее» —
+          а Максиму предложить плед и горячий чай
+        effects:
+          loyalty: 15
+          stats: {trust: 10}
+          competences: {service: 15}
+        reaction:
+          - {speaker: maxim, expression: neutral, text: "Плед — отлично, спасибо."}
+        next: motion
+        best: true
+        explanation: >
+          Выслушать, передать бортинженеру и учесть соседей: если кому-то жарко, а кому-то холодно, помогают плед,
+          чай или пересадка.
+      - id: max_cold
+        text: "Попросить бортинженера сделать как можно холоднее"
+        effects:
+          loyalty: -10
+          competences: {service: -5}
+        reaction:
+          - {speaker: maxim, expression: angry, text: "Отлично, теперь я совсем замёрзну."}
+        next: motion
+        explanation: "Решение для одного пассажира за счёт другого. Сначала опросить соседей — индивидуально и тихо."
+
+  - id: motion
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: maxim, position: right, expression: pained}
+    situation: "Соседа по ряду укачивает — он едет против хода движения."
+    dialogue:
+      - {speaker: narrator, text: "Через полчаса Максим бледнеет и закрывает глаза."}
+      - {speaker: maxim, text: "Что-то меня мутит. Я всегда плохо переношу, когда еду спиной вперёд."}
+    choices:
+      - id: forward_seat
+        text: "«Позвольте предложить Вам пересесть по ходу движения» — и принести воду с лимоном"
+        effects:
+          loyalty: 15
+          safety: 5
+          competences: {service: 10, first_aid: 5}
+        reaction:
+          - {speaker: maxim, expression: neutral, text: "По ходу… да, так лучше. И вода с лимоном — то что надо."}
+        next: follow_up
+        best: true
+        explanation: "При укачивании — место по ходу движения при наличии, вода, лимон если есть. Позже — спросить о самочувствии."
+      - id: pill
+        text: "Предложить таблетку от укачивания из своей сумки"
+        effects:
+          safety: -15
+          set_flags: [mistake_made]
+          competences: {first_aid: -10}
+        next: end_partial
+        explanation: "Личные лекарства пассажирам не выдают — реакция неизвестна, а ответственность ляжет на проводника."
+
+  - id: follow_up
+    scene:
+      background: staff_room
+      characters:
+        - {id: player, position: left}
+    situation: "Острое прошло; осталось сообщить начальнику поезда и проверить пассажиров позже."
+    dialogue:
+      - {speaker: narrator, text: "В служебном купе тихо. До Новгорода ещё час."}
+      - {speaker: player, thought: true, text: "Паническая атака может вернуться."}
+    choices:
+      - id: notify_and_check
+        text: "Уведомить начальника поезда о пассажирке и через двадцать минут подойти к обоим пассажирам"
+        effects:
+          safety: 10
+          loyalty: 10
+          set_flags: [chief_informed]
+          competences: {safety_rules: 5, service: 10}
+        next: end_success
+        best: true
+        explanation: "Начальника поезда уведомляют о пассажире с панической атакой, а к пассажирам обязательно возвращаются позже."
+      - id: skip
+        text: "Раз всем лучше — можно заняться другими делами"
+        effects:
+          loyalty: -10
+          competences: {service: -5}
+        next: end_partial
+        explanation: "Без обратной связи и доклада начальнику поезда повторный приступ застанет бригаду врасплох."
+
+  - id: end_success
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: happy}
+        - {id: darya, position: center, expression: happy}
+        - {id: maxim, position: right, expression: happy}
+    outcome: success
+    ending: "Пассажирам стало легче"
+    final_text: >
+      Проводник остался рядом во время приступа, помог восстановить дыхание, решил вопрос с температурой для обоих
+      соседей и пересадил укачавшегося пассажира по ходу движения. Начальник поезда в курсе.
+  - id: end_partial
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: worried}
+    outcome: partial
+    ending: "Острое прошло, но внимания не хватило"
+    final_text: >
+      С приступом справились, но кто-то из пассажиров остался без обратной связи или получил неподходящую помощь.
+  - id: end_failure
+    scene:
+      background: salon
+      characters:
+        - {id: darya, position: right, expression: pained}
+    outcome: failure
+    ending: "Паника охватила вагон"
+    final_text: >
+      Пассажирку оставили одну в момент приступа — она потеряла сознание в проходе. Потребовалась экстренная помощь.

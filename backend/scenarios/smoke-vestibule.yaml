@@ -1,157 +1,306 @@
-# ДЕМО-КОНТЕНТ: написан командой до получения материалов кейсодержателя.
-# Порядок действий условный — сверить с регламентом пожарной безопасности перевозчика.
+# Ситуации 20, 42, 25 и 45: курение электронной сигареты в тамбуре, повреждённое имущество поезда
+# (заклеенный датчик), съёмка других пассажиров без согласия и паника в салоне.
 id: smoke-vestibule
-title: Задымление в тамбуре
+title: "Задымление в тамбуре"
 category: safety
 difficulty: 3
-service_class: Эконом
-route: Москва — Санкт-Петербург
+service_class: Стандарт
+route: Санкт-Петербург — Москва
 description: >
-  Из тамбура тянет дымом и срабатывает датчик. Нужно за секунды оценить угрозу,
-  не допустить паники и действовать по правилам пожарной безопасности.
-demo: true
+  Мигает индикатор датчика дыма. В тамбуре стоит пассажир с электронной сигаретой,
+  а у двери кто-то уже снимает происходящее на телефон.
+situations: [20, 42, 25, 45]
 initial:
   loyalty: 70
-  safety: 70
+  safety: 60
+stats:
+  trust: 30
+  tension: 40
+characters:
+  stas:
+    name: "Стас"
+    role: "Пассажир с электронной сигаретой"
+    look: {top: "#F2B84B", bottom: "#34405A", hair: "#3A2E2A"}
+  lera:
+    name: "Лера"
+    role: "Пассажирка с телефоном"
+    look: {top: "#E8735A", bottom: "#3A3550", hair: "#6B3F2A", hair_style: long}
+  galina:
+    name: "Галина Ивановна"
+    role: "Пассажирка"
+    look: {top: "#8A6D5A", bottom: "#3A3550", hair: "#B8B8B8", hair_style: bun}
+  chief:
+    name: "Ольга Николаевна"
+    role: "Начальник поезда"
+    look: {outfit: uniform, hair: "#4A3426", hair_style: bun}
+  roman:
+    name: "Роман"
+    role: "Сотрудник ПТБ"
+    look: {top: "#2E3A4F", bottom: "#1E2636", hair: "#1F1A17"}
 start_node: start
 
 nodes:
   - id: start
-    situation: >
-      Из тамбура тянет дымом, срабатывает датчик. В тамбуре стоит пассажир с электронной
-      сигаретой, из урны идёт дым.
-    timer_seconds: 15
+    scene:
+      background: vestibule
+      characters:
+        - {id: player, position: left}
+        - {id: stas, position: right, expression: neutral}
+    situation: "Пассажир курит электронную сигарету в тамбуре, мигает индикатор датчика дыма."
+    dialogue:
+      - {speaker: narrator, text: "На панели мигает жёлтый индикатор: датчик дыма, тамбур седьмого вагона."}
+      - {speaker: narrator, text: "В тамбуре — густое облако сладкого пара."}
+      - {speaker: stas, text: "О, привет. Я быстро, пару затяжек — и всё."}
+      - {speaker: player, thought: true, text: "Если сработает система — экстренное торможение на трёхстах восьмидесяти."}
+    timer_seconds: 20
     timeout_next: smoke_spreads
-    timeout_effects:
-      safety: -20
+    timeout_effects: {safety: -20}
+    timeout_reaction:
+      - {speaker: narrator, text: "Пар затягивает в салон. Из вагона доносится кашель и встревоженные голоса."}
     choices:
-      - id: assess_fire
+      - id: stop_rule_safety
         text: >
-          Быстро оценить: небольшое тление в урне — взять огнетушитель и сообщить
-          начальнику поезда по рации
-        effects:
-          safety: 10
-          competences: {safety_rules: 10, stress_resistance: 5}
-        next: extinguish
-        best: true
-        explanation: Сначала — источник огня и связь со старшим, разговор с нарушителем подождёт.
-      - id: scold_smoker
-        text: Сначала отчитать курильщика
-        effects:
-          loyalty: -5
-          safety: -15
-          competences: {communication: -5}
-        next: smoke_spreads
-        explanation: Пока идёт разбирательство, тление разгорается.
-      - id: open_door
-        text: Открыть межвагонную дверь, чтобы проветрить
-        effects:
-          safety: -20
-          competences: {safety_rules: -10}
-        next: smoke_spreads
-        explanation: Приток воздуха раздувает огонь, а дым уходит в соседний вагон.
-
-  - id: extinguish
-    situation: Вы с огнетушителем у урны. Пассажиры из соседних рядов выглядывают в тамбур.
-    timer_seconds: 15
-    timeout_next: smoke_spreads
-    timeout_effects:
-      safety: -15
-    choices:
-      - id: use_extinguisher
-        text: Потушить тление огнетушителем, попросить пассажиров вернуться на места и закрыть дверь тамбура
-        effects:
-          safety: 20
-          competences: {safety_rules: 10, communication: 5}
-        next: aftermath
-        best: true
-        explanation: Огнетушитель рассчитан на такие случаи, а закрытая дверь не пускает дым в вагон.
-      - id: water_bottle
-        text: Залить урну водой из бутылки
-        effects:
-          safety: -10
-        next: aftermath
-        explanation: >
-          В урне может быть аккумулятор электронной сигареты — вода не гарантирует
-          тушения и опасна для электроники.
-
-  - id: smoke_spreads
-    situation: >
-      Дым заполняет тамбур и тянется в вагон, пассажиры кашляют, кто-то тянется к стоп-крану.
-    timer_seconds: 12
-    timeout_next: final_fail
-    timeout_effects:
-      safety: -25
-      loyalty: -10
-    choices:
-      - id: evacuate_car
-        text: >
-          Спокойно перевести пассажиров в соседний вагон, закрыть двери тамбура, доложить
-          начальнику поезда и взять огнетушитель
+          «Прошу Вас прекратить курение. В поезде это не допускается — дым и пар могут вызвать срабатывание системы
+          и остановку поезда»
         effects:
           safety: 15
-          loyalty: 5
-          competences: {safety_rules: 15, stress_resistance: 5}
-        next: extinguish
+          stats: {trust: 10}
+          competences: {safety_rules: 15, communication: 5}
+        reaction:
+          - {speaker: stas, expression: annoyed, text: "Да это же просто пар! Ладно, ладно, убрал."}
+        next: stas_reacts
         best: true
-        explanation: >
-          Люди — в безопасность, дым — за закрытую дверь, старший — в курсе.
-          После этого можно тушить.
-      - id: stop_crane
-        text: Разрешить пассажиру сорвать стоп-кран
+        explanation: "Вежливо прекратить нарушение и обязательно сделать акцент на угрозе безопасности движения."
+      - id: joke
+        text: "Пошутить и попросить хотя бы приоткрыть дверь в соседний вагон"
+        effects:
+          safety: -15
+          set_flags: [mistake_made]
+          competences: {safety_rules: -10}
+        next: smoke_spreads
+        explanation: "Курение на борту не допускается в любом виде — «проветрить» не решение, дым уходит в салон."
+      - id: grab_vape
+        text: "Выхватить электронную сигарету из рук"
+        effects:
+          safety: -5
+          stats: {tension: 30, trust: -20}
+          set_flags: [conflict_started]
+          competences: {communication: -10}
+        reaction:
+          - {speaker: stas, expression: angry, text: "Руки убрал! Ты что творишь?!"}
+        next: stas_refuses
+        explanation: "Силовое изъятие провоцирует конфликт. Не вступать в конфликт и не провоцировать — при отказе звать начальника поезда и ПТБ."
+
+  - id: stas_reacts
+    scene:
+      background: vestibule
+      characters:
+        - {id: player, position: left}
+        - {id: stas, position: right, expression: annoyed}
+    situation: "Выяснилось, что пассажир заклеил датчик дыма скотчем."
+    dialogue:
+      - {speaker: narrator, text: "На потолке тамбура — датчик дыма. Он аккуратно заклеен скотчем."}
+      - {speaker: stas, expression: happy, text: "Да я его заклеил, чтобы не пищал. Никакого вреда!"}
+      - {speaker: player, thought: true, text: "Это повреждение оборудования безопасности. Его нужно фиксировать."}
+    choices:
+      - id: invite_chief_record
+        text: >
+          «Я вынужден пригласить начальника поезда, чтобы зафиксировать ситуацию установленным порядком» — сообщить
+          о датчике начальнику поезда и бортинженеру
+        effects:
+          safety: 15
+          set_flags: [chief_informed]
+          competences: {safety_rules: 15}
+        reaction:
+          - {speaker: stas, expression: worried, text: "Зачем начальника? Ну заклеил, подумаешь…"}
+        next: filming
+        best: true
+        explanation: "Повреждение имущества поезда фиксируют установленным порядком — через начальника поезда, бортинженера и машиниста."
+      - id: remove_tape
+        text: "Молча снять скотч и никому не сообщать"
+        effects:
+          safety: -10
+          competences: {safety_rules: -10}
+        next: filming
+        explanation: "Датчик мог быть повреждён. О любых замечаниях к оборудованию обязательно сообщают начальнику поезда."
+      - id: ask_himself
+        text: "Спокойно объяснить, что пар тоже срабатывает датчик, и попросить Стаса самому снять скотч при вас"
+        condition: ["not flag conflict_started"]
+        effects:
+          safety: 10
+          stats: {trust: 10}
+          set_flags: [chief_informed]
+          competences: {communication: 10, safety_rules: 5}
+        reaction:
+          - {speaker: stas, expression: sad, text: "Ну… ладно, снимаю. Не знал, что всё так серьёзно."}
+          - {speaker: player, text: "Благодарю за понимание. О датчике я всё равно сообщу бортинженеру — его нужно проверить."}
+        next: filming
+        explanation: "Если пассажир не агрессивен, объяснение помогает ему понять риск. Но доклад о датчике обязателен."
+
+  - id: stas_refuses
+    scene:
+      background: vestibule
+      characters:
+        - {id: player, position: left}
+        - {id: stas, position: right, expression: angry}
+    situation: "Пассажир агрессивно отказывается прекратить курение."
+    dialogue:
+      - {speaker: stas, text: "Я буду курить где хочу! Отойди от меня!"}
+      - {speaker: player, thought: true, text: "Не спорить. Отойти на шаг. Звать помощь."}
+    timer_seconds: 15
+    timeout_next: smoke_spreads
+    timeout_effects: {safety: -20}
+    choices:
+      - id: step_back_call
+        text: "Отойти на безопасное расстояние и вызвать начальника поезда и ПТБ по рации"
+        effects:
+          safety: 15
+          stats: {tension: -10}
+          set_flags: [security_called, chief_informed]
+          competences: {safety_rules: 10, stress_resistance: 10}
+        next: filming
+        best: true
+        explanation: "При отказе прекратить — начальник поезда и ПТБ любым оперативным способом. Не вступать в конфликт."
+      - id: fight
+        text: "Попытаться силой вывести его из тамбура"
+        effects:
+          safety: -25
+          competences: {safety_rules: -10}
+        next: end_incident
+        explanation: "Силовые действия — не задача проводника и угроза для всех. Для этого есть сотрудники ПТБ."
+
+  - id: smoke_spreads
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: galina, position: right, expression: pained}
+    situation: "Пар проник в салон, одна из пассажирок в панике кричит о пожаре."
+    dialogue:
+      - {speaker: galina, text: "Пожар! Горим! Остановите поезд!"}
+      - {speaker: narrator, text: "Пассажиры вскакивают с мест, кто-то тянется к стоп-крану."}
+      - {speaker: player, thought: true, text: "Паника опаснее пара. Нужны чёткие короткие фразы."}
+    choices:
+      - id: calm_instructions
+        text: >
+          «Пожалуйста, сохраняйте спокойствие и следуйте рекомендациям персонала поезда. Это не пожар» — закрыть
+          дверь тамбура и вызвать начальника поезда и ПТБ
+        effects:
+          safety: 15
+          stats: {tension: -20}
+          set_flags: [security_called, chief_informed]
+          competences: {stress_resistance: 15, communication: 5}
+        reaction:
+          - {speaker: galina, expression: worried, text: "Не пожар?.. Правда?"}
+        next: filming
+        best: true
+        explanation: "Сохранять спокойствие, не допускать паники, давать чёткие формулировки и параллельно вызвать помощь."
+      - id: shout_fire
+        text: "Крикнуть: «Всем покинуть вагон!»"
+        effects:
+          safety: -25
+          competences: {stress_resistance: -15}
+        next: end_incident
+        explanation: "Команда без оснований превращает панику одного пассажира в панику всего вагона."
+
+  - id: filming
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left}
+        - {id: lera, position: center, expression: happy}
+        - {id: galina, position: right, expression: angry}
+    situation: "Пассажирка снимает происходящее и других пассажиров для своего блога."
+    dialogue:
+      - {speaker: lera, text: "Друзья, у нас тут в поезде ЧП! Смотрите, что творится!"}
+      - {speaker: galina, text: "Девушка, уберите телефон! Не снимайте меня!"}
+      - {speaker: player, thought: true, text: "Снимать других без согласия нельзя. И Галина Ивановна уже на взводе."}
+    choices:
+      - id: ask_stop_filming
+        text: "«Прошу Вас не снимать других пассажиров без их согласия»"
+        effects:
+          loyalty: 15
+          stats: {tension: -10}
+          competences: {communication: 10}
+        reaction:
+          - {speaker: lera, expression: sad, text: "Ладно, выключаю. Я просто хотела показать."}
+          - {speaker: galina, expression: neutral, text: "Спасибо вам."}
+        next: chief_arrives
+        best: true
+        explanation: "Вежливо попросить прекратить съёмку без согласия и следить за реакцией других пассажиров."
+      - id: ignore_film
+        text: "Не вмешиваться — это её телефон и её дело"
         effects:
           loyalty: -10
-          safety: -20
-          competences: {safety_rules: -15}
-        next: final_fail
-        explanation: >
-          Экстренное торможение на высокой скорости опасно само по себе. Решение
-          об остановке принимает начальник поезда.
-
-  - id: aftermath
-    situation: Дым рассеивается. Пассажир с электронной сигаретой оправдывается, соседи возмущены.
-    line:
-      speaker: passenger
-      name: Пассажир с электронной сигаретой
-      text: Я не думал, что так получится, это же не настоящая сигарета!
-    choices:
-      - id: document_and_explain
-        condition:
-          - safety >= 60
-        text: >
-          Составить акт вместе с начальником поезда, спокойно объяснить запрет на курение,
-          в том числе электронных сигарет, и успокоить соседей
-        effects:
-          loyalty: 10
-          safety: 10
-          competences: {safety_rules: 10, communication: 5}
-        next: final_success
-        best: true
-        explanation: >
-          Нарушение оформлено, пассажир понимает правило, соседи видят, что экипаж
-          контролирует ситуацию. Вариант доступен, если угрозу удержали под контролем.
-      - id: explain_only
-        text: Объяснить запрет и отпустить без оформления
-        effects:
-          loyalty: 5
-        next: final_partial
-        explanation: Пассажир понял, но нарушение пожарной безопасности не зафиксировано.
-      - id: public_shame
-        text: Отчитать пассажира при всех
+          competences: {communication: -5}
+        next: chief_arrives
+        explanation: "Недовольство пассажиров съёмкой нельзя игнорировать — просьба прекратить съёмку входит в стандарт."
+      - id: take_phone
+        text: "Забрать телефон до конца поездки"
         effects:
           loyalty: -15
+          stats: {tension: 20}
           competences: {communication: -10}
-        next: final_partial
-        explanation: Публичный разнос не добавляет безопасности, а ухудшает атмосферу в вагоне.
+        next: chief_arrives
+        explanation: "Изымать личные вещи проводник не вправе. Достаточно вежливой просьбы."
 
-  - id: final_success
+  - id: chief_arrives
+    scene:
+      background: vestibule
+      characters:
+        - {id: player, position: left}
+        - {id: chief, position: center, expression: serious}
+        - {id: roman, position: right, expression: serious}
+    situation: "Начальник поезда и сотрудник ПТБ на месте и просят доложить."
+    dialogue:
+      - {speaker: chief, text: "Докладывайте. Что с датчиком и где нарушитель?"}
+    choices:
+      - id: report_all
+        text: "Доложить всё — курение, заклеенный датчик, съёмку пассажиров — и что уже сделано"
+        effects:
+          safety: 15
+          competences: {safety_rules: 10, communication: 10}
+        reaction:
+          - {speaker: roman, expression: neutral, text: "Пассажира беру. Датчик пусть проверит бортинженер."}
+          - {speaker: chief, expression: neutral, text: "При нарушении порядка я вправе передать его полиции. Спасибо за чёткий доклад."}
+        next: end_success
+        best: true
+        explanation: "Полный доклад позволяет начальнику поезда принять решение, а бортинженеру — проверить оборудование."
+      - id: minimise
+        text: "«Ничего серьёзного, просто пар»"
+        effects:
+          safety: -15
+          competences: {safety_rules: -10}
+        next: end_partial
+        explanation: "Преуменьшение скрывает повреждение датчика — следующее задымление система может не заметить."
+
+  - id: end_success
+    scene:
+      background: vestibule
+      characters:
+        - {id: player, position: left, expression: happy}
+        - {id: chief, position: right, expression: neutral}
     outcome: success
-    final_text: Возгорание потушено за минуту, пострадавших нет, нарушение оформлено по регламенту.
-
-  - id: final_partial
+    ending: "Задымление предотвращено"
+    final_text: >
+      Курение прекращено с акцентом на безопасности, повреждённый датчик зафиксирован, паника не началась, съёмка
+      пассажиров остановлена вежливой просьбой. Поезд продолжил движение без остановки.
+  - id: end_partial
+    scene:
+      background: vestibule
+      characters:
+        - {id: player, position: left, expression: worried}
     outcome: partial
-    final_text: Опасность устранена, но действия экипажа были не вполне по регламенту. Будет разбор.
-
-  - id: final_fail
+    ending: "Нарушение остановлено, но не зафиксировано"
+    final_text: >
+      Курение прекратилось, но о повреждённом датчике не узнали вовремя. Оборудование безопасности осталось непроверенным.
+  - id: end_incident
+    scene:
+      background: salon
+      characters:
+        - {id: player, position: left, expression: sad}
+        - {id: galina, position: right, expression: pained}
     outcome: failure
-    final_text: Задымление распространилось, поезд экстренно остановлен. Проводится расследование.
+    ending: "Экстренная остановка поезда"
+    final_text: >
+      Паника или сработавшая система привели к экстренной остановке. Пострадавших нет, но рейс задержан, проводится проверка.

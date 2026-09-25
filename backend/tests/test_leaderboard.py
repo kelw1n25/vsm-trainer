@@ -2,7 +2,7 @@ import pytest
 
 from app.auth.security import hash_password
 from tests.conftest import login
-from tests.test_engine import play
+from tests.test_engine import BEST_PATH, play
 
 
 @pytest.fixture
@@ -52,10 +52,10 @@ def test_current_user_is_marked(client, company):
 
 def test_week_counts_only_this_week_runs(client, company):
     auth = login(client, "100001")
-    play(client, auth, "ask_tickets", "explain_calmly", "reissue_ticket")
+    play(client, auth, *BEST_PATH)
     week = board(client, auth, "brigade", "week")["rows"]
     # На этой неделе XP заработал только 100001, у коллеги с 500 XP «за всё время» — 0
-    assert (week[0]["full_name"], week[0]["points"], week[0]["rank"]) == ("Сотрудник 100001", 204, 1)
+    assert (week[0]["full_name"], week[0]["points"], week[0]["rank"]) == ("Сотрудник 100001", 208, 1)
     assert week[1]["points"] == 0
 
 

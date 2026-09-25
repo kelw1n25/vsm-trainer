@@ -1,7 +1,7 @@
 from app.auth.security import hash_password
 from tests.conftest import create_employee, login
-from tests.test_engine import play, start
-from tests.test_timer import rewind
+from tests.test_engine import PARTIAL_PATH, choose, play
+from tests.test_timer import at_timed_node, rewind
 
 
 def analytics(client, auth) -> dict:
@@ -17,20 +17,21 @@ def test_new_employee(client, auth):
 
 
 def test_frequent_timeouts_are_detected(client, auth, db):
-    for _ in range(2):
-        state = start(client, auth)
-        rewind(db, state["id"], 20 + 15 + 2)  # оба таймера истекли — провал
-        client.get(f"/api/runs/{state['id']}", headers=auth)
+    for _ in range(3):
+        state = at_timed_node(client, auth)
+        rewind(db, state["id"], 22)  # таймер спора пассажиров истёк
+        state = client.get(f"/api/runs/{state['id']}", headers=auth).json()
+        choose(client, auth, state, "promise_now")
 
     data = analytics(client, auth)
     conflict = data["categories"][0]
-    assert (conflict["runs"], conflict["timed_steps"], conflict["timeout_rate"]) == (2, 4, 1.0)
+    assert (conflict["runs"], conflict["timed_steps"], conflict["timeout_rate"]) == (3, 3, 1.0)
     assert any(m.startswith("Часто истекает таймер в конфликтных сценариях") for m in data["mistakes"])
 
 
 def test_rare_best_choices_and_progress(client, auth):
-    play(client, auth, "demand_leave", "ask_neighbours")
-    play(client, auth, "offer_temp_seat", "offer_meal")
+    play(client, auth, "side_with_sergey", "raise_voice")
+    play(client, auth, "tell_wait", "raise_voice")
     data = analytics(client, auth)
     assert data["categories"][0]["best_choice_rate"] == 0.0
     assert any("Лучшее решение в конфликтных сценариях выбирается редко" in m for m in data["mistakes"])
@@ -40,11 +41,11 @@ def test_rare_best_choices_and_progress(client, auth):
 
 
 def test_recommendation_targets_weakest_competence(client, auth):
-    play(client, auth, "ask_tickets", "explain_calmly", "leave_as_is")
+    play(client, auth, *PARTIAL_PATH)
     data = analytics(client, auth)
     assert data["weaknesses"][0] == "Первая помощь и медицинские ситуации"
     # Больше всего очков первой помощи даёт медицинский сценарий
-    assert data["recommendation"]["scenario_id"] == "medical-heart-attack"
+    assert data["recommendation"]["scenario_id"] == "passenger-unwell"
     assert "Первая помощь" in data["recommendation"]["reason"]
 
 
