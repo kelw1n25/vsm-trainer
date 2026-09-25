@@ -31,19 +31,67 @@ export interface ScenarioSummary {
   service_class: string;
   route: string;
   description: string;
-  demo: boolean;
+  /** Номера ситуаций из справочника «Ситуации на борту». */
+  situations: number[];
+  endings_total: number;
 }
+
+export type Expression =
+  | "neutral"
+  | "happy"
+  | "angry"
+  | "annoyed"
+  | "worried"
+  | "sad"
+  | "surprised"
+  | "thinking"
+  | "serious"
+  | "pained"
+  | "tipsy";
 
 export interface Line {
   speaker: string;
+  /** Имя персонажа; у рассказчика и проводника — null. */
   name: string | null;
+  role: string | null;
+  kind: "speech" | "thought" | "narration";
   text: string;
+  expression: Expression | null;
+}
+
+export interface SceneCharacter {
+  id: string;
+  position: "left" | "center" | "right";
+  expression: Expression;
+}
+
+export interface Scene {
+  background: string;
+  characters: SceneCharacter[];
+}
+
+export interface Look {
+  outfit: "uniform" | "casual";
+  top: string;
+  bottom: string;
+  hair: string;
+  hair_style: "short" | "bun" | "long";
+  child: boolean;
+}
+
+export interface Character {
+  id: string;
+  name: string;
+  role: string;
+  look: Look;
 }
 
 export interface NodeState {
   id: string;
-  situation: string;
-  line: Line | null;
+  scene: Scene;
+  dialogue: Line[];
+  /** Варианты приходят только после /reveal — пока сцена читается, таймер не идёт. */
+  choices_shown: boolean;
   choices: { id: string; text: string }[];
   timer_seconds: number | null;
   deadline_at: string | null;
@@ -53,6 +101,7 @@ export interface NodeState {
 export interface Step {
   kind: "choice" | "timeout";
   text: string;
+  reaction: Line[];
   loyalty_delta: number;
   safety_delta: number;
   competences: Record<string, number>;
@@ -61,7 +110,10 @@ export interface Step {
 export interface FinalState {
   outcome: RunStatus;
   reason: FinishReason;
+  ending: string;
   text: string;
+  scene: Scene;
+  dialogue: Line[];
   xp_earned: number;
   competence_points: Record<string, number>;
 }
@@ -89,6 +141,7 @@ export interface Debrief {
   scenario_title: string;
   outcome: RunStatus;
   reason: FinishReason;
+  ending: string;
   final_text: string;
   xp_earned: number;
   competence_points: Record<string, number>;
@@ -101,6 +154,7 @@ export interface Debrief {
   timeouts: number;
   average_reaction_seconds: number | null;
   steps: DebriefStep[];
+  situations: Situation[];
 }
 
 export interface Achievement {
@@ -209,7 +263,10 @@ export interface RunState {
   difficulty: number;
   route: string;
   service_class: string;
+  characters: Character[];
   steps_taken: number;
+  /** Сколько решений как минимум осталось до финала — для индикатора истории. */
+  steps_left: number;
   status: RunStatus;
   loyalty: number;
   safety: number;
@@ -219,4 +276,50 @@ export interface RunState {
   new_achievements: Achievement[];
   level_up: Level | null;
   server_time: string;
+}
+
+export interface Situation {
+  number: number;
+  title: string;
+  stage: "boarding" | "onboard";
+  category: string;
+  reaction: string;
+  phrases: string[];
+  comment: string[];
+}
+
+export interface ServiceClass {
+  code: "first" | "business" | "comfort" | "standard";
+  title: string;
+  layout: string;
+  aisle_mm: number;
+  pitch_mm: number;
+  seat_mm: number;
+  max_wait_minutes: number;
+  summary: string;
+}
+
+export interface Handbook {
+  role_model: { title: string; steps: { code: string; title: string; phrases: string[] }[] };
+  service_classes: ServiceClass[];
+  standards: { title: string; text: string }[];
+  situations: Situation[];
+}
+
+/** Архив веток: тексты неисследованных вариантов и финалов сервер не отдаёт. */
+export interface StoryMap {
+  scenario_id: string;
+  start_node: string;
+  playthroughs: number;
+  choices_total: number;
+  choices_explored: number;
+  nodes: {
+    id: string;
+    situation: string;
+    choices: { id: string; explored: boolean; text: string | null; next: string | null }[];
+    timer: boolean;
+    timeout_explored: boolean;
+    timeout_next: string | null;
+  }[];
+  endings: { id: string; outcome: RunStatus; reached: boolean; ending: string | null }[];
 }

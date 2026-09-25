@@ -296,7 +296,18 @@ function Frame({ children, top, bottom }: { children: ReactNode; top: string; bo
   );
 }
 
-type Mood = "calm" | "happy" | "angry" | "annoyed" | "worried" | "pained" | "tipsy";
+export type Mood =
+  | "calm"
+  | "happy"
+  | "angry"
+  | "annoyed"
+  | "worried"
+  | "pained"
+  | "tipsy"
+  | "surprised"
+  | "sad"
+  | "thinking"
+  | "serious";
 
 /** Лицо персонажа: глаза, брови и рот передают эмоцию — единый стиль для всех иллюстраций. */
 function Face({ cx, cy, r, mood = "calm" }: { cx: number; cy: number; r: number; mood?: Mood }) {
@@ -324,9 +335,16 @@ function Face({ cx, cy, r, mood = "calm" }: { cx: number; cy: number; r: number;
               }
             />
           ))
-        : eyes.map((x) => <circle key={x} cx={x} cy={ey} r={er} fill="#2B2320" />)}
+        : eyes.map((x) => <circle key={x} cx={x} cy={ey} r={mood === "surprised" ? er * 1.3 : er} fill="#2B2320" />)}
       {mood === "angry" && <path {...line} d={`M${cx - ex - er * 2} ${by - er}l${er * 3} ${er * 1.6}M${cx + ex + er * 2} ${by - er}l${-er * 3} ${er * 1.6}`} />}
-      {(mood === "worried" || mood === "pained") && (
+      {mood === "surprised" && (
+        <path {...line} d={`M${cx - ex - er * 1.6} ${by - er * 1.2}q${er * 1.6} ${-er * 1.4} ${er * 3.2} 0M${cx + ex - er * 1.6} ${by - er * 1.2}q${er * 1.6} ${-er * 1.4} ${er * 3.2} 0`} />
+      )}
+      {mood === "thinking" && (
+        <path {...line} d={`M${cx - ex - er * 1.8} ${by}h${er * 3}M${cx + ex - er * 1.4} ${by - er * 1.4}q${er * 1.6} ${-er} ${er * 3} ${er * 0.4}`} />
+      )}
+      {mood === "serious" && <path {...line} d={`M${cx - ex - er * 1.8} ${by + er * 0.4}h${er * 3.2}M${cx + ex + er * 1.8} ${by + er * 0.4}h${-er * 3.2}`} />}
+      {(mood === "worried" || mood === "pained" || mood === "sad") && (
         <path {...line} d={`M${cx - ex - er * 2} ${by + er * 0.6}l${er * 3} ${-er * 1.4}M${cx + ex + er * 2} ${by + er * 0.6}l${-er * 3} ${-er * 1.4}`} />
       )}
       {mood === "annoyed" && <path {...line} d={`M${cx - ex - er * 1.8} ${by}h${er * 3}M${cx + ex + er * 1.8} ${by}h${-er * 3}`} />}
@@ -341,7 +359,10 @@ function Face({ cx, cy, r, mood = "calm" }: { cx: number; cy: number; r: number;
       {mood === "tipsy" && <path {...line} d={`M${cx - mw * 1.3} ${my - mw * 0.2}q${mw * 1.4} ${mw * 1.2} ${mw * 2.6} ${-mw * 0.5}`} />}
       {mood === "angry" && <ellipse cx={cx} cy={my} rx={mw * 0.8} ry={mw * 0.6} fill="#8A3B34" />}
       {mood === "worried" && <ellipse cx={cx} cy={my} rx={mw * 0.45} ry={mw * 0.4} fill="#8A3B34" />}
-      {(mood === "annoyed" || mood === "pained") && (
+      {mood === "surprised" && <ellipse cx={cx} cy={my} rx={mw * 0.5} ry={mw * 0.65} fill="#8A3B34" />}
+      {mood === "thinking" && <path {...line} d={`M${cx - mw * 0.6} ${my}h${mw * 1.4}`} />}
+      {mood === "serious" && <path {...line} d={`M${cx - mw} ${my}h${mw * 2}`} />}
+      {(mood === "annoyed" || mood === "pained" || mood === "sad") && (
         <path {...line} d={`M${cx - mw} ${my + mw * 0.3}q${mw} ${-mw * 0.6} ${mw * 2} 0`} />
       )}
     </g>
@@ -382,8 +403,8 @@ function WindowView({ x, y, width, height }: { x: number; y: number; width: numb
 // Все люди на иллюстрациях собираются из одного компонента: одинаковые пропорции,
 // голова соединена с корпусом шеей, у всех сотрудников одна форма.
 
-type Outfit = "uniform" | { top: string; bottom: string };
-type Hand = "down" | "point" | "hold" | "radio" | "hush" | "chest" | "throat";
+export type Outfit = "uniform" | { top: string; bottom: string };
+export type Hand = "down" | "point" | "hold" | "radio" | "hush" | "chest" | "throat";
 type Item = "ticket" | "bottle" | "injector" | "extinguisher" | "radio";
 
 const UNIFORM = { top: "#1F2E57", bottom: "#18233F" };
@@ -401,7 +422,7 @@ const HAND_POSITION: Record<Hand, [number, number]> = {
   throat: [3, -65],
 };
 
-interface PersonProps {
+export interface PersonProps {
   x: number;
   /** Стоя — уровень пола под ногами, сидя — уровень сиденья. */
   y: number;
@@ -460,7 +481,7 @@ function HeldItem({ kind, x, y }: { kind: Item; x: number; y: number }) {
   }
 }
 
-function Person({
+export function Person({
   x,
   y,
   s = 1,

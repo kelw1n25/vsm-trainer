@@ -9,11 +9,12 @@ import { LoginPage } from "./pages/LoginPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { RatingPage } from "./pages/RatingPage";
-import { RunPage } from "./pages/RunPage";
 import { ScenarioPage } from "./pages/ScenarioPage";
 import { ScenariosPage } from "./pages/ScenariosPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { StoryMapPage } from "./pages/StoryMapPage";
 import { TeamPage } from "./pages/TeamPage";
+import { StoryPlayer } from "./story/StoryPlayer";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { session } = useAuth();
@@ -26,6 +27,15 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          {/* Новелла открывается на весь экран — без шапки и навигации дашборда */}
+          <Route
+            path="/runs/:runId"
+            element={
+              <RequireAuth>
+                <StoryPlayer />
+              </RequireAuth>
+            }
+          />
           <Route
             element={
               <RequireAuth>
@@ -36,7 +46,7 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/scenarios" element={<ScenariosPage />} />
             <Route path="/scenarios/:scenarioId" element={<ScenarioPage />} />
-            <Route path="/runs/:runId" element={<RunPage />} />
+            <Route path="/scenarios/:scenarioId/map" element={<StoryMapPage />} />
             <Route path="/runs/:runId/debrief" element={<DebriefPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/rating" element={<RatingPage />} />

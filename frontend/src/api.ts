@@ -1,6 +1,7 @@
 import type {
   Analytics,
   Debrief,
+  Handbook,
   Leaderboard,
   LeaderboardPeriod,
   LeaderboardScope,
@@ -11,6 +12,7 @@ import type {
   RunState,
   ScenarioSummary,
   Session,
+  StoryMap,
   TeamMember,
 } from "./types";
 
@@ -84,9 +86,13 @@ export const api = {
   scenarios: () => request<ScenarioSummary[]>("GET", "/api/scenarios"),
   startRun: (scenarioId: string) => request<RunState>("POST", "/api/runs", { scenario_id: scenarioId }),
   getRun: (runId: string) => request<RunState>("GET", `/api/runs/${runId}`),
+  reveal: (runId: string, nodeId: string) =>
+    request<RunState>("POST", `/api/runs/${runId}/reveal`, { node_id: nodeId }),
   choose: (runId: string, nodeId: string, choiceId: string) =>
     request<RunState>("POST", `/api/runs/${runId}/choices`, { node_id: nodeId, choice_id: choiceId }),
   debrief: (runId: string) => request<Debrief>("GET", `/api/runs/${runId}/debrief`),
+  storyMap: (scenarioId: string) => request<StoryMap>("GET", `/api/scenarios/${scenarioId}/story-map`),
+  handbook: () => request<Handbook>("GET", "/api/handbook"),
   profile: () => request<Profile>("GET", "/api/profile"),
   leaderboard: (scope: LeaderboardScope, period: LeaderboardPeriod) =>
     request<Leaderboard>("GET", `/api/leaderboard?scope=${scope}&period=${period}`),

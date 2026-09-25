@@ -48,7 +48,7 @@ export function ScenarioCard({ scenario, index, onStart }: Props) {
       <div className="scenario-card__body">
         <div className="tags">
           <span className="tag tag--category">{categoryLabels[scenario.category] ?? scenario.category}</span>
-          {scenario.demo && <span className="tag">Демо</span>}
+          <span className="tag">Финалов: {scenario.endings_total}</span>
         </div>
         <h3 className="scenario-card__title">{withoutOrphan(scenario.title)}</h3>
         <p className="route">

@@ -7,10 +7,9 @@ export const categoryLabels: Record<string, string> = {
   safety: "Безопасность",
 };
 
-export const speakerLabels: Record<string, string> = {
-  passenger: "Пассажир",
-  colleague: "Коллега",
-  train_chief: "Начальник поезда",
+export const stageLabels: Record<string, string> = {
+  boarding: "На посадке",
+  onboard: "В пути",
 };
 
 export const outcomeLabels: Record<RunStatus, string> = {
@@ -32,4 +31,14 @@ export function signed(value: number): string {
 /** «Смирнов Алексей Андреевич» → «Алексей». */
 export function firstName(fullName: string): string {
   return fullName.split(" ")[1] ?? fullName;
+}
+
+/** Склонение по числу: plural(3, ["финал", "финала", "финалов"]) → «финала». */
+export function plural(count: number, forms: [string, string, string]): string {
+  const tens = count % 100;
+  const units = count % 10;
+  if (tens >= 11 && tens <= 14) return forms[2];
+  if (units === 1) return forms[0];
+  if (units >= 2 && units <= 4) return forms[1];
+  return forms[2];
 }

@@ -34,8 +34,9 @@ export function DebriefPage() {
     <div className="stack">
       <h1 className="page-title">Разбор: {debrief.scenario_title}</h1>
 
-      <section className={`card final final--${debrief.outcome}`}>
-        <h2>{outcomeLabels[debrief.outcome]}</h2>
+      <section className={`card debrief-summary debrief-summary--${debrief.outcome}`}>
+        <p className="debrief-summary__outcome">{outcomeLabels[debrief.outcome]}</p>
+        <h2>{debrief.ending}</h2>
         <p>{debrief.final_text}</p>
         <div className="stats">
           <Stat value={`${debrief.best_decisions} из ${debrief.decisions}`} label="лучших решений" />
@@ -58,8 +59,34 @@ export function DebriefPage() {
         <StepReview key={index} step={step} index={index} />
       ))}
 
+      <section className="card">
+        <h2>Как действовать по стандарту</h2>
+        <p className="muted">Рекомендации из «Ситуаций на борту» для ситуаций этого сценария.</p>
+        <div className="standard-list">
+          {debrief.situations.map((situation) => (
+            <article key={situation.number} className="standard" id={`situation-${situation.number}`}>
+              <h3>
+                {situation.number}. {situation.title}
+              </h3>
+              <p>{situation.reaction}</p>
+              <ul className="standard__phrases">
+                {situation.phrases.map((phrase) => (
+                  <li key={phrase}>{phrase}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <div className="actions">
-        <Link className="button" to="/scenarios">
+        <Link className="button" to={`/scenarios/${debrief.scenario_id}/map`}>
+          Развитие истории
+        </Link>
+        <Link className="button button--ghost" to={`/scenarios/${debrief.scenario_id}`}>
+          Пройти заново
+        </Link>
+        <Link className="button button--ghost" to="/scenarios">
           Вернуться к сценариям
         </Link>
       </div>

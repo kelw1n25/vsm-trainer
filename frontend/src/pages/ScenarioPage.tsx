@@ -5,7 +5,7 @@ import { DifficultyIndicator } from "../components/DifficultyIndicator";
 import { ArrowRightIcon, ChevronLeftIcon, PinIcon } from "../components/icons";
 import { ScenarioImage } from "../components/illustrations";
 import { useScenarios, useStartScenario } from "../hooks";
-import { categoryLabels, outcomeLabels } from "../labels";
+import { categoryLabels, outcomeLabels, plural } from "../labels";
 import type { HistoryItem, RunStatus } from "../types";
 
 const outcomeRank: Record<RunStatus, number> = { success: 3, partial: 2, failure: 1, in_progress: 0 };
@@ -53,7 +53,7 @@ export function ScenarioPage() {
         <div className="scenario-detail__body">
           <div className="tags">
             <span className="tag tag--category">{categoryLabels[scenario.category] ?? scenario.category}</span>
-            {scenario.demo && <span className="tag">Демо</span>}
+            <span className="tag">Финалов: {scenario.endings_total}</span>
           </div>
           <h1 className="page-title">{scenario.title}</h1>
           <p className="route">
@@ -73,9 +73,16 @@ export function ScenarioPage() {
             </div>
           </div>
           {startError && <p className="error">{startError}</p>}
-          <button className="button button--large" onClick={() => start(scenario.id)}>
-            Начать сценарий <ArrowRightIcon />
-          </button>
+          <div className="actions">
+            <button className="button button--large" onClick={() => start(scenario.id)}>
+              Начать сценарий <ArrowRightIcon />
+            </button>
+            {attempts && attempts.length > 0 && (
+              <Link className="button button--ghost button--large" to={`/scenarios/${scenario.id}/map`}>
+                Развитие истории
+              </Link>
+            )}
+          </div>
         </div>
         <div className="scenario-detail__image">
           <ScenarioImage scenarioId={scenario.id} category={scenario.category} />
@@ -84,16 +91,31 @@ export function ScenarioPage() {
 
       <section className="features">
         <div className="card feature">
+          <strong>🎬 Интерактивная история</strong>
+          <span className="muted">
+            Сцены, диалоги и реакции персонажей. Выбор меняет сюжет — у сценария {scenario.endings_total}{" "}
+            {plural(scenario.endings_total, ["финал", "финала", "финалов"])}.
+          </span>
+        </div>
+        <div className="card feature">
           <strong>⏱ Решения под таймером</strong>
-          <span className="muted">Время контролирует сервер: не успели — ситуация развивается без вас.</span>
+          <span className="muted">Таймер стартует, когда появились варианты. Не успели — ситуация развивается без вас.</span>
         </div>
         <div className="card feature">
           <strong>⚖️ Две шкалы</strong>
           <span className="muted">Лояльность пассажира и рейтинг безопасности. Падение любой до нуля — провал.</span>
         </div>
-        <div className="card feature">
-          <strong>📋 Разбор после финала</strong>
-          <span className="muted">Каждое решение, его последствия и лучший вариант в этой точке.</span>
+      </section>
+
+      <section className="card">
+        <h2>Какие ситуации отрабатываются</h2>
+        <p className="muted">По материалам «Ситуации на борту» — после финала разбор покажет, как действовать по стандарту.</p>
+        <div className="chips">
+          {scenario.situations.map((number) => (
+            <Link key={number} className="chip" to={`/handbook#situation-${number}`}>
+              Ситуация {number}
+            </Link>
+          ))}
         </div>
       </section>
 

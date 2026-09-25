@@ -36,17 +36,24 @@ export function useScenarios(): { scenarios: ScenarioSummary[] | null; error: st
   return { scenarios, error };
 }
 
-/** Старт сценария (или продолжение незавершённого) и переход на экран прохождения. */
+// Сколько длится затемнение дашборда перед входом в новеллу
+const FADE_TO_STORY_MS = 450;
+
+/** Старт сценария (или продолжение незавершённого): дашборд уходит в затемнение, открывается новелла. */
 export function useStartScenario(): { start: (scenarioId: string) => void; error: string | null } {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const start = useCallback(
     (scenarioId: string) => {
       setError(null);
-      api
-        .startRun(scenarioId)
-        .then((run) => navigate(`/runs/${run.id}`))
-        .catch((e) => setError(e instanceof ApiError ? e.message : "Не удалось начать сценарий"));
+      document.documentElement.classList.add("story-leaving");
+      const faded = new Promise((resolve) => setTimeout(resolve, FADE_TO_STORY_MS));
+      Promise.all([api.startRun(scenarioId), faded])
+        .then(([run]) => navigate(`/runs/${run.id}`))
+        .catch((e) => {
+          document.documentElement.classList.remove("story-leaving");
+          setError(e instanceof ApiError ? e.message : "Не удалось начать сценарий");
+        });
     },
     [navigate],
   );
