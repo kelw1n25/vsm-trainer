@@ -231,13 +231,16 @@ def _build_state(
     node = next(n for n in definition.nodes if n.id == run.current_node_id)
     node_out = final_out = None
     if run.status == RunStatus.IN_PROGRESS:
+        deadline = _deadline(run, node)
+        grace = timedelta(seconds=game_config.timer.answer_grace_seconds)
         node_out = NodeOut(
             id=node.id,
             situation=node.situation,
             line=LineOut(**node.line.model_dump()) if node.line else None,
             choices=[ChoiceOut(id=c.id, text=c.text) for c in _visible_choices(node, run)],
             timer_seconds=node.timer_seconds,
-            deadline_at=_deadline(run, node),
+            deadline_at=deadline,
+            timeout_at=deadline + grace if deadline else None,
         )
     else:
         final_out = FinalOut(

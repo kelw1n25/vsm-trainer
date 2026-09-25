@@ -1,0 +1,409 @@
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --text: #16202e;
+  --muted: #5b6778;
+  --border: #dde2ea;
+  --brand: #0b3d91;
+  --brand-contrast: #ffffff;
+  --accent: #d6232a;
+  --positive: #16794a;
+  --negative: #c0282f;
+  --warning: #b35c00;
+  --loyalty: #2f6fdd;
+  --safety: #169c7a;
+  --track: #e6eaf0;
+  --radius: 12px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f141c;
+    --surface: #18202b;
+    --text: #e8edf4;
+    --muted: #9aa6b6;
+    --border: #2b3645;
+    --brand: #5b8ff0;
+    --brand-contrast: #0f141c;
+    --accent: #ff5a60;
+    --positive: #4cc88a;
+    --negative: #ff6b70;
+    --warning: #ffae4d;
+    --loyalty: #6f9cf5;
+    --safety: #3fcfa6;
+    --track: #2b3645;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin: 0 0 16px;
+}
+
+h2 {
+  font-size: 1.15rem;
+  margin: 0 0 8px;
+}
+
+a {
+  color: var(--brand);
+}
+
+.muted {
+  color: var(--muted);
+  margin: 4px 0;
+}
+
+.error {
+  color: var(--negative);
+}
+
+.notice {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border-left: 4px solid var(--warning);
+}
+
+.positive {
+  color: var(--positive);
+}
+
+.negative {
+  color: var(--negative);
+}
+
+/* Каркас */
+
+.header {
+  background: var(--brand);
+  color: var(--brand-contrast);
+}
+
+.header__inner {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.header__brand {
+  font-weight: 700;
+}
+
+.header__nav {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.header__nav a {
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.8;
+  padding: 4px 0;
+}
+
+.header__nav a.active {
+  opacity: 1;
+  border-bottom: 2px solid currentColor;
+}
+
+.header .button--ghost {
+  color: inherit;
+  border-color: currentColor;
+}
+
+.page {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+/* Элементы управления */
+
+.button {
+  display: inline-block;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--brand);
+  background: var(--brand);
+  color: var(--brand-contrast);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.button--ghost {
+  background: transparent;
+  color: var(--brand);
+}
+
+input,
+select {
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  width: 100%;
+}
+
+label {
+  display: grid;
+  gap: 4px;
+  font-weight: 600;
+}
+
+/* Вход */
+
+.login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.login__form {
+  width: min(400px, 100%);
+  display: grid;
+  gap: 14px;
+}
+
+/* Каталог */
+
+.scenario-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scenario-card .button {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+.scenario-card__tags {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.tag {
+  font-size: 0.8rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--track);
+}
+
+.tag--demo {
+  background: transparent;
+  border: 1px dashed var(--muted);
+  color: var(--muted);
+}
+
+/* Прохождение */
+
+.run {
+  display: grid;
+  gap: 16px;
+}
+
+.run h1 {
+  margin: 0;
+}
+
+.hud {
+  display: grid;
+  grid-template-columns: 1fr 1fr 160px;
+  gap: 16px;
+  align-items: end;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+@media (max-width: 640px) {
+  .hud {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.scale__head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.scale__track,
+.timer__track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.scale__fill,
+.timer__fill {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+.scale__fill--loyalty {
+  background: var(--loyalty);
+}
+
+.scale__fill--safety {
+  background: var(--safety);
+}
+
+.scale__fill--low {
+  background: var(--negative);
+}
+
+.timer__value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer__fill {
+  background: var(--brand);
+  transition: width 0.2s linear;
+}
+
+.timer--urgent .timer__value {
+  color: var(--accent);
+}
+
+.timer--urgent .timer__fill {
+  background: var(--accent);
+}
+
+.feedback {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border-left: 4px solid var(--brand);
+  font-weight: 600;
+}
+
+.feedback--timeout {
+  border-left-color: var(--accent);
+}
+
+.situation p {
+  margin-top: 0;
+  font-size: 1.05rem;
+}
+
+.line {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-left: 4px solid var(--muted);
+  background: var(--bg);
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+}
+
+.line__speaker {
+  display: block;
+  font-style: normal;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.choices {
+  display: grid;
+  gap: 10px;
+}
+
+.choice {
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.choice:hover:not(:disabled) {
+  border-color: var(--brand);
+}
+
+.choice:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.final {
+  border-top: 6px solid var(--muted);
+}
+
+.final--success {
+  border-top-color: var(--positive);
+}
+
+.final--partial {
+  border-top-color: var(--warning);
+}
+
+.final--failure {
+  border-top-color: var(--negative);
+}
+
+.competences {
+  margin: 8px 0;
+  padding-left: 20px;
+}

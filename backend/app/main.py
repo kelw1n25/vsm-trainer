@@ -11,6 +11,7 @@ from app.auth.router import router as auth_router
 from app.db import SessionLocal, get_db
 from app.engine.router import router as runs_router
 from app.errors import validation_error_handler
+from app.game_config import game_config
 from app.scenarios.loader import load_scenarios
 from app.scenarios.router import router as scenarios_router
 
@@ -42,3 +43,8 @@ app.include_router(runs_router)
 def health(db: Session = Depends(get_db)) -> dict[str, str]:
     db.execute(text("SELECT 1"))
     return {"status": "ok"}
+
+
+@app.get("/api/meta", tags=["system"], summary="Справочники для интерфейса: названия компетенций")
+def meta() -> dict[str, dict[str, str]]:
+    return {"competences": game_config.competences}

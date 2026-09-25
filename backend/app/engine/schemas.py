@@ -34,7 +34,10 @@ class NodeOut(BaseModel):
     line: LineOut | None
     choices: list[ChoiceOut]
     timer_seconds: int | None
+    # deadline_at — до какого момента показывать обратный отсчёт;
+    # timeout_at — когда сервер применит истечение таймера (дедлайн + льгота на задержку сети)
     deadline_at: datetime | None
+    timeout_at: datetime | None
 
 
 class StepOut(BaseModel):

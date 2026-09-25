@@ -1,26 +1,35 @@
-import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import { AuthProvider, useAuth } from "./auth";
+import { Layout } from "./components/Layout";
+import { CatalogPage } from "./pages/CatalogPage";
+import { LoginPage } from "./pages/LoginPage";
+import { RunPage } from "./pages/RunPage";
 
-type ApiStatus = "checking" | "ok" | "unavailable";
-
-const statusText: Record<ApiStatus, string> = {
-  checking: "проверяем…",
-  ok: "работает",
-  unavailable: "недоступен",
-};
+function RequireAuth({ children }: { children: ReactNode }) {
+  const { session } = useAuth();
+  return session ? children : <Navigate to="/login" replace />;
+}
 
 export default function App() {
-  const [status, setStatus] = useState<ApiStatus>("checking");
-
-  useEffect(() => {
-    fetch("/api/health")
-      .then((response) => setStatus(response.ok ? "ok" : "unavailable"))
-      .catch(() => setStatus("unavailable"));
-  }, []);
-
   return (
-    <main style={{ fontFamily: "system-ui, sans-serif", padding: 24 }}>
-      <h1>ВСМ-тренажёр проводника</h1>
-      <p>Backend: {statusText[status]}</p>
-    </main>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            element={
+              <RequireAuth>
+                <Layout />
+              </RequireAuth>
+            }
+          >
+            <Route path="/" element={<CatalogPage />} />
+            <Route path="/runs/:runId" element={<RunPage />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
