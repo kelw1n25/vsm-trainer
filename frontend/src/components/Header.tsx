@@ -22,6 +22,7 @@ export function Header() {
         <NavLink to="/profile">Профиль</NavLink>
         <NavLink to="/rating">Рейтинг</NavLink>
         <NavLink to="/analytics">Аналитика</NavLink>
+        <NavLink to="/handbook">Справочник</NavLink>
         {session?.role === "instructor" && <NavLink to="/team">Команда</NavLink>}
       </nav>
       <div className="header__actions">

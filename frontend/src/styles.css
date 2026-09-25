@@ -3056,20 +3056,20 @@ html[data-theme="dark"] .story {
   }
 
   .story-sprite {
-    bottom: 26vh;
-    height: 46vh;
+    bottom: 27vh;
+    height: 32vh;
   }
 
   .story-sprite--child {
-    height: 34vh;
+    height: 24vh;
   }
 
   .story-sprite--left {
-    left: 20%;
+    left: 19%;
   }
 
   .story-sprite--right {
-    left: 80%;
+    left: 81%;
   }
 
   .story-box,
@@ -3277,4 +3277,120 @@ html[data-reduce-motion] .story {
 
 .standard:target {
   box-shadow: 0 0 0 2px var(--brand);
+}
+
+/* ───────── Справочник ───────── */
+
+.handbook__lead {
+  margin: 0;
+  max-width: 900px;
+}
+
+.role-model {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.role-model > li {
+  padding: 16px 18px;
+  border-radius: var(--radius);
+  background: var(--soft);
+  counter-increment: step;
+}
+
+.role-model > li > strong::before {
+  content: counter(step) ". ";
+  color: var(--brand-text);
+}
+
+.role-model ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+
+.service-classes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.service-class {
+  padding: 16px 18px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.service-class h3 {
+  margin-bottom: 8px;
+}
+
+.service-class dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0 0 8px;
+}
+
+.service-class dt {
+  color: var(--muted);
+}
+
+.service-class dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.slides {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.slides figure {
+  margin: 0;
+}
+
+.slides img {
+  display: block;
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+
+.slides figcaption {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.standards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px 24px;
+}
+
+.standards p {
+  margin: 4px 0 0;
+}
+
+.handbook__filters {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.handbook__filters input {
+  max-width: 420px;
+}
+
+.standard__trained {
+  margin: 10px 0 0;
+  font-size: 14px;
 }

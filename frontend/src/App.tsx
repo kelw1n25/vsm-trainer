@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./auth";
 import { Layout } from "./components/Layout";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { DebriefPage } from "./pages/DebriefPage";
+import { HandbookPage } from "./pages/HandbookPage";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="/scenarios/:scenarioId" element={<ScenarioPage />} />
             <Route path="/scenarios/:scenarioId/map" element={<StoryMapPage />} />
             <Route path="/runs/:runId/debrief" element={<DebriefPage />} />
+            <Route path="/handbook" element={<HandbookPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/rating" element={<RatingPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />

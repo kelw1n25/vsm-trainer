@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { api, ApiError } from "../api";
 import { ChevronLeftIcon } from "../components/icons";
@@ -15,6 +15,7 @@ export function StoryMapPage() {
   const { start, error: startError } = useStartScenario();
   const [map, setMap] = useState<StoryMap | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const owners = useMemo(() => (map ? firstAppearance(map) : {}), [map]);
 
   useEffect(() => {
     api
@@ -44,7 +45,7 @@ export function StoryMapPage() {
 
       <section className="card story-map">
         <p className="story-map__root">Начало</p>
-        <Branch nodeId={map.start_node} nodes={nodes} endings={endings} drawn={new Set()} />
+        <Branch nodeId={map.start_node} via={ROOT} nodes={nodes} endings={endings} owners={owners} />
       </section>
 
       <section className="card">
@@ -75,15 +76,36 @@ export function StoryMapPage() {
   );
 }
 
-interface BranchProps {
-  nodeId: string;
-  nodes: Record<string, MapNode>;
-  endings: Record<string, StoryMap["endings"][number]>;
-  /** Уже показанные узлы: в графе ветки сходятся, второй раз узел не разворачиваем. */
-  drawn: Set<string>;
+const ROOT = "root";
+
+/**
+ * В графе ветки сходятся: узел разворачивается там, где встретился впервые при обходе в глубину,
+ * а в остальных местах показывается ссылка «сходится с веткой». Считается заранее, без побочных эффектов при отрисовке.
+ */
+function firstAppearance(map: StoryMap): Record<string, string> {
+  const nodes = Object.fromEntries(map.nodes.map((node) => [node.id, node]));
+  const owners: Record<string, string> = {};
+  const visit = (nodeId: string, via: string) => {
+    if (owners[nodeId] || !nodes[nodeId]) return;
+    owners[nodeId] = via;
+    const node = nodes[nodeId];
+    for (const choice of node.choices) if (choice.next) visit(choice.next, `${nodeId}:${choice.id}`);
+    if (node.timeout_next) visit(node.timeout_next, `${nodeId}:timeout`);
+  };
+  visit(map.start_node, ROOT);
+  return owners;
 }
 
-function Branch({ nodeId, nodes, endings, drawn }: BranchProps) {
+interface BranchProps {
+  nodeId: string;
+  /** Через какой переход пришли в узел. */
+  via: string;
+  nodes: Record<string, MapNode>;
+  endings: Record<string, StoryMap["endings"][number]>;
+  owners: Record<string, string>;
+}
+
+function Branch({ nodeId, via, nodes, endings, owners }: BranchProps) {
   const ending = endings[nodeId];
   if (ending) {
     return (
@@ -94,8 +116,7 @@ function Branch({ nodeId, nodes, endings, drawn }: BranchProps) {
   }
   const node = nodes[nodeId];
   if (!node) return null;
-  if (drawn.has(nodeId)) return <p className="story-map__again">→ сходится с веткой «{node.situation}»</p>;
-  drawn.add(nodeId);
+  if (owners[nodeId] !== via) return <p className="story-map__again">→ сходится с веткой «{node.situation}»</p>;
 
   return (
     <div className="story-map__node">
@@ -106,7 +127,9 @@ function Branch({ nodeId, nodes, endings, drawn }: BranchProps) {
             {choice.explored ? (
               <>
                 <span className="story-map__choice">✓ {choice.text}</span>
-                {choice.next && <Branch nodeId={choice.next} nodes={nodes} endings={endings} drawn={drawn} />}
+                {choice.next && (
+                  <Branch nodeId={choice.next} via={`${node.id}:${choice.id}`} nodes={nodes} endings={endings} owners={owners} />
+                )}
               </>
             ) : (
               <span className="story-map__choice">🔒 Ветка не исследована</span>
@@ -118,7 +141,9 @@ function Branch({ nodeId, nodes, endings, drawn }: BranchProps) {
             {node.timeout_explored ? (
               <>
                 <span className="story-map__choice">⏱ Время на решение истекло</span>
-                {node.timeout_next && <Branch nodeId={node.timeout_next} nodes={nodes} endings={endings} drawn={drawn} />}
+                {node.timeout_next && (
+                  <Branch nodeId={node.timeout_next} via={`${node.id}:timeout`} nodes={nodes} endings={endings} owners={owners} />
+                )}
               </>
             ) : (
               <span className="story-map__choice">🔒 Ветка не исследована</span>
