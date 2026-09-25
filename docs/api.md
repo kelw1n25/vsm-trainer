@@ -127,12 +127,15 @@ curl -s -G "$API/billing/usage" -H "X-API-Key: $KEY" --data-urlencode "month=202
 | Метод и путь | Назначение |
 |--------------|-----------|
 | `POST /api/auth/login` | вход: `{personnel_number, password}` → `access_token` |
-| `GET /api/scenarios` | каталог сценариев |
+| `GET /api/scenarios` | каталог: класс, ситуации из справочника, число финалов |
 | `GET /api/scenarios/schema` | JSON-схема файла сценария |
-| `POST /api/runs` | начать сценарий (или продолжить незавершённый) |
+| `GET /api/scenarios/{id}/story-map` | архив веток сотрудника: исследованные развилки и открытые финалы (закрытые — без текста) |
+| `GET /api/handbook` | справочник: 51 ситуация, ролевая модель, классы обслуживания, стандарты |
+| `POST /api/runs` | начать сценарий (или продолжить незавершённый): сцена, диалог, персонажи |
 | `GET /api/runs/{id}` | состояние; заодно применяет истёкший таймер |
-| `POST /api/runs/{id}/choices` | ответ: `{node_id, choice_id}` |
-| `GET /api/runs/{id}/debrief` | разбор завершённого сценария |
+| `POST /api/runs/{id}/reveal` | сцена дочитана: `{node_id}` → варианты и дедлайн таймера |
+| `POST /api/runs/{id}/choices` | ответ: `{node_id, choice_id}` → реакция персонажей и следующая сцена |
+| `GET /api/runs/{id}/debrief` | разбор: каждое решение, лучший вариант, стандарты по ситуациям |
 | `GET /api/profile` | уровень, компетенции, ачивки, история |
 | `GET /api/leaderboard?scope=brigade\|depot\|company&period=week\|month\|all` | рейтинг |
 | `GET /api/notifications`, `POST /api/notifications/read-all` | уведомления |
@@ -147,6 +150,8 @@ TOKEN=$(curl -s localhost:8000/api/auth/login -H "Content-Type: application/json
   -d '{"personnel_number":"100001","password":"demo2026"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["access_token"])')
 RUN=$(curl -s localhost:8000/api/runs -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d '{"scenario_id":"business-seat-conflict"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["id"])')
+curl -s localhost:8000/api/runs/$RUN/reveal -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"node_id":"start"}'
 curl -s localhost:8000/api/runs/$RUN/choices -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"node_id":"start","choice_id":"ask_tickets"}'
+  -d '{"node_id":"start","choice_id":"check_both"}'
 ```

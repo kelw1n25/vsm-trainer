@@ -5,12 +5,16 @@
 ```mermaid
 flowchart LR
     subgraph Client["Браузер проводника / инструктора"]
-        UI["React + TypeScript<br/>(Vite)"]
+        UI["React + TypeScript<br/>(Vite): дашборд"]
+        STORY["StoryEngine (чистый TS)<br/>режим новеллы"]
+        LS[("localStorage<br/>место в истории, журнал")]
+        STORY --- LS
     end
 
     subgraph Backend["Backend — FastAPI, stateless"]
         AUTH["auth<br/>JWT, роли"]
-        SCN["scenarios<br/>загрузка и валидация"]
+        SCN["scenarios<br/>загрузка, валидация,<br/>архив веток"]
+        HB["handbook<br/>ситуации, стандарты"]
         ENG["engine<br/>прохождение, таймер"]
         SCO["scoring<br/>шкалы, XP, сгорание"]
         ACH["achievements<br/>ачивки, уровни"]
@@ -22,20 +26,24 @@ flowchart LR
     end
 
     DB[("PostgreSQL")]
-    FILES[/"scenarios/*.yaml<br/>config/game.yaml"/]
+    FILES[/"scenarios/*.yaml<br/>config/game.yaml<br/>config/handbook.yaml"/]
     EXT["HR / LMS / биллинг"]
 
     UI -- "REST /api, JWT" --> AUTH
-    UI --> ENG & PR & LB & NOT & AN
+    UI --> PR & LB & NOT & AN & HB & SCN
+    STORY -- "REST /api/runs" --> ENG
     ENG --> SCO --> ACH --> NOT
-    FILES -- "при старте" --> SCN
+    FILES -- "при старте" --> SCN & HB
     SCN --> DB
     ENG & SCO & ACH & LB & NOT & AN & PR & INT --> DB
     EXT -- "REST, X-API-Key" --> INT
 ```
 
 **Frontend** — одностраничное приложение. Обращается к относительному адресу `/api`, который Vite
-проксирует на backend, поэтому CORS не нужен.
+проксирует на backend, поэтому CORS не нужен. Режим визуальной новеллы — отдельный движок
+`frontend/src/story/StoryEngine.ts` на чистом TypeScript без React: очередь реплик, печать текста, смена сцен,
+журнал, автопрокрутка, пропуск виденного, сохранение места в localStorage. React-компоненты только
+подписываются на его состояние и рисуют сцену. Что происходит в истории, решает сервер.
 
 **Backend** не хранит состояния в памяти: прохождение, таймер, шкалы и флаги лежат в строке
 `scenario_runs`. Любую копию backend можно перезапустить или добавить за балансировщиком.
@@ -58,8 +66,9 @@ flowchart LR
 | Модуль | Ответственность |
 |--------|-----------------|
 | `profiles` | депо, бригады, сотрудники; `GET /api/profile` |
-| `scenarios` | формат (Pydantic → JSON-схема), валидатор графа, загрузка файлов в БД, каталог |
-| `engine` | старт, выбор, условия, эффекты, переходы, серверный таймер, финал, разбор |
+| `scenarios` | формат новеллы (Pydantic → JSON-схема), валидатор графа и сцен, загрузка файлов в БД, каталог, архив веток |
+| `handbook` | справочник из материалов кейсодержателя: 51 ситуация, ролевая модель, классы обслуживания, стандарты |
+| `engine` | старт, показ вариантов (reveal), выбор, условия по шкалам, скрытым параметрам и флагам, эффекты, реакции, серверный таймер, финал, разбор |
 | `scoring` | границы шкал 0–100, XP, бонус за скорость, челлендж недели, сгорание баллов |
 | `achievements` | уровни по порогам XP, правила ачивок из конфига |
 | `leaderboard` | рейтинг: бригада / депо / компания × неделя / месяц / всё время |
@@ -91,7 +100,9 @@ erDiagram
                     int loyalty
                     int safety
                     jsonb flags
-                    timestamptz node_entered_at "отсчёт таймера"
+                    jsonb stats "скрытые параметры"
+                    timestamptz node_entered_at
+                    timestamptz choices_shown_at "отсчёт таймера"
                     string status
                     int xp_earned }
     events { string type "choice_made, timeout, run_finished, ..."
@@ -110,7 +121,12 @@ sequenceDiagram
     P->>UI: «Начать»
     UI->>API: POST /api/runs {scenario_id}
     API->>DB: INSERT scenario_runs (node_entered_at = now())
-    API-->>UI: узел, варианты, deadline_at, timeout_at, server_time
+    API-->>UI: сцена, диалог, персонажи — без вариантов, таймер не идёт
+    Note over UI: заставка, печать реплик,<br/>журнал, «Авто», «Пропустить»
+    P->>UI: дочитал сцену
+    UI->>API: POST /api/runs/{id}/reveal {node_id}
+    API->>DB: choices_shown_at = now()
+    API-->>UI: варианты, deadline_at, timeout_at, server_time
     Note over UI: обратный отсчёт с поправкой<br/>на разницу часов клиента и сервера
 
     alt Ответ до дедлайна
@@ -120,22 +136,23 @@ sequenceDiagram
         API->>API: проверки: время, актуальный узел, условие показа
         API->>API: эффекты → шкалы 0–100 → бонус за скорость → переход
         API->>DB: UPDATE run, INSERT events
-        API-->>UI: новое состояние + последствия шага
+        API-->>UI: реакция персонажей + следующая сцена
     else Таймер истёк
         UI->>API: GET /api/runs/{id} в момент timeout_at
         API->>API: timeout_effects → переход в timeout_next
-        API-->>UI: новое состояние + шаг «время истекло»
+        API-->>UI: реакция на промедление + следующая сцена
     end
 
     opt Финальный узел или шкала = 0
         API->>DB: XP и компетенции в профиль, ачивки, уровень, уведомления
-        API-->>UI: итог, XP, новые ачивки, новый уровень
-        UI->>API: GET /api/runs/{id}/debrief
+        API-->>UI: название финала, эпилог, XP, ачивки, уровень
+        UI->>API: GET /api/scenarios/{id}/story-map, /api/runs/{id}/debrief
     end
 ```
 
 Клиентский таймер только показывает остаток. Решает сервер: ответ позже
-`node_entered_at + timer_seconds` (плюс 1 секунда на задержку сети, настраивается)
+`choices_shown_at + timer_seconds` (плюс 1 секунда на задержку сети, настраивается)
 отклоняется с кодом `time_expired`, а таймаут применяется при любом обращении к прохождению.
-Если проводник пропустил несколько узлов подряд, таймауты применяются по цепочке
-от точных моментов дедлайнов.
+Таймер стартует, когда проводник дочитал сцену и увидел варианты: время на чтение диалога не штрафуется,
+а варианты до этого момента сервер не отдаёт — подглядеть их, не запустив таймер, нельзя.
+Ответ без показа вариантов отклоняется с кодом `choices_not_shown`.
