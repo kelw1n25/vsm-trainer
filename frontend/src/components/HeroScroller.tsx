@@ -1,23 +1,23 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 
 interface Props {
   /** Положение от 0 до 1. */
   value: number;
   steps: number;
   label: string;
-  /** smooth — короткая плавность (клавиатура); при перетаскивании и колесе движение мгновенное. */
+  /** smooth — короткая плавность (клавиатура); за курсором и пальцем движение мгновенное. */
   onChange: (value: number, smooth: boolean) => void;
 }
 
 const KEY_STEP = 0.05;
-const WHEEL_SENSITIVITY = 1 / 800;
 
-/** Единый ползунок hero: от его положения зависят слайд и путь поезда. */
+/**
+ * Единый ползунок hero. Мышью управляется наведением — достаточно вести курсор над ним,
+ * без клика. На сенсорных экранах — перетаскиванием пальцем. Колесо обрабатывает весь hero.
+ */
 export function HeroScroller({ value, steps, label, onChange }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
-  const valueRef = useRef(value);
-  valueRef.current = value;
 
   function valueAt(clientX: number): number {
     const rect = trackRef.current!.getBoundingClientRect();
@@ -25,13 +25,15 @@ export function HeroScroller({ value, steps, label, onChange }: Props) {
   }
 
   function onPointerDown(event: PointerEvent<HTMLDivElement>) {
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setDragging(true);
+    if (event.pointerType !== "mouse") {
+      event.currentTarget.setPointerCapture(event.pointerId);
+      setDragging(true);
+    }
     onChange(valueAt(event.clientX), false);
   }
 
   function onPointerMove(event: PointerEvent<HTMLDivElement>) {
-    if (dragging) onChange(valueAt(event.clientX), false);
+    if (event.pointerType === "mouse" || dragging) onChange(valueAt(event.clientX), false);
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -48,26 +50,13 @@ export function HeroScroller({ value, steps, label, onChange }: Props) {
     onChange(Math.min(1, Math.max(0, next)), true);
   }
 
-  // Колесо мыши и тачпад над ползунком двигают поезд; обработчик не пассивный, чтобы страница не прокручивалась
-  useEffect(() => {
-    const track = trackRef.current!;
-    const onWheel = (event: WheelEvent) => {
-      event.preventDefault();
-      const delta = (Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY) * WHEEL_SENSITIVITY;
-      onChange(Math.min(1, Math.max(0, valueRef.current + delta)), false);
-    };
-    track.addEventListener("wheel", onWheel, { passive: false });
-    return () => track.removeEventListener("wheel", onWheel);
-  }, [onChange]);
-
   const percent = value * 100;
   return (
     <div
-      ref={trackRef}
       className={`scroller ${dragging ? "scroller--dragging" : ""}`}
       role="slider"
       tabIndex={0}
-      aria-label="Прокрутка слайдов"
+      aria-label="Прокрутка слайдов: ведите курсором или крутите колесо мыши"
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(percent)}
@@ -78,13 +67,14 @@ export function HeroScroller({ value, steps, label, onChange }: Props) {
       onPointerCancel={() => setDragging(false)}
       onKeyDown={onKeyDown}
     >
-      <div className="scroller__track">
+      <div className="scroller__track" ref={trackRef}>
         <div className="scroller__fill" style={{ width: `${percent}%` }} />
         {Array.from({ length: steps }, (_, i) => (
           <span key={i} className="scroller__tick" style={{ left: `${steps > 1 ? (i / (steps - 1)) * 100 : 0}%` }} />
         ))}
         <div className="scroller__thumb" style={{ left: `${percent}%` }} />
       </div>
+      <span className="scroller__hint">⇆ ведите курсором или крутите колесо</span>
     </div>
   );
 }

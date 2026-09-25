@@ -12,6 +12,17 @@ import { HeroTrain } from "./illustrations";
 const TRAIN_DISTANCE = 220;
 // Сколько после последнего движения линии скорости ещё «дуют» сильнее
 const WIND_AFTER_MS = 350;
+// Один «щелчок» колеса (deltaY ≈ 100) сдвигает ползунок на 1/8 пути
+const WHEEL_SENSITIVITY = 1 / 800;
+// Доля оставшегося пути, которую поезд проходит за кадр при прокрутке колесом
+const GLIDE_FACTOR = 0.2;
+
+function motionReduced(): boolean {
+  return (
+    document.documentElement.hasAttribute("data-reduce-motion") ||
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
 
 interface Slide {
   eyebrow: string;
@@ -30,16 +41,77 @@ export function HeroCarousel() {
   const [smooth, setSmooth] = useState(false);
   const [moving, setMoving] = useState(false);
   const windTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const heroRef = useRef<HTMLElement>(null);
+  const progressRef = useRef(0);
+  const targetRef = useRef(0);
+  const glideFrame = useRef(0);
 
-  const move = useCallback((value: number, animated: boolean) => {
+  const show = useCallback((value: number) => {
+    progressRef.current = value;
     setProgress(value);
-    setSmooth(animated);
     setMoving(true);
     clearTimeout(windTimer.current);
     windTimer.current = setTimeout(() => setMoving(false), WIND_AFTER_MS);
   }, []);
 
-  useEffect(() => () => clearTimeout(windTimer.current), []);
+  // Курсор, палец и клавиатура: поезд сразу встаёт в нужное место
+  const move = useCallback(
+    (value: number, animated: boolean) => {
+      cancelAnimationFrame(glideFrame.current);
+      glideFrame.current = 0;
+      targetRef.current = value;
+      setSmooth(animated);
+      show(value);
+    },
+    [show],
+  );
+
+  // Колесо: цель сдвигается «щелчками», а поезд плавно доезжает до неё по кадрам
+  const glideTo = useCallback(
+    (target: number) => {
+      targetRef.current = target;
+      setSmooth(false);
+      if (motionReduced()) {
+        show(target);
+        return;
+      }
+      if (glideFrame.current) return;
+      const step = () => {
+        const remaining = targetRef.current - progressRef.current;
+        if (Math.abs(remaining) < 0.001) {
+          show(targetRef.current);
+          glideFrame.current = 0;
+          return;
+        }
+        show(progressRef.current + remaining * GLIDE_FACTOR);
+        glideFrame.current = requestAnimationFrame(step);
+      };
+      glideFrame.current = requestAnimationFrame(step);
+    },
+    [show],
+  );
+
+  useEffect(() => {
+    const hero = heroRef.current!;
+    const onWheel = (event: WheelEvent) => {
+      const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+      const target = Math.min(1, Math.max(0, targetRef.current + delta * WHEEL_SENSITIVITY));
+      // Поезд упёрся в начало или конец пути — отдаём колесо странице, чтобы она прокручивалась дальше
+      if (target === targetRef.current) return;
+      event.preventDefault();
+      glideTo(target);
+    };
+    hero.addEventListener("wheel", onWheel, { passive: false });
+    return () => hero.removeEventListener("wheel", onWheel);
+  }, [glideTo]);
+
+  useEffect(
+    () => () => {
+      clearTimeout(windTimer.current);
+      cancelAnimationFrame(glideFrame.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     // Без рекомендации в карусели просто на один слайд меньше
@@ -80,7 +152,7 @@ export function HeroCarousel() {
   const longTitle = current.title[1].length > 24;
 
   return (
-    <section className="hero" aria-roledescription="карусель">
+    <section className="hero" aria-roledescription="карусель" ref={heroRef}>
       <HeroTrain offset={progress * TRAIN_DISTANCE} moving={moving} smooth={smooth} />
       <div className="hero__content" key={current.eyebrow}>
         <p className="hero__eyebrow">{current.eyebrow}</p>
