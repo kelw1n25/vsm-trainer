@@ -13,3 +13,22 @@ timer:
   # Ответ, пришедший позже таймера не больше чем на столько секунд, ещё принимается:
   # компенсирует задержку сети. Позже — срабатывает timeout_next.
   answer_grace_seconds: 1.0
+
+scoring:
+  # XP за сценарий = xp_by_outcome × difficulty_multiplier + итоговые шкалы × scale_weights
+  xp_by_outcome:
+    success: 100
+    partial: 50
+    failure: 10
+  difficulty_multiplier:
+    1: 1.0
+    2: 1.5
+    3: 2.0
+  scale_weights:
+    loyalty: 0.3
+    safety: 0.3
+  # Решение в первой трети таймера даёт очки стрессоустойчивости
+  fast_answer:
+    timer_fraction: 0.33
+    competence: stress_resistance
+    points: 3

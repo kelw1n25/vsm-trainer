@@ -23,6 +23,14 @@ from app.profiles.models import Employee
 from app.scenarios.conditions import is_satisfied, parse_condition
 from app.scenarios.models import Scenario
 from app.scenarios.schema import Choice, Effects, Node, ScenarioDefinition
+from app.scoring import service as scoring
+
+DEPLETED_TEXT = {
+    "loyalty_depleted": "Лояльность пассажиров упала до нуля: доверие потеряно, ситуация вышла из-под контроля. "
+    "Сценарий завершён досрочно.",
+    "safety_depleted": "Рейтинг безопасности упал до нуля: пассажиры и экипаж подвергнуты недопустимому риску. "
+    "Сценарий завершён досрочно.",
+}
 
 
 def db_now(db: Session) -> datetime:
@@ -68,7 +76,7 @@ def start_run(db: Session, employee: Employee, scenario_id: str) -> RunState:
 def get_run(db: Session, employee: Employee, run_id: uuid.UUID) -> RunState:
     run, scenario, definition = _lock_run(db, employee, run_id)
     now = db_now(db)
-    steps = _resolve_timeouts(db, run, definition, now)
+    steps = _resolve_timeouts(db, run, scenario, definition, now)
     db.commit()
     return _build_state(run, scenario, definition, now, steps)
 
@@ -76,7 +84,7 @@ def get_run(db: Session, employee: Employee, run_id: uuid.UUID) -> RunState:
 def choose(db: Session, employee: Employee, run_id: uuid.UUID, node_id: str, choice_id: str) -> RunState:
     run, scenario, definition = _lock_run(db, employee, run_id)
     now = db_now(db)
-    if _resolve_timeouts(db, run, definition, now):
+    if _resolve_timeouts(db, run, scenario, definition, now):
         # Истечение таймера уже применено и сохраняется, ответ — нет
         db.commit()
         raise api_error(409, "time_expired", "Время на решение истекло, ответ не принят")
@@ -91,14 +99,18 @@ def choose(db: Session, employee: Employee, run_id: uuid.UUID, node_id: str, cho
     if choice is None:
         raise api_error(422, "unknown_choice", "Такого варианта нет на этом шаге")
 
-    step = _apply(run, choice.effects, choice.text, "choice")
+    elapsed = (now - run.node_entered_at).total_seconds()
+    bonus = scoring.fast_answer_bonus(node.timer_seconds, elapsed)
+    step = _apply(run, choice.effects, bonus, choice.text, "choice")
     _log(db, run, "choice_made", {
         "node_id": node.id,
         "choice_id": choice.id,
-        "elapsed_seconds": (now - run.node_entered_at).total_seconds(),
+        "best": choice.best,
+        "elapsed_seconds": elapsed,
+        "timer_seconds": node.timer_seconds,
         **_step_payload(step, run),
     })
-    _enter_node(db, run, nodes[choice.next], now)
+    _advance(db, run, scenario, nodes[choice.next], now)
     db.commit()
     return _build_state(run, scenario, definition, now, [step])
 
@@ -112,7 +124,9 @@ def _lock_run(db: Session, employee: Employee, run_id: uuid.UUID) -> tuple[Scena
     return run, scenario, ScenarioDefinition.model_validate(scenario.definition)
 
 
-def _resolve_timeouts(db: Session, run: ScenarioRun, definition: ScenarioDefinition, now: datetime) -> list[StepOut]:
+def _resolve_timeouts(
+    db: Session, run: ScenarioRun, scenario: Scenario, definition: ScenarioDefinition, now: datetime
+) -> list[StepOut]:
     """Применяет все истёкшие таймеры по цепочке, если проводник пропустил несколько узлов подряд."""
     nodes = {node.id: node for node in definition.nodes}
     grace = timedelta(seconds=game_config.timer.answer_grace_seconds)
@@ -122,11 +136,11 @@ def _resolve_timeouts(db: Session, run: ScenarioRun, definition: ScenarioDefinit
         deadline = _deadline(run, node)
         if deadline is None or now <= deadline + grace:
             break
-        step = _apply(run, node.timeout_effects, "Время на решение истекло", "timeout")
+        step = _apply(run, node.timeout_effects, {}, "Время на решение истекло", "timeout")
         _log(db, run, "timeout", {"node_id": node.id, **_step_payload(step, run)})
         steps.append(step)
         # Следующий узел начинается в момент дедлайна, а не в момент запроса
-        _enter_node(db, run, nodes[node.timeout_next], deadline)
+        _advance(db, run, scenario, nodes[node.timeout_next], deadline)
     return steps
 
 
@@ -139,31 +153,56 @@ def _visible_choices(node: Node, run: ScenarioRun) -> list[Choice]:
     ]
 
 
-def _apply(run: ScenarioRun, effects: Effects, text: str, kind: str) -> StepOut:
-    run.loyalty += effects.loyalty
-    run.safety += effects.safety
+def _apply(run: ScenarioRun, effects: Effects, bonus: dict[str, int], text: str, kind: str) -> StepOut:
+    loyalty_before, safety_before = run.loyalty, run.safety
+    run.loyalty = scoring.clamp_scale(run.loyalty + effects.loyalty)
+    run.safety = scoring.clamp_scale(run.safety + effects.safety)
     # Новые объекты вместо изменения на месте: так SQLAlchemy видит, что JSONB-поля изменились
     run.flags = sorted(set(run.flags) | set(effects.set_flags))
+    gained = dict(effects.competences)
+    for code, value in bonus.items():
+        gained[code] = gained.get(code, 0) + value
     points = dict(run.competence_points)
-    for code, value in effects.competences.items():
+    for code, value in gained.items():
         points[code] = points.get(code, 0) + value
     run.competence_points = points
     return StepOut(
         kind=kind,
         text=text,
-        loyalty_delta=effects.loyalty,
-        safety_delta=effects.safety,
-        competences=effects.competences,
+        # Фактическое изменение с учётом границ 0–100
+        loyalty_delta=run.loyalty - loyalty_before,
+        safety_delta=run.safety - safety_before,
+        competences=gained,
     )
 
 
-def _enter_node(db: Session, run: ScenarioRun, node: Node, entered_at: datetime) -> None:
-    run.current_node_id = node.id
-    run.node_entered_at = entered_at
-    if node.outcome is not None:
-        run.status = RunStatus(node.outcome)
-        run.finished_at = entered_at
-        _log(db, run, "run_finished", {"outcome": node.outcome, "node_id": node.id})
+def _advance(db: Session, run: ScenarioRun, scenario: Scenario, target: Node, at: datetime) -> None:
+    """Переход после шага: досрочный провал при нулевой шкале, иначе вход в следующий узел."""
+    if run.loyalty == 0 or run.safety == 0:
+        reason = "loyalty_depleted" if run.loyalty == 0 else "safety_depleted"
+        _finish(db, run, scenario, RunStatus.FAILURE, reason, at)
+        return
+    run.current_node_id = target.id
+    run.node_entered_at = at
+    if target.outcome is not None:
+        _finish(db, run, scenario, RunStatus(target.outcome), "final", at)
+
+
+def _finish(db: Session, run: ScenarioRun, scenario: Scenario, outcome: RunStatus, reason: str, at: datetime) -> None:
+    run.status = outcome
+    run.finish_reason = reason
+    run.finished_at = at
+    run.xp_earned = scoring.calculate_xp(outcome, scenario.difficulty, run.loyalty, run.safety)
+    scoring.award(db, run.employee_id, run.xp_earned, run.competence_points, at)
+    _log(db, run, "run_finished", {
+        "outcome": outcome,
+        "reason": reason,
+        "category": scenario.category,
+        "xp_earned": run.xp_earned,
+        "competence_points": run.competence_points,
+        "loyalty": run.loyalty,
+        "safety": run.safety,
+    })
 
 
 def _deadline(run: ScenarioRun, node: Node) -> datetime | None:
@@ -201,7 +240,13 @@ def _build_state(
             deadline_at=_deadline(run, node),
         )
     else:
-        final_out = FinalOut(outcome=run.status, text=node.final_text)
+        final_out = FinalOut(
+            outcome=run.status,
+            reason=run.finish_reason,
+            text=node.final_text if run.finish_reason == "final" else DEPLETED_TEXT[run.finish_reason],
+            xp_earned=run.xp_earned,
+            competence_points=run.competence_points,
+        )
     return RunState(
         id=run.id,
         scenario_id=scenario.id,

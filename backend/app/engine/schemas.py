@@ -49,7 +49,10 @@ class StepOut(BaseModel):
 
 class FinalOut(BaseModel):
     outcome: RunStatus
+    reason: Literal["final", "loyalty_depleted", "safety_depleted"]
     text: str
+    xp_earned: int
+    competence_points: dict[str, int]
 
 
 class RunState(BaseModel):

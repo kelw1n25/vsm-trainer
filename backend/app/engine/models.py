@@ -35,6 +35,8 @@ class ScenarioRun(Base):
     flags: Mapped[list[str]] = mapped_column(JSONB, default=list)
     # Серверная метка входа в текущий узел — от неё считается таймер
     node_entered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # "final" — дошёл до финального узла; "loyalty_depleted" / "safety_depleted" — шкала упала до нуля
+    finish_reason: Mapped[str | None] = mapped_column(String(30))
     xp_earned: Mapped[int] = mapped_column(default=0)
     competence_points: Mapped[dict[str, int]] = mapped_column(JSONB, default=dict)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
