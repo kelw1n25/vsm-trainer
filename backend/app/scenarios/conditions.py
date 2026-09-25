@@ -1,6 +1,8 @@
+import operator
 import re
 from dataclasses import dataclass
 
+_OPERATORS = {">=": operator.ge, "<=": operator.le, ">": operator.gt, "<": operator.lt, "==": operator.eq}
 _SCALE_RE = re.compile(r"^(loyalty|safety)\s*(>=|<=|>|<|==)\s*(\d+)$")
 _FLAG_RE = re.compile(r"^(not\s+)?flag\s+(\w+)$")
 
@@ -31,3 +33,9 @@ def parse_condition(text: str) -> Condition:
         f"не удалось разобрать условие «{text}». "
         "Примеры: «safety >= 40», «loyalty < 30», «flag medic_called», «not flag medic_called»"
     )
+
+
+def is_satisfied(condition: Condition, scales: dict[str, int], flags: list[str]) -> bool:
+    if isinstance(condition, ScaleCondition):
+        return _OPERATORS[condition.op](scales[condition.scale], condition.value)
+    return (condition.flag in flags) == condition.present

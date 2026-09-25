@@ -1,3 +1,4 @@
+from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
@@ -7,6 +8,9 @@ class Settings(BaseSettings):
     postgres_db: str
     postgres_host: str = "db"
     postgres_port: int = 5432
+    # Для HS256 рекомендуется ключ не короче 32 байт (RFC 7518, 3.2)
+    jwt_secret: str = Field(min_length=32)
+    jwt_ttl_minutes: int = 720
 
     @property
     def database_url(self) -> str:

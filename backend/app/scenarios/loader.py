@@ -44,6 +44,8 @@ def load_scenarios(db: Session, directory: Path = SCENARIOS_DIR) -> None:
                 where=Scenario.content_hash != values["content_hash"],
             )
         )
-        db.execute(statement)
-        logger.info("Сценарий %s загружен", path.name)
+        if db.execute(statement).rowcount:
+            logger.info("Сценарий %s загружен", path.name)
+        else:
+            logger.info("Сценарий %s не изменился", path.name)
     db.commit()

@@ -3,10 +3,14 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI
+from fastapi.exceptions import RequestValidationError
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.auth.router import router as auth_router
 from app.db import SessionLocal, get_db
+from app.engine.router import router as runs_router
+from app.errors import validation_error_handler
 from app.scenarios.loader import load_scenarios
 from app.scenarios.router import router as scenarios_router
 
@@ -28,7 +32,10 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
     lifespan=lifespan,
 )
+app.add_exception_handler(RequestValidationError, validation_error_handler)
+app.include_router(auth_router)
 app.include_router(scenarios_router)
+app.include_router(runs_router)
 
 
 @app.get("/api/health", tags=["system"])
