@@ -8,8 +8,9 @@ from sqlalchemy.orm import Session
 
 from app.analytics.models import Event
 from app.engine.models import RunStatus, ScenarioRun
-from app.engine.service import final_text
+from app.engine.service import ending_title, final_text
 from app.errors import api_error
+from app.handbook.data import Situation, handbook
 from app.profiles.models import Employee
 from app.scenarios.models import Scenario, parse_definition
 
@@ -37,6 +38,7 @@ class Debrief(BaseModel):
     scenario_title: str
     outcome: RunStatus
     reason: str
+    ending: str
     final_text: str
     xp_earned: int
     competence_points: dict[str, int]
@@ -49,6 +51,8 @@ class Debrief(BaseModel):
     timeouts: int
     average_reaction_seconds: float | None
     steps: list[DebriefStep]
+    # Ситуации из справочника, которые отрабатывает сценарий: как действовать по стандарту и что говорить
+    situations: list[Situation]
 
 
 def build_debrief(db: Session, employee: Employee, run_id: uuid.UUID) -> Debrief:
@@ -101,6 +105,7 @@ def build_debrief(db: Session, employee: Employee, run_id: uuid.UUID) -> Debrief
         scenario_title=scenario.title,
         outcome=run.status,
         reason=run.finish_reason,
+        ending=ending_title(run, nodes[run.current_node_id]),
         final_text=final_text(run, nodes[run.current_node_id]),
         xp_earned=run.xp_earned,
         competence_points=run.competence_points,
@@ -113,4 +118,5 @@ def build_debrief(db: Session, employee: Employee, run_id: uuid.UUID) -> Debrief
         timeouts=len(steps) - len(choice_steps),
         average_reaction_seconds=round(sum(reactions) / len(reactions), 1) if reactions else None,
         steps=steps,
+        situations=[handbook.situation(number) for number in definition.situations],
     )

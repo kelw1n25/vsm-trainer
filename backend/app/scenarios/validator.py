@@ -13,8 +13,8 @@ from typing import Any
 import yaml
 from pydantic import ValidationError
 
-from app.scenarios.conditions import FlagCondition, parse_condition
-from app.scenarios.schema import Node, ScenarioDefinition
+from app.scenarios.conditions import FlagCondition, ScaleCondition, parse_condition
+from app.scenarios.schema import NARRATOR, PLAYER, Line, Node, ScenarioDefinition
 
 SCENARIOS_DIR = Path(__file__).resolve().parents[2] / "scenarios"
 
@@ -112,6 +112,41 @@ def validate_graph(scenario: ScenarioDefinition) -> list[str]:
                     errors.append(
                         f"узел «{node.id}», вариант «{choice.id}»: условие «{text}» ссылается на флаг, "
                         "который нигде в сценарии не устанавливается (set_flags)"
+                    )
+    errors += _validate_story(scenario)
+    return errors
+
+
+def _validate_story(scenario: ScenarioDefinition) -> list[str]:
+    """Персонажи, говорящие и скрытые параметры должны быть объявлены в сценарии."""
+    errors = []
+    known = set(scenario.characters) | {PLAYER}
+    scales = {"loyalty", "safety"} | set(scenario.stats)
+    for node in scenario.nodes:
+        on_stage = {character.id for character in node.scene.characters}
+        for character in on_stage - known:
+            errors.append(f"узел «{node.id}»: персонаж «{character}» не объявлен в characters")
+        speeches: list[tuple[str, list[Line]]] = [("dialogue", node.dialogue), ("timeout_reaction", node.timeout_reaction)]
+        speeches += [(f"вариант «{choice.id}», reaction", choice.reaction) for choice in node.choices]
+        for source, lines in speeches:
+            for line in lines:
+                # Говорит тот, кого видно в сцене; рассказчик и мысли проводника звучат всегда
+                if line.speaker not in on_stage | {NARRATOR, PLAYER}:
+                    errors.append(
+                        f"узел «{node.id}», {source}: говорит «{line.speaker}», но его нет в сцене (scene.characters)"
+                    )
+        effects = [("timeout_effects", node.timeout_effects)]
+        effects += [(f"вариант «{choice.id}»", choice.effects) for choice in node.choices]
+        for source, effect in effects:
+            for name in set(effect.stats) - set(scenario.stats):
+                errors.append(f"узел «{node.id}», {source}: скрытый параметр «{name}» не объявлен в stats")
+        for choice in node.choices:
+            for text in choice.condition:
+                condition = parse_condition(text)
+                if isinstance(condition, ScaleCondition) and condition.scale not in scales:
+                    errors.append(
+                        f"узел «{node.id}», вариант «{choice.id}»: условие «{text}» — нет шкалы или скрытого "
+                        f"параметра «{condition.scale}». Доступны: {', '.join(sorted(scales))}"
                     )
     return errors
 

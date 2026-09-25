@@ -33,8 +33,13 @@ class ScenarioRun(Base):
     loyalty: Mapped[int]
     safety: Mapped[int]
     flags: Mapped[list[str]] = mapped_column(JSONB, default=list)
-    # Серверная метка входа в текущий узел — от неё считается таймер
+    # Скрытые параметры сценария (доверие, напряжение…): влияют на ветки, игроку не показываются
+    stats: Mapped[dict[str, int]] = mapped_column(JSONB, default=dict)
+    # Серверная метка входа в текущий узел
     node_entered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # Когда проводник дочитал сцену и увидел варианты — от этой метки считается таймер.
+    # Пока варианты не показаны, время на чтение диалога не идёт в зачёт решения
+    choices_shown_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # "final" — дошёл до финального узла; "loyalty_depleted" / "safety_depleted" — шкала упала до нуля
     finish_reason: Mapped[str | None] = mapped_column(String(30))
     xp_earned: Mapped[int] = mapped_column(default=0)

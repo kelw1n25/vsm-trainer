@@ -4,11 +4,15 @@
 обработать любая копия backend. Строка прохождения блокируется на время запроса
 (SELECT ... FOR UPDATE), чтобы два одновременных ответа не применились дважды.
 
+Узел — сцена визуальной новеллы: сначала проводник читает диалог, затем запрашивает
+варианты (reveal). С этого момента идёт таймер: чтение сцены не отнимает время на решение.
+
 Таймер серверный: при каждом обращении к прохождению сначала проверяется, не истекло
 ли время текущего узла (по часам БД). Клиентский таймер только показывает остаток.
 """
 
 import uuid
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
@@ -19,16 +23,30 @@ from app.achievements import service as achievements
 from app.achievements.service import AchievementOut, LevelOut
 from app.analytics.models import Event
 from app.engine.models import RunStatus, ScenarioRun
-from app.engine.schemas import ChoiceOut, FinalOut, LineOut, NodeOut, RunState, StepOut
+from app.engine.schemas import (
+    CharacterOut,
+    ChoiceOut,
+    FinalOut,
+    LineOut,
+    NodeOut,
+    RunState,
+    SceneCharacterOut,
+    SceneOut,
+    StepOut,
+)
 from app.errors import api_error
 from app.game_config import game_config
 from app.notifications.service import notify
 from app.profiles.models import Employee
 from app.scenarios.conditions import is_satisfied, parse_condition
 from app.scenarios.models import Scenario, parse_definition
-from app.scenarios.schema import Choice, Effects, Node, ScenarioDefinition
+from app.scenarios.schema import NARRATOR, PLAYER, Choice, Effects, Line, Node, Scene, ScenarioDefinition
 from app.scoring import service as scoring
 
+DEPLETED_ENDING = {
+    "loyalty_depleted": "Доверие пассажиров потеряно",
+    "safety_depleted": "Ситуация переросла в серьёзный инцидент",
+}
 DEPLETED_TEXT = {
     "loyalty_depleted": "Лояльность пассажиров упала до нуля: доверие потеряно, ситуация вышла из-под контроля. "
     "Сценарий завершён досрочно.",
@@ -75,6 +93,7 @@ def start_run(db: Session, employee: Employee, scenario_id: str) -> RunState:
         loyalty=definition.initial.loyalty,
         safety=definition.initial.safety,
         flags=[],
+        stats=dict(definition.stats),
         competence_points={},
         node_entered_at=now,
     )
@@ -94,6 +113,23 @@ def get_run(db: Session, employee: Employee, run_id: uuid.UUID) -> RunState:
     return _build_state(db, run, scenario, definition, now, steps, rewards)
 
 
+def reveal_choices(db: Session, employee: Employee, run_id: uuid.UUID, node_id: str) -> RunState:
+    """Проводник дочитал сцену: показываем варианты и запускаем таймер. Повторный вызов ничего не меняет."""
+    run, scenario, definition = _lock_run(db, employee, run_id)
+    now = db_now(db)
+    rewards = Rewards()
+    steps = _resolve_timeouts(db, run, scenario, definition, now, rewards)
+    if run.status != RunStatus.IN_PROGRESS:
+        raise api_error(409, "run_finished", "Сценарий уже завершён")
+    if node_id != run.current_node_id:
+        raise api_error(409, "stale_node", "Сцена уже сменилась. Обновите экран.")
+    if run.choices_shown_at is None:
+        run.choices_shown_at = now
+        _log(db, run, "choices_shown", {"node_id": node_id})
+    db.commit()
+    return _build_state(db, run, scenario, definition, now, steps, rewards)
+
+
 def choose(db: Session, employee: Employee, run_id: uuid.UUID, node_id: str, choice_id: str) -> RunState:
     run, scenario, definition = _lock_run(db, employee, run_id)
     now = db_now(db)
@@ -106,13 +142,15 @@ def choose(db: Session, employee: Employee, run_id: uuid.UUID, node_id: str, cho
         raise api_error(409, "run_finished", "Сценарий уже завершён")
     if node_id != run.current_node_id:
         raise api_error(409, "stale_node", "Ответ на этот шаг уже принят. Обновите экран.")
+    if run.choices_shown_at is None:
+        raise api_error(409, "choices_not_shown", "Сначала дочитайте сцену — варианты ещё не показаны")
 
     node = next(n for n in definition.nodes if n.id == run.current_node_id)
     choice = next((c for c in visible_choices(node, run) if c.id == choice_id), None)
     if choice is None:
         raise api_error(422, "unknown_choice", "Такого варианта нет на этом шаге")
 
-    elapsed = (now - run.node_entered_at).total_seconds()
+    elapsed = (now - run.choices_shown_at).total_seconds()
     step = apply_choice(db, run, scenario, definition, choice, elapsed, now, rewards)
     db.commit()
     return _build_state(db, run, scenario, definition, now, [step], rewards)
@@ -135,7 +173,11 @@ def _resolve_timeouts(
     now: datetime,
     rewards: Rewards,
 ) -> list[StepOut]:
-    """Применяет все истёкшие таймеры по цепочке, если проводник пропустил несколько узлов подряд."""
+    """Применяет истёкший таймер текущего узла.
+
+    Таймер следующего узла стартует, только когда проводник снова увидит варианты,
+    поэтому за один запрос истекает не больше одного таймера.
+    """
     nodes = {node.id: node for node in definition.nodes}
     grace = timedelta(seconds=game_config.timer.answer_grace_seconds)
     steps = []
@@ -163,7 +205,7 @@ def apply_choice(
     nodes = {node.id: node for node in definition.nodes}
     node = nodes[run.current_node_id]
     bonus = scoring.fast_answer_bonus(node.timer_seconds, elapsed)
-    step = _apply(run, choice.effects, bonus, choice.text, "choice")
+    step = _apply(run, choice.effects, bonus, choice.text, "choice", _lines(definition, choice.reaction))
     _log(db, run, "choice_made", {
         "node_id": node.id,
         "choice_id": choice.id,
@@ -182,14 +224,17 @@ def apply_timeout(
     """Один шаг «истёк таймер». Используется API и генератором демо-истории."""
     nodes = {node.id: node for node in definition.nodes}
     node = nodes[run.current_node_id]
-    step = _apply(run, node.timeout_effects, {}, "Время на решение истекло", "timeout")
+    step = _apply(
+        run, node.timeout_effects, {}, "Время на решение истекло", "timeout", _lines(definition, node.timeout_reaction)
+    )
     _log(db, run, "timeout", {"node_id": node.id, **_step_payload(step, run)})
     _advance(db, run, scenario, definition, nodes[node.timeout_next], at, rewards)
     return step
 
 
 def visible_choices(node: Node, run: ScenarioRun) -> list[Choice]:
-    scales = {"loyalty": run.loyalty, "safety": run.safety}
+    """Варианты, доступные сейчас: часть веток открывается только при нужных параметрах или флагах."""
+    scales = {**run.stats, "loyalty": run.loyalty, "safety": run.safety}
     return [
         choice
         for choice in node.choices
@@ -197,10 +242,15 @@ def visible_choices(node: Node, run: ScenarioRun) -> list[Choice]:
     ]
 
 
-def _apply(run: ScenarioRun, effects: Effects, bonus: dict[str, int], text: str, kind: str) -> StepOut:
+def _apply(
+    run: ScenarioRun, effects: Effects, bonus: dict[str, int], text: str, kind: str, reaction: list[LineOut]
+) -> StepOut:
     loyalty_before, safety_before = run.loyalty, run.safety
     run.loyalty = scoring.clamp_scale(run.loyalty + effects.loyalty)
     run.safety = scoring.clamp_scale(run.safety + effects.safety)
+    run.stats = {
+        name: scoring.clamp_scale(value + effects.stats.get(name, 0)) for name, value in run.stats.items()
+    }
     # Новые объекты вместо изменения на месте: так SQLAlchemy видит, что JSONB-поля изменились
     run.flags = sorted(set(run.flags) | set(effects.set_flags))
     gained = dict(effects.competences)
@@ -213,6 +263,7 @@ def _apply(run: ScenarioRun, effects: Effects, bonus: dict[str, int], text: str,
     return StepOut(
         kind=kind,
         text=text,
+        reaction=reaction,
         # Фактическое изменение с учётом границ 0–100
         loyalty_delta=run.loyalty - loyalty_before,
         safety_delta=run.safety - safety_before,
@@ -239,6 +290,7 @@ def _advance(
     else:
         run.current_node_id = target.id
         run.node_entered_at = at
+        run.choices_shown_at = None
         if target.outcome is not None:
             _finish(db, run, scenario, RunStatus(target.outcome), "final", at, rewards)
     initial = (definition.initial.loyalty, definition.initial.safety)
@@ -278,10 +330,58 @@ def final_text(run: ScenarioRun, final_node: Node) -> str:
     return final_node.final_text if run.finish_reason == "final" else DEPLETED_TEXT[run.finish_reason]
 
 
+def ending_title(run: ScenarioRun, final_node: Node) -> str:
+    return final_node.ending if run.finish_reason == "final" else DEPLETED_ENDING[run.finish_reason]
+
+
 def _deadline(run: ScenarioRun, node: Node) -> datetime | None:
-    if node.timer_seconds is None:
+    if node.timer_seconds is None or run.choices_shown_at is None:
         return None
-    return run.node_entered_at + timedelta(seconds=node.timer_seconds)
+    return run.choices_shown_at + timedelta(seconds=node.timer_seconds)
+
+
+def steps_to_final(definition: ScenarioDefinition, node_id: str) -> int:
+    """Сколько решений как минимум осталось до финала — для индикатора истории без раскрытия развилок."""
+    nodes = {node.id: node for node in definition.nodes}
+    distance = {node_id: 0}
+    queue = deque([node_id])
+    while queue:
+        current = nodes[queue.popleft()]
+        if current.outcome is not None:
+            return distance[current.id]
+        targets = [choice.next for choice in current.choices]
+        if current.timeout_next:
+            targets.append(current.timeout_next)
+        for target in targets:
+            if target not in distance:
+                distance[target] = distance[current.id] + 1
+                queue.append(target)
+    return 0
+
+
+def _lines(definition: ScenarioDefinition, lines: list[Line]) -> list[LineOut]:
+    out = []
+    for line in lines:
+        character = definition.characters.get(line.speaker)
+        kind = "narration" if line.speaker == NARRATOR else "thought" if line.thought else "speech"
+        out.append(LineOut(
+            speaker=line.speaker,
+            name=character.name if character else None,
+            role=character.role if character else ("Проводник" if line.speaker == PLAYER else None),
+            kind=kind,
+            text=line.text,
+            expression=line.expression,
+        ))
+    return out
+
+
+def _scene(scene: Scene) -> SceneOut:
+    return SceneOut(
+        background=scene.background,
+        characters=[
+            SceneCharacterOut(id=c.id, position=c.position, expression=c.expression) for c in scene.characters
+        ],
+    )
 
 
 def _step_payload(step: StepOut, run: ScenarioRun) -> dict:
@@ -312,11 +412,13 @@ def _build_state(
     if run.status == RunStatus.IN_PROGRESS:
         deadline = _deadline(run, node)
         grace = timedelta(seconds=game_config.timer.answer_grace_seconds)
+        shown = run.choices_shown_at is not None
         node_out = NodeOut(
             id=node.id,
-            situation=node.situation,
-            line=LineOut(**node.line.model_dump()) if node.line else None,
-            choices=[ChoiceOut(id=c.id, text=c.text) for c in visible_choices(node, run)],
+            scene=_scene(node.scene),
+            dialogue=_lines(definition, node.dialogue),
+            choices_shown=shown,
+            choices=[ChoiceOut(id=c.id, text=c.text) for c in visible_choices(node, run)] if shown else [],
             timer_seconds=node.timer_seconds,
             deadline_at=deadline,
             timeout_at=deadline + grace if deadline else None,
@@ -325,7 +427,11 @@ def _build_state(
         final_out = FinalOut(
             outcome=run.status,
             reason=run.finish_reason,
+            ending=ending_title(run, node),
             text=final_text(run, node),
+            scene=_scene(node.scene),
+            # Эпилог финальной сцены звучит, только если история дошла до неё, а не прервалась
+            dialogue=_lines(definition, node.dialogue) if run.finish_reason == "final" else [],
             xp_earned=run.xp_earned,
             competence_points=run.competence_points,
         )
@@ -337,6 +443,11 @@ def _build_state(
         difficulty=scenario.difficulty,
         route=scenario.route,
         service_class=scenario.service_class,
+        characters=[
+            CharacterOut(id=cid, name=c.name, role=c.role, look=c.look.model_dump())
+            for cid, c in definition.characters.items()
+        ],
+        steps_left=steps_to_final(definition, run.current_node_id) if run.status == RunStatus.IN_PROGRESS else 0,
         steps_taken=db.scalar(
             select(func.count()).where(Event.run_id == run.id, Event.type.in_(["choice_made", "timeout"]))
         ),

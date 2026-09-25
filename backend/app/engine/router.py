@@ -7,7 +7,7 @@ from app.auth.deps import get_current_employee
 from app.db import get_db
 from app.engine import service
 from app.engine.debrief import Debrief, build_debrief
-from app.engine.schemas import ChoiceRequest, RunState, StartRunRequest
+from app.engine.schemas import ChoiceRequest, RevealRequest, RunState, StartRunRequest
 from app.profiles.models import Employee
 
 router = APIRouter(prefix="/api/runs", tags=["runs"])
@@ -29,6 +29,16 @@ def get_run(
     db: Session = Depends(get_db),
 ) -> RunState:
     return service.get_run(db, employee, run_id)
+
+
+@router.post("/{run_id}/reveal", summary="Сцена дочитана: показать варианты и запустить таймер")
+def reveal(
+    run_id: uuid.UUID,
+    body: RevealRequest,
+    employee: Employee = Depends(get_current_employee),
+    db: Session = Depends(get_db),
+) -> RunState:
+    return service.reveal_choices(db, employee, run_id, body.node_id)
 
 
 @router.post("/{run_id}/choices", summary="Выбрать вариант на текущем шаге")

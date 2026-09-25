@@ -3,7 +3,8 @@ import re
 from dataclasses import dataclass
 
 _OPERATORS = {">=": operator.ge, "<=": operator.le, ">": operator.gt, "<": operator.lt, "==": operator.eq}
-_SCALE_RE = re.compile(r"^(loyalty|safety)\s*(>=|<=|>|<|==)\s*(\d+)$")
+# Шкалы loyalty и safety или скрытые параметры сценария (trust, tension…) — какие имена допустимы, проверяет валидатор
+_SCALE_RE = re.compile(r"^([a-z_][a-z0-9_]*)\s*(>=|<=|>|<|==)\s*(\d+)$")
 _FLAG_RE = re.compile(r"^(not\s+)?flag\s+(\w+)$")
 
 
@@ -31,11 +32,12 @@ def parse_condition(text: str) -> Condition:
         return FlagCondition(flag=match[2], present=match[1] is None)
     raise ValueError(
         f"не удалось разобрать условие «{text}». "
-        "Примеры: «safety >= 40», «loyalty < 30», «flag medic_called», «not flag medic_called»"
+        "Примеры: «safety >= 40», «trust >= 50», «flag medic_called», «not flag medic_called»"
     )
 
 
 def is_satisfied(condition: Condition, scales: dict[str, int], flags: list[str]) -> bool:
+    """scales — шкалы и скрытые параметры прохождения по имени."""
     if isinstance(condition, ScaleCondition):
         return _OPERATORS[condition.op](scales[condition.scale], condition.value)
     return (condition.flag in flags) == condition.present

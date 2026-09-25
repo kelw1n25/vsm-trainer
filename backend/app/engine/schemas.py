@@ -18,10 +18,36 @@ class ChoiceRequest(BaseModel):
     choice_id: str
 
 
+class RevealRequest(BaseModel):
+    node_id: str
+
+
 class LineOut(BaseModel):
     speaker: str
+    # Имя и должность персонажа; у рассказчика и проводника — null (имя проводника подставляет интерфейс)
     name: str | None
+    role: str | None
+    kind: Literal["speech", "thought", "narration"]
     text: str
+    expression: str | None
+
+
+class SceneCharacterOut(BaseModel):
+    id: str
+    position: str
+    expression: str
+
+
+class SceneOut(BaseModel):
+    background: str
+    characters: list[SceneCharacterOut]
+
+
+class CharacterOut(BaseModel):
+    id: str
+    name: str
+    role: str
+    look: dict[str, str | bool]
 
 
 class ChoiceOut(BaseModel):
@@ -31,8 +57,10 @@ class ChoiceOut(BaseModel):
 
 class NodeOut(BaseModel):
     id: str
-    situation: str
-    line: LineOut | None
+    scene: SceneOut
+    dialogue: list[LineOut]
+    # Варианты приходят только после POST /reveal: пока проводник читает сцену, таймер не идёт
+    choices_shown: bool
     choices: list[ChoiceOut]
     timer_seconds: int | None
     # deadline_at — до какого момента показывать обратный отсчёт;
@@ -42,10 +70,11 @@ class NodeOut(BaseModel):
 
 
 class StepOut(BaseModel):
-    """Последствия только что произошедшего шага — показываются сразу после выбора."""
+    """Последствия только что произошедшего шага — реакция персонажей звучит перед следующей сценой."""
 
     kind: Literal["choice", "timeout"]
     text: str
+    reaction: list[LineOut]
     loyalty_delta: int
     safety_delta: int
     competences: dict[str, int]
@@ -54,7 +83,11 @@ class StepOut(BaseModel):
 class FinalOut(BaseModel):
     outcome: RunStatus
     reason: Literal["final", "loyalty_depleted", "safety_depleted"]
+    # Название финала, например «Ситуация разрешена спокойно»
+    ending: str
     text: str
+    scene: SceneOut
+    dialogue: list[LineOut]
     xp_earned: int
     competence_points: dict[str, int]
 
@@ -67,8 +100,11 @@ class RunState(BaseModel):
     difficulty: int
     route: str
     service_class: str
-    # Сколько шагов уже пройдено (решений и истёкших таймеров) — для индикатора прогресса
+    characters: list[CharacterOut]
+    # Сколько шагов уже пройдено и сколько как минимум осталось до финала — для индикатора истории.
+    # Карта будущих развилок не раскрывается
     steps_taken: int
+    steps_left: int
     status: RunStatus
     loyalty: int
     safety: int
