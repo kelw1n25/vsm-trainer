@@ -7,6 +7,10 @@ import type { Analytics } from "../types";
 import { StarIcon } from "./icons";
 import { HeroTrain } from "./illustrations";
 
+// На сколько поезд проезжает вперёд на каждом следующем слайде (единицы viewBox иллюстрации)
+const TRAIN_STEP = 70;
+const DRIVE_MS = 1600;
+
 interface Slide {
   eyebrow: string;
   title: [string, string];
@@ -21,6 +25,19 @@ export function HeroCarousel() {
   const { scenarios } = useScenarios();
   const [recommendation, setRecommendation] = useState<Analytics["recommendation"]>(null);
   const [index, setIndex] = useState(0);
+  const [moving, setMoving] = useState(false);
+
+  function select(next: number) {
+    if (next === index) return;
+    setIndex(next);
+    setMoving(true);
+  }
+
+  useEffect(() => {
+    if (!moving) return;
+    const id = setTimeout(() => setMoving(false), DRIVE_MS);
+    return () => clearTimeout(id);
+  }, [moving, index]);
 
   useEffect(() => {
     // Без рекомендации карусель просто покажет на один слайд меньше
@@ -56,14 +73,16 @@ export function HeroCarousel() {
       note: "Закрой пробел — и навык вырастет быстрее!",
     });
   }
-  const current = slides[Math.min(index, slides.length - 1)];
+  const position = Math.min(index, slides.length - 1);
+  const current = slides[position];
+  const longTitle = current.title[1].length > 24;
 
   return (
     <section className="hero" aria-roledescription="карусель">
-      <HeroTrain />
+      <HeroTrain offset={position * TRAIN_STEP} moving={moving} />
       <div className="hero__content" key={current.eyebrow}>
         <p className="hero__eyebrow">{current.eyebrow}</p>
-        <h1 className="hero__title">
+        <h1 className={`hero__title ${longTitle ? "hero__title--long" : ""}`}>
           {current.title[0]}
           <br />
           {current.title[1]}
@@ -83,7 +102,7 @@ export function HeroCarousel() {
               aria-selected={slide === current}
               aria-label={`Слайд ${i + 1}: ${slide.eyebrow}`}
               className={`hero__dot ${slide === current ? "hero__dot--active" : ""}`}
-              onClick={() => setIndex(i)}
+              onClick={() => select(i)}
             />
           ))}
         </div>

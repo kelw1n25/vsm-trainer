@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { Link, useParams } from "react-router";
 import { api, ApiError } from "../api";
+import { AnimatedNumber } from "../components/AnimatedNumber";
 import { CompetenceList } from "../components/CompetenceList";
 import { DifficultyIndicator } from "../components/DifficultyIndicator";
 import { ArrowRightIcon, ChevronLeftIcon, PinIcon } from "../components/icons";
@@ -125,6 +126,7 @@ export function RunPage() {
             {node.choices.map((choice, index) => (
               <button
                 key={choice.id}
+                style={{ "--i": index } as CSSProperties}
                 className={`answer ${selected === choice.id ? "answer--selected" : ""}`}
                 disabled={selected !== null || timeIsUp}
                 onClick={() => choose(choice.id)}
@@ -145,7 +147,9 @@ export function RunPage() {
           <div className="kpis kpis--compact">
             <div className="kpi">
               <span className="kpi__label">Получено баллов</span>
-              <strong className="kpi__value">+{run.final.xp_earned} XP</strong>
+              <strong className="kpi__value">
+                +<AnimatedNumber value={run.final.xp_earned} suffix=" XP" />
+              </strong>
             </div>
             <div className="kpi">
               <span className="kpi__label">Итоговые шкалы</span>

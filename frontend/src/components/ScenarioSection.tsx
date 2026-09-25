@@ -25,8 +25,8 @@ export function ScenarioSection({ title, scenarios, error, action }: Props) {
       {!scenarios && !error && <p className="muted">Загрузка…</p>}
       {scenarios?.length === 0 && <p className="muted">В этой категории пока нет сценариев.</p>}
       <div className="scenario-grid">
-        {scenarios?.map((scenario) => (
-          <ScenarioCard key={scenario.id} scenario={scenario} onStart={start} />
+        {scenarios?.map((scenario, index) => (
+          <ScenarioCard key={scenario.id} scenario={scenario} index={index} onStart={start} />
         ))}
       </div>
     </section>

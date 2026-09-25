@@ -90,9 +90,10 @@ button {
 /* ───────── Каркас ───────── */
 
 .shell {
+  --gutter: 72px;
   max-width: 1920px;
   margin: 0 auto;
-  padding: 0 72px 64px;
+  padding: 0 var(--gutter) 40px;
 }
 
 .page {
@@ -562,7 +563,7 @@ button {
 
 .hero__content {
   position: relative;
-  max-width: 470px;
+  max-width: 520px;
   padding: 48px 0 0 50px;
   animation: slide-in 0.4s ease-out;
 }
@@ -628,13 +629,13 @@ button {
   flex: none;
 }
 
+/* Точки слева под текстом: справа по ним проезжает поезд */
 .hero__dots {
   position: absolute;
-  left: 52%;
-  bottom: 14px;
+  left: 44px;
+  bottom: 18px;
   display: flex;
   gap: 6px;
-  transform: translateX(-50%);
 }
 
 .hero__dot {
@@ -736,16 +737,20 @@ button {
   min-width: 160px;
 }
 
-.scenario-card__image,
-.scenario-detail__image {
-  line-height: 0;
-}
 
 .scenario-image {
+  display: block;
   width: 100%;
   height: auto;
+  transition: transform 0.5s ease;
+}
+
+.scenario-card__image,
+.scenario-detail__image {
+  overflow: hidden;
   border-radius: 14px;
   box-shadow: 0 6px 18px rgba(24, 64, 140, 0.12);
+  align-self: start;
 }
 
 .scenario-card__image .scenario-image {
@@ -1584,7 +1589,7 @@ input:focus {
 
 @media (max-width: 1280px) {
   .shell {
-    padding: 0 32px 48px;
+    --gutter: 32px;
   }
 
   .scenario-grid {
@@ -1643,9 +1648,6 @@ input:focus {
     display: none;
   }
 
-  .hero__dots {
-    left: 50%;
-  }
 
   .scenario-detail,
   .two-columns,
@@ -1665,7 +1667,7 @@ input:focus {
 
 @media (max-width: 760px) {
   .shell {
-    padding: 0 16px 40px;
+    --gutter: 16px;
   }
 
   .scenario-grid {
@@ -1741,6 +1743,463 @@ input:focus {
 
   .hud {
     grid-template-columns: 1fr;
+  }
+}
+
+
+/* ───────── Живая анимация и детали ───────── */
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.route {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+
+/* Мягкие пятна света на фоне страницы */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(70px);
+  pointer-events: none;
+  animation: blob-float 18s ease-in-out infinite alternate;
+}
+
+body::before {
+  width: 540px;
+  height: 540px;
+  top: -180px;
+  right: -140px;
+  background: rgba(120, 170, 255, 0.2);
+}
+
+body::after {
+  width: 480px;
+  height: 480px;
+  bottom: -200px;
+  left: -160px;
+  background: rgba(90, 200, 220, 0.13);
+  animation-delay: -9s;
+}
+
+@keyframes blob-float {
+  to {
+    transform: translate(-70px, 50px) scale(1.1);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+/* Шапка закреплена и размывает прокручиваемый контент */
+@media (min-width: 901px) {
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    margin: 0 calc(-1 * var(--gutter));
+    padding: 0 var(--gutter);
+    background: rgba(247, 250, 254, 0.82);
+    backdrop-filter: blur(14px);
+  }
+
+  .hud {
+    top: 122px;
+  }
+}
+
+.brand svg {
+  transition: transform 0.3s ease;
+}
+
+.brand:hover svg {
+  transform: translateX(3px) skewX(-8deg);
+}
+
+.nav a.active::after {
+  animation: underline-in 0.35s ease-out;
+}
+
+@keyframes underline-in {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.user__online::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 2px solid var(--online);
+  animation: ping 2.2s ease-out infinite;
+}
+
+@keyframes ping {
+  to {
+    transform: scale(2.3);
+    opacity: 0;
+  }
+}
+
+.user__avatar .avatar {
+  transition: transform 0.25s ease;
+}
+
+.user__toggle:hover .avatar {
+  transform: scale(1.04);
+}
+
+.menu a,
+.menu__logout {
+  animation: rise-in 0.25s backwards;
+}
+
+.menu > :nth-child(3) {
+  animation-delay: 0.03s;
+}
+
+.menu > :nth-child(4) {
+  animation-delay: 0.06s;
+}
+
+.menu > :nth-child(5) {
+  animation-delay: 0.09s;
+}
+
+/* Кнопки: блик и стрелка, которая «зовёт» вперёд */
+.button {
+  position: relative;
+  overflow: hidden;
+}
+
+.button::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.38), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.65s ease;
+  pointer-events: none;
+}
+
+.button:hover::after {
+  left: 130%;
+}
+
+.button svg {
+  transition: transform 0.25s ease;
+}
+
+.button:hover svg {
+  transform: translateX(4px);
+}
+
+/* Hero: поезд проезжает вперёд, город смещается медленнее (параллакс) */
+.hero__train-drive,
+.hero__parallax {
+  transition: transform 1.6s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.hero__train-bob {
+  animation: train-bob 3.2s ease-in-out infinite;
+}
+
+@keyframes train-bob {
+  50% {
+    transform: translateY(-1.6px);
+  }
+}
+
+.hero__speed path {
+  stroke-dasharray: 90 160;
+  opacity: 0.55;
+  animation: wind 2.4s linear infinite;
+  transition: opacity 0.4s;
+}
+
+.hero__speed path:nth-child(2n) {
+  animation-duration: 1.8s;
+}
+
+.hero__train--moving .hero__speed path {
+  opacity: 1;
+  animation-duration: 0.6s;
+}
+
+@keyframes wind {
+  to {
+    stroke-dashoffset: -250;
+  }
+}
+
+.hero__clouds {
+  animation: clouds 40s ease-in-out infinite alternate;
+}
+
+@keyframes clouds {
+  to {
+    transform: translateX(-70px);
+  }
+}
+
+.hero__headlight-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: glow 2.4s ease-in-out infinite;
+}
+
+@keyframes glow {
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+}
+
+.hero__note {
+  animation: note-in 0.45s ease-out, note-float 5s ease-in-out 0.45s infinite;
+}
+
+@keyframes note-float {
+  50% {
+    transform: rotate(4deg) translateY(-6px);
+  }
+}
+
+.star {
+  animation: star-twinkle 3.6s ease-in-out infinite;
+}
+
+@keyframes star-twinkle {
+  0%,
+  100% {
+    transform: rotate(-5deg) scale(1);
+  }
+
+  50% {
+    transform: rotate(7deg) scale(1.1);
+  }
+}
+
+.hero__title--long {
+  font-size: 28px;
+  line-height: 35px;
+}
+
+.hero__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hero__dots {
+  padding: 3px 8px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 14px rgba(24, 64, 140, 0.08);
+}
+
+.hero__dot--active::after {
+  inset: 7px 1px;
+  border-radius: 4px;
+}
+
+/* Карточки: появляются по очереди, картинка приближается при наведении */
+.scenario-card {
+  position: relative;
+  overflow: hidden;
+  animation: rise-in 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+.scenario-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, #4f8dff, var(--brand), #6fd3ff);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s ease;
+}
+
+.scenario-card:hover::before {
+  transform: scaleX(1);
+}
+
+.scenario-card:hover .scenario-image {
+  transform: scale(1.07);
+}
+
+.section__head {
+  animation: rise-in 0.5s backwards;
+}
+
+.count-badge {
+  animation: pop 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) 0.3s backwards;
+}
+
+.blink {
+  animation: blink 1.4s steps(2) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Появление блоков на остальных страницах */
+.answer,
+.rating__row {
+  animation: rise-in 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 55ms + 0.08s);
+}
+
+.kpis > *,
+.features > *,
+.achievements > *,
+.history li {
+  animation: rise-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+
+.kpis > :nth-child(2),
+.features > :nth-child(2),
+.achievements > :nth-child(2),
+.history li:nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.kpis > :nth-child(3),
+.features > :nth-child(3),
+.achievements > :nth-child(3),
+.history li:nth-child(3) {
+  animation-delay: 0.12s;
+}
+
+.kpis > :nth-child(4),
+.achievements > :nth-child(4),
+.history li:nth-child(n + 4) {
+  animation-delay: 0.18s;
+}
+
+.card.kpi,
+.feature {
+  transition: transform 0.2s ease, box-shadow 0.25s ease;
+}
+
+.card.kpi:hover,
+.feature:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+}
+
+.scale__fill,
+.progress__fill {
+  transform-origin: left;
+  animation: bar-grow 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.timer--urgent .timer__value {
+  transform-origin: left center;
+  animation: pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.reward {
+  animation: reward-in 0.5s cubic-bezier(0.3, 1.4, 0.5, 1) backwards;
+}
+
+.reward:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.reward:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes reward-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+}
+
+.final--success {
+  background: linear-gradient(180deg, #f2fbf6 0%, #ffffff 60%);
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 56px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+}
+
+/* Ноутбуки 1280–1600 px: три колонки остаются, но карточки компактнее */
+@media (min-width: 1281px) and (max-width: 1600px) {
+  .shell {
+    --gutter: 40px;
+  }
+
+  .scenario-grid {
+    gap: 20px;
+  }
+
+  .scenario-card {
+    grid-template-columns: 1fr 124px;
+    gap: 14px;
+    padding: 20px 16px 18px 20px;
+  }
+
+  .scenario-card__image .scenario-image {
+    height: 118px;
+  }
+
+  .scenario-card__title {
+    font-size: 18.5px;
+    line-height: 27px;
+  }
+
+  .route,
+  .difficulty {
+    font-size: 14.5px;
   }
 }
 

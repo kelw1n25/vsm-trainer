@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer } from "recharts";
 import { api, ApiError } from "../api";
+import { AnimatedNumber } from "../components/AnimatedNumber";
 import { Avatar } from "../components/Avatar";
 import { LevelProgress } from "../components/LevelProgress";
 import { useCompetenceNames } from "../hooks";
@@ -46,11 +47,15 @@ export function ProfilePage() {
       <section className="kpis">
         <div className="card kpi">
           <span className="kpi__label">Общий балл</span>
-          <strong className="kpi__value">{profile.level.xp} XP</strong>
+          <strong className="kpi__value">
+            <AnimatedNumber value={profile.level.xp} suffix=" XP" />
+          </strong>
         </div>
         <div className="card kpi">
           <span className="kpi__label">Пройдено сценариев</span>
-          <strong className="kpi__value">{profile.runs_completed}</strong>
+          <strong className="kpi__value">
+            <AnimatedNumber value={profile.runs_completed} />
+          </strong>
         </div>
         <div className="card kpi">
           <span className="kpi__label">Достижения</span>

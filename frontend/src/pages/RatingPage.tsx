@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { api, ApiError } from "../api";
+import { AnimatedNumber } from "../components/AnimatedNumber";
 import { Avatar, InitialsAvatar } from "../components/Avatar";
 import { LevelProgress } from "../components/LevelProgress";
 import type { Leaderboard, LeaderboardPeriod, LeaderboardScope, Profile } from "../types";
@@ -53,7 +54,9 @@ export function RatingPage() {
           </div>
           <div className="my-place__points">
             <span className="muted">Баллы за период</span>
-            <strong className="kpi__value">{me.points} XP</strong>
+            <strong className="kpi__value">
+              <AnimatedNumber value={me.points} suffix=" XP" />
+            </strong>
           </div>
           {profile && <LevelProgress level={profile.level} />}
         </section>
@@ -71,8 +74,12 @@ export function RatingPage() {
             {board.title} <span className="muted">· участников: {board.participants}</span>
           </h2>
           <ol className="rating">
-            {board.rows.map((row) => (
-              <li key={row.employee_id} className={`rating__row ${row.is_me ? "rating__row--me" : ""}`}>
+            {board.rows.map((row, index) => (
+              <li
+                key={row.employee_id}
+                className={`rating__row ${row.is_me ? "rating__row--me" : ""}`}
+                style={{ "--i": index } as CSSProperties}
+              >
                 <span className={`rank ${row.rank <= 3 ? `rank--top${row.rank}` : ""}`}>{row.rank}</span>
                 {row.is_me ? <Avatar size={44} /> : <InitialsAvatar name={row.full_name} size={44} />}
                 <span className="rating__name">

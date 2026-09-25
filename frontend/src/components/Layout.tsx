@@ -10,6 +10,10 @@ export function Layout() {
       <main className="page" key={pathname}>
         <Outlet />
       </main>
+      <footer className="footer">
+        <span>ВСМ · Геймификация обучения проводников</span>
+        <span className="muted">Демо-версия · все данные синтетические</span>
+      </footer>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { api, ApiError } from "../api";
+import { AnimatedNumber } from "../components/AnimatedNumber";
 import { ArrowRightIcon } from "../components/icons";
 import { useStartScenario } from "../hooks";
 import { outcomeLabels } from "../labels";
@@ -58,7 +59,9 @@ export function AnalyticsPage() {
       <section className="kpis">
         <div className="card kpi">
           <span className="kpi__label">Пройдено сценариев</span>
-          <strong className="kpi__value">{data.total_runs}</strong>
+          <strong className="kpi__value">
+            <AnimatedNumber value={data.total_runs} />
+          </strong>
         </div>
         <div className="card kpi">
           <span className="kpi__label">Средний результат</span>
@@ -67,7 +70,9 @@ export function AnalyticsPage() {
         </div>
         <div className="card kpi">
           <span className="kpi__label">Набрано баллов</span>
-          <strong className="kpi__value">{weeksXp} XP</strong>
+          <strong className="kpi__value">
+            <AnimatedNumber value={weeksXp} suffix=" XP" />
+          </strong>
           <span className="muted">за 8 недель</span>
         </div>
         <div className="card kpi">

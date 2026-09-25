@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 // Небольшие линейные иконки интерфейса. Цвет берут из currentColor.
 
 const common = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" } as const;
@@ -56,22 +58,48 @@ export function GridIcon() {
   );
 }
 
-export function StarIcon({ size = 46 }: { size?: number }) {
+function starPoints(cx: number, cy: number, outer: number, inner: number): string {
+  return Array.from({ length: 10 }, (_, i) => {
+    const radius = i % 2 === 0 ? outer : inner;
+    const angle = -Math.PI / 2 + (i * Math.PI) / 5;
+    return `${(cx + radius * Math.cos(angle)).toFixed(2)},${(cy + radius * Math.sin(angle)).toFixed(2)}`;
+  }).join(" ");
+}
+
+/** Объёмная золотая звезда в стиле эмодзи: толстая скруглённая обводка делает лучи «пухлыми». */
+export function StarIcon({ size = 56 }: { size?: number }) {
+  const id = useId().replace(/:/g, "");
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
+    <svg className="star" width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
       <defs>
-        <linearGradient id="star-fill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#FFD85A" />
-          <stop offset="1" stopColor="#F5A623" />
-        </linearGradient>
+        <radialGradient id={`${id}-gold`} cx="0.36" cy="0.3" r="0.78">
+          <stop offset="0" stopColor="#FFF6CF" />
+          <stop offset="0.3" stopColor="#FFD863" />
+          <stop offset="0.72" stopColor="#F0A92A" />
+          <stop offset="1" stopColor="#C27910" />
+        </radialGradient>
+        <radialGradient id={`${id}-core`} cx="0.45" cy="0.4" r="0.6">
+          <stop offset="0" stopColor="#FFEFA8" stopOpacity="0.9" />
+          <stop offset="1" stopColor="#FFD863" stopOpacity="0" />
+        </radialGradient>
+        <filter id={`${id}-shadow`} x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="2.2" stdDeviation="1.6" floodColor="#A45F00" floodOpacity="0.35" />
+        </filter>
+        <filter id={`${id}-blur`}>
+          <feGaussianBlur stdDeviation="1.1" />
+        </filter>
       </defs>
-      <path
-        fill="url(#star-fill)"
-        stroke="#E8961A"
-        strokeWidth="1.2"
+      <polygon
+        points={starPoints(24, 25.5, 17.5, 9.4)}
+        fill={`url(#${id}-gold)`}
+        stroke={`url(#${id}-gold)`}
+        strokeWidth="7"
         strokeLinejoin="round"
-        d="M24 4.5l5.9 12 13.2 1.9-9.6 9.3 2.3 13.1L24 34.6l-11.8 6.2 2.3-13.1-9.6-9.3 13.2-1.9z"
+        filter={`url(#${id}-shadow)`}
       />
+      <polygon points={starPoints(24, 25, 10, 5.4)} fill={`url(#${id}-core)`} filter={`url(#${id}-blur)`} />
+      <ellipse cx="17.5" cy="15.5" rx="5.5" ry="2.6" fill="#FFFFFF" opacity="0.75" transform="rotate(-32 17.5 15.5)" filter={`url(#${id}-blur)`} />
+      <circle cx="31" cy="12" r="1.2" fill="#FFFFFF" opacity="0.8" />
     </svg>
   );
 }
