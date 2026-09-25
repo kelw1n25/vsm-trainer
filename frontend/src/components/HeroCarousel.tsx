@@ -14,8 +14,10 @@ const TRAIN_DISTANCE = 220;
 const WIND_AFTER_MS = 350;
 // Один «щелчок» колеса (deltaY ≈ 100) сдвигает ползунок на 1/8 пути
 const WHEEL_SENSITIVITY = 1 / 800;
-// Доля оставшегося пути, которую поезд проходит за кадр при прокрутке колесом
+// Доля оставшегося пути, которую поезд проходит за кадр при плавном доезде
 const GLIDE_FACTOR = 0.2;
+// Пауза после последнего «щелчка» колеса, после которой поезд докатывается до ближайшего слайда
+const SNAP_AFTER_WHEEL_MS = 180;
 
 function motionReduced(): boolean {
   return (
@@ -45,6 +47,8 @@ export function HeroCarousel() {
   const progressRef = useRef(0);
   const targetRef = useRef(0);
   const glideFrame = useRef(0);
+  const wheelTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const stepsRef = useRef(1);
 
   const show = useCallback((value: number) => {
     progressRef.current = value;
@@ -91,6 +95,20 @@ export function HeroCarousel() {
     [show],
   );
 
+  // Доводка до точки слайда: после курсора — до ближайшей,
+  // после колеса — до следующей в сторону прокрутки, чтобы даже один «щелчок» листал слайд
+  const snap = useCallback(
+    (direction = 0) => {
+      const segments = stepsRef.current - 1;
+      if (segments < 1) return;
+      const position = targetRef.current * segments;
+      const point = direction > 0 ? Math.ceil(position) : direction < 0 ? Math.floor(position) : Math.round(position);
+      glideTo(point / segments);
+    },
+    [glideTo],
+  );
+  const snapToNearest = useCallback(() => snap(), [snap]);
+
   useEffect(() => {
     const hero = heroRef.current!;
     const onWheel = (event: WheelEvent) => {
@@ -100,14 +118,17 @@ export function HeroCarousel() {
       if (target === targetRef.current) return;
       event.preventDefault();
       glideTo(target);
+      clearTimeout(wheelTimer.current);
+      wheelTimer.current = setTimeout(() => snap(Math.sign(delta)), SNAP_AFTER_WHEEL_MS);
     };
     hero.addEventListener("wheel", onWheel, { passive: false });
     return () => hero.removeEventListener("wheel", onWheel);
-  }, [glideTo]);
+  }, [glideTo, snap]);
 
   useEffect(
     () => () => {
       clearTimeout(windTimer.current);
+      clearTimeout(wheelTimer.current);
       cancelAnimationFrame(glideFrame.current);
     },
     [],
@@ -147,6 +168,7 @@ export function HeroCarousel() {
       note: "Закрой пробел — и навык вырастет быстрее!",
     });
   }
+  stepsRef.current = slides.length;
   // Слайд — ближайший к положению ползунка
   const current = slides[Math.round(progress * (slides.length - 1))];
   const longTitle = current.title[1].length > 24;
@@ -169,7 +191,7 @@ export function HeroCarousel() {
       </div>
       {slides.length > 1 && (
         <div className="hero__scroller">
-          <HeroScroller value={progress} steps={slides.length} label={current.eyebrow} onChange={move} />
+          <HeroScroller value={progress} steps={slides.length} label={current.eyebrow} onChange={move} onRelease={snapToNearest} />
         </div>
       )}
     </section>

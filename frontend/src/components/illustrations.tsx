@@ -462,57 +462,78 @@ function NoisyGroup() {
   );
 }
 
-/** Мама с ребёнком и значок аллергена. */
-function AllergyChild() {
+/** Взрослый пассажир с аллергической реакцией и спутница с автоинжектором. */
+function AllergyPassenger() {
   return (
     <Frame top="#EAF2FC" bottom="#D0E0F4">
-      <WindowView x={94} y={8} width={60} height={48} />
-      <rect x="6" y="100" width="148" height="32" rx="10" fill="#2E5CC4" />
+      <WindowView x={96} y={8} width={58} height={46} />
+      <rect x="4" y="96" width="112" height="36" rx="10" fill="#2E5CC4" />
+      <rect x="10" y="62" width="44" height="50" rx="10" fill="#2A57C0" />
       <path d="M0 132L160 126V150H0Z" fill="#C5D3E6" />
-      <path d="M14 132C12 100 24 78 44 76S70 96 68 132Z" fill="#8E6BBF" />
-      <circle cx="44" cy="60" r="13" fill="#F2C9A5" />
-      <path d="M30 60C28 44 60 42 58 60 56 50 34 50 30 60Z" fill="#4A3426" />
-      <path d="M31 60C30 72 32 80 36 82" stroke="#4A3426" strokeWidth="5" fill="none" strokeLinecap="round" />
-      <path d="M64 102C80 96 86 88 92 84" stroke="#8E6BBF" strokeWidth="8" strokeLinecap="round" fill="none" />
-      <path d="M78 132C78 110 84 100 96 100S114 110 114 132Z" fill="#5FB0E8" />
-      <circle cx="96" cy="88" r="11" fill="#F6BFA8" />
-      <g fill="#E1343C" opacity="0.75">
-        <circle cx="91" cy="90" r="1.6" />
-        <circle cx="100" cy="92" r="1.6" />
-        <circle cx="95" cy="95" r="1.4" />
-        <circle cx="102" cy="86" r="1.3" />
+      <path d="M18 132C16 104 24 88 38 86S60 100 60 132Z" fill="#56657F" />
+      <path d="M34 88L38 100 42 88Z" fill="#FFFFFF" />
+      <circle cx="38" cy="72" r="12" fill="#F2C9A5" />
+      <g fill="#E1343C" opacity="0.7">
+        <circle cx="32" cy="76" r="1.7" />
+        <circle cx="43" cy="78" r="1.7" />
+        <circle cx="38" cy="82" r="1.4" />
+        <circle cx="36" cy="86" r="1.5" />
+        <circle cx="41" cy="88" r="1.3" />
       </g>
-      <path d="M86 84C86 74 106 74 106 84 102 80 90 80 86 84Z" fill="#6B3F2A" />
-      <circle cx="136" cy="80" r="14" fill="#FFFFFF" stroke="#E1343C" strokeWidth="2.5" />
-      <ellipse cx="136" cy="80" rx="6" ry="7.5" fill="#C98A3A" />
-      <path d="M126 70L146 90" stroke="#E1343C" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M26 70C26 58 50 58 50 70 46 64 30 64 26 70Z" fill="#3A2E2A" />
+      <path d="M52 100C50 92 46 88 42 86" stroke="#56657F" strokeWidth="7" strokeLinecap="round" fill="none" />
+      <path d="M78 132C76 104 84 90 98 88S118 102 118 132Z" fill="#8E6BBF" />
+      <circle cx="98" cy="74" r="11" fill="#F0C4A0" />
+      <path d="M86 74C85 60 111 58 110 74 107 66 90 66 86 74Z" fill="#6B3F2A" />
+      <path d="M87 74C86 84 88 90 91 92" stroke="#6B3F2A" strokeWidth="5" fill="none" strokeLinecap="round" />
+      <path d="M80 104C72 106 66 106 60 104" stroke="#8E6BBF" strokeWidth="7" strokeLinecap="round" fill="none" />
+      <rect x="56" y="98" width="20" height="7" rx="3.5" fill="#FFC53D" transform="rotate(-12 66 101)" />
+      <rect x="54" y="99" width="5" height="5" rx="1" fill="#E1343C" transform="rotate(-12 66 101)" />
+      <circle cx="140" cy="84" r="14" fill="#FFFFFF" stroke="#E1343C" strokeWidth="2.5" />
+      <ellipse cx="140" cy="84" rx="6" ry="7.5" fill="#C98A3A" />
+      <path d="M130 74L150 94" stroke="#E1343C" strokeWidth="2.5" strokeLinecap="round" />
     </Frame>
   );
 }
 
-/** Пассажир на кресле-коляске и переносной пандус у двери вагона. */
+/** Пассажир на кресле-коляске въезжает в вагон по переносному пандусу. */
 function WheelchairBoarding() {
   return (
     <Frame top="#EAF1FB" bottom="#CFDFF3">
-      <rect x="84" y="10" width="76" height="118" rx="6" fill="#F5F8FC" />
-      <rect x="96" y="22" width="36" height="96" rx="4" fill="#2B3F66" />
-      <rect x="102" y="28" width="24" height="34" rx="3" fill="#CFE3FF" />
-      <rect x="84" y="118" width="76" height="4" fill="#E1343C" />
+      <rect x="92" y="6" width="68" height="120" rx="8" fill="#F5F8FC" />
+      <rect x="104" y="18" width="40" height="100" rx="5" fill="#2B3F66" />
+      <rect x="110" y="26" width="28" height="34" rx="4" fill="#CFE3FF" />
+      <rect x="92" y="112" width="68" height="4" fill="#E1343C" />
+      <rect x="92" y="118" width="68" height="3" fill="#2A5FD8" />
       <path d="M0 132H160V150H0Z" fill="#BFCDE0" />
-      <path d="M40 132L96 118V124L46 136Z" fill="#8FA3C0" />
-      <path d="M40 132L96 118" stroke="#6E819E" strokeWidth="2" />
-      <circle cx="44" cy="122" r="14" fill="none" stroke="#243047" strokeWidth="4" />
-      <circle cx="44" cy="122" r="3" fill="#243047" />
-      <circle cx="66" cy="130" r="5" fill="none" stroke="#243047" strokeWidth="3" />
-      <path d="M32 94H56L62 116H42Z" fill="#2E5CC4" />
-      <path d="M32 80V116" stroke="#243047" strokeWidth="4" strokeLinecap="round" />
-      <path d="M38 96C38 80 44 72 52 72S64 80 64 96Z" fill="#56657F" />
-      <path d="M56 100H74V112" stroke="#34465F" strokeWidth="7" strokeLinecap="round" fill="none" />
-      <circle cx="52" cy="60" r="10" fill="#F0C4A0" />
-      <path d="M42 58C42 46 62 46 62 58 58 52 46 52 42 58Z" fill="#2E2622" />
-      <rect x="6" y="18" width="30" height="30" rx="6" fill="#1E5FD6" />
-      <circle cx="21" cy="26" r="2.6" fill="#FFFFFF" />
-      <path d="M19 30v7h6l2 5M15 36a6 6 0 1 0 9 5" stroke="#FFFFFF" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path d="M0 132H160" stroke="#A9B9CF" strokeWidth="2" />
+
+      <path d="M58 134L106 121" stroke="#7E90AE" strokeWidth="5" strokeLinecap="round" />
+      <path d="M58 134L106 121" stroke="#A6B6CD" strokeWidth="2" strokeLinecap="round" />
+
+      <circle cx="44" cy="112" r="18" fill="none" stroke="#243047" strokeWidth="3.5" />
+      <circle cx="44" cy="112" r="14" fill="none" stroke="#8C9DB6" strokeWidth="1.5" />
+      <path d="M44 94V130M26 112H62M31 99L57 125M57 99L31 125" stroke="#8C9DB6" strokeWidth="1" />
+      <circle cx="44" cy="112" r="3" fill="#243047" />
+      <circle cx="80" cy="126" r="5" fill="none" stroke="#243047" strokeWidth="3" />
+      <path d="M30 70L34 104H70" stroke="#243047" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path d="M26 68H36" stroke="#243047" strokeWidth="4" strokeLinecap="round" />
+      <path d="M70 104L80 121M74 116H86" stroke="#243047" strokeWidth="3.5" strokeLinecap="round" />
+
+      <path d="M34 102V78C34 70 40 64 48 64S60 70 60 78V100Z" fill="#3E6FD8" />
+      <path d="M40 100H68C72 100 74 102 74 106V108H40Z" fill="#34465F" />
+      <path d="M68 106L74 118" stroke="#34465F" strokeWidth="7" strokeLinecap="round" />
+      <path d="M72 119H82" stroke="#1B2436" strokeWidth="5" strokeLinecap="round" />
+      <path d="M54 76C60 86 56 96 50 104" stroke="#3E6FD8" strokeWidth="7" strokeLinecap="round" fill="none" />
+      <circle cx="50" cy="104" r="3.5" fill="#F2C9A5" />
+      <rect x="44" y="52" width="8" height="10" rx="3" fill="#EDBE98" />
+      <circle cx="48" cy="46" r="10" fill="#F2C9A5" />
+      <path d="M38 45C37 33 59 32 58 44 55 38 42 38 38 45Z" fill="#2E2622" />
+
+      <rect x="6" y="10" width="28" height="28" rx="7" fill="#1E5FD6" />
+      <circle cx="20" cy="16.5" r="2.4" fill="#FFFFFF" />
+      <path d="M18.5 20V27H24L26.5 32" stroke="#FFFFFF" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14.5 25.5A5.5 5.5 0 1 0 22.5 31.5" stroke="#FFFFFF" strokeWidth="2.2" fill="none" strokeLinecap="round" />
     </Frame>
   );
 }
@@ -555,7 +576,7 @@ const byScenario: Record<string, () => ReactNode> = {
   "suspicious-item": LeftBag,
   "train-delay-compensation": DelayBoard,
   "noisy-group-night": NoisyGroup,
-  "allergy-child": AllergyChild,
+  "allergy-attack": AllergyPassenger,
   "wheelchair-boarding": WheelchairBoarding,
   "smoke-vestibule": SmokeVestibule,
 };

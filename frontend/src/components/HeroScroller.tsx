@@ -7,6 +7,8 @@ interface Props {
   label: string;
   /** smooth — короткая плавность (клавиатура); за курсором и пальцем движение мгновенное. */
   onChange: (value: number, smooth: boolean) => void;
+  /** Курсор ушёл с ползунка или палец отпущен — ползунок докатывается до ближайшего слайда. */
+  onRelease: () => void;
 }
 
 const KEY_STEP = 0.05;
@@ -15,7 +17,7 @@ const KEY_STEP = 0.05;
  * Единый ползунок hero. Мышью управляется наведением — достаточно вести курсор над ним,
  * без клика. На сенсорных экранах — перетаскиванием пальцем. Колесо обрабатывает весь hero.
  */
-export function HeroScroller({ value, steps, label, onChange }: Props) {
+export function HeroScroller({ value, steps, label, onChange, onRelease }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
 
@@ -63,8 +65,15 @@ export function HeroScroller({ value, steps, label, onChange }: Props) {
       aria-valuetext={label}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
-      onPointerUp={() => setDragging(false)}
-      onPointerCancel={() => setDragging(false)}
+      onPointerLeave={(event) => event.pointerType === "mouse" && onRelease()}
+      onPointerUp={(event) => {
+        setDragging(false);
+        if (event.pointerType !== "mouse") onRelease();
+      }}
+      onPointerCancel={() => {
+        setDragging(false);
+        onRelease();
+      }}
       onKeyDown={onKeyDown}
     >
       <div className="scroller__track" ref={trackRef}>

@@ -1,0 +1,175 @@
+# ДЕМО-КОНТЕНТ: написан командой до получения материалов кейсодержателя.
+# Алгоритм действий упрощён для тренажёра и не заменяет обучение первой помощи.
+id: allergy-attack
+title: Острая аллергическая реакция у пассажира
+category: medical
+difficulty: 2
+service_class: Эконом
+route: Москва — Санкт-Петербург
+description: >
+  После обеда в вагоне-бистро у пассажира появились сыпь, кашель и затруднённое дыхание.
+  Счёт идёт на минуты: нужно не допустить отёка и помочь применить назначенное лекарство.
+demo: true
+initial:
+  loyalty: 70
+  safety: 75
+start_node: start
+
+nodes:
+  - id: start
+    situation: >
+      Пассажир лет сорока вернулся из вагона-бистро: лицо покраснело, на шее сыпь,
+      он часто кашляет и держится за горло. Рядом его растерянная спутница.
+    line:
+      speaker: passenger
+      name: Спутница пассажира
+      text: У него аллергия на орехи, а в салате, кажется, был соус с орехами!
+    timer_seconds: 15
+    timeout_next: swelling
+    timeout_effects:
+      safety: -20
+    choices:
+      - id: assess_and_call
+        text: >
+          Спросить про аллергию и лекарства при себе, усадить пассажира, сообщить начальнику
+          поезда и объявить поиск медика
+        effects:
+          safety: 10
+          loyalty: 5
+          set_flags: [chief_informed]
+          competences: {first_aid: 10, communication: 5}
+        next: has_meds
+        best: true
+        explanation: >
+          Два главных вопроса — известна ли аллергия и есть ли назначенное лекарство.
+          Параллельно запускается цепочка помощи.
+      - id: give_water
+        text: Принести воды и предложить подождать — «наверное, просто поперхнулся»
+        effects:
+          safety: -15
+          competences: {first_aid: -5}
+        next: swelling
+        explanation: Аллергическая реакция может быстро перейти в отёк гортани — ждать нельзя.
+      - id: own_pills
+        text: Дать таблетку от аллергии из аптечки поезда
+        effects:
+          safety: -10
+          competences: {first_aid: -5, safety_rules: -10}
+        next: swelling
+        explanation: >
+          Проводник не назначает лекарства: при тяжёлой реакции таблетка не успеет подействовать,
+          а у пассажира могут быть противопоказания.
+
+  - id: has_meds
+    situation: >
+      В сумке у пассажира автоинжектор с адреналином, назначенный врачом. Пассажиру тяжело
+      дышать, руки дрожат, спутница боится сделать укол.
+    timer_seconds: 15
+    timeout_next: swelling
+    timeout_effects:
+      safety: -15
+    choices:
+      - id: guide_injection
+        text: >
+          Спокойно помочь: достать автоинжектор, прочитать инструкцию вслух и поддержать
+          спутницу, чтобы она сделала укол в бедро
+        effects:
+          safety: 20
+          competences: {first_aid: 15, communication: 5, stress_resistance: 5}
+        next: stabilizing
+        best: true
+        explanation: >
+          Препарат назначен врачом и рассчитан на применение без медицинского образования.
+          Проводник помогает спокойствием и чёткими подсказками.
+      - id: wait_doctor
+        text: Ждать, пока найдётся медик среди пассажиров
+        effects:
+          safety: -15
+        next: swelling
+        explanation: Когда лекарство под рукой, промедление опаснее самого укола.
+
+  - id: swelling
+    situation: Губы и лицо пассажира отекают, дыхание становится хриплым, он едва может говорить.
+    timer_seconds: 10
+    timeout_next: final_fail
+    timeout_effects:
+      safety: -30
+    choices:
+      - id: urgent_chief
+        text: >
+          Немедленно по рации сообщить об экстренной ситуации, запросить остановку и скорую,
+          помочь найти лекарство в вещах пассажира
+        effects:
+          safety: 15
+          set_flags: [chief_informed]
+          competences: {first_aid: 10, stress_resistance: 5}
+        next: has_meds
+        best: true
+        explanation: При нарастающем отёке нужны одновременно лекарство и экстренная медицинская помощь.
+      - id: panic_announce
+        text: Громко крикнуть на весь вагон «Человеку плохо, помогите кто-нибудь!»
+        effects:
+          safety: -5
+          loyalty: -10
+          competences: {communication: -5}
+        next: has_meds
+        explanation: >
+          Паника передаётся пассажиру и спутнице. Помощь ищут через объявление по связи,
+          спокойно и с чёткой просьбой.
+
+  - id: stabilizing
+    situation: >
+      Отёк уменьшается, пассажир дышит ровнее. Начальник поезда спрашивает, нужна ли остановка.
+    line:
+      speaker: train_chief
+      name: Начальник поезда
+      text: Доложи, что с пассажиром. Нужна скорая?
+    timer_seconds: 20
+    timeout_next: final_partial
+    timeout_effects:
+      safety: -10
+    choices:
+      - id: request_ambulance
+        text: >
+          Попросить скорую к ближайшей станции: после укола адреналина пассажира обязательно
+          должны осмотреть врачи
+        effects:
+          safety: 10
+          loyalty: 5
+          competences: {first_aid: 10, safety_rules: 10}
+        next: final_success
+        best: true
+        explanation: Действие адреналина временное, реакция может вернуться — нужен осмотр врача.
+      - id: report_details
+        condition:
+          - flag chief_informed
+        text: >
+          Доложить, что и когда съел пассажир, какие были симптомы и во сколько сделан укол, —
+          начальник поезда передаст это скорой
+        effects:
+          safety: 10
+          competences: {communication: 10, first_aid: 5}
+        next: final_success
+        explanation: >
+          Точная хронология помогает врачам. Вариант доступен, если начальник поезда
+          в курсе ситуации с самого начала.
+      - id: no_stop_needed
+        text: Согласиться с пассажиром, что «уже всё прошло» и скорая не нужна
+        effects:
+          loyalty: 5
+          safety: -20
+          competences: {safety_rules: -10}
+        next: final_partial
+        explanation: Поезд не задерживается, но пассажир остаётся без осмотра, а реакция может вернуться.
+
+  - id: final_success
+    outcome: success
+    final_text: Пассажира осмотрели врачи на станции, опасность миновала. Спутница благодарит экипаж.
+
+  - id: final_partial
+    outcome: partial
+    final_text: Реакцию удалось остановить, но пассажир доехал без осмотра врача. Будет разбор случая.
+
+  - id: final_fail
+    outcome: failure
+    final_text: Помощь опоздала, пассажира экстренно госпитализировали. Проводится служебная проверка.
