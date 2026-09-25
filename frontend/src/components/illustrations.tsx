@@ -405,7 +405,7 @@ function WindowView({ x, y, width, height }: { x: number; y: number; width: numb
 
 export type Outfit = "uniform" | { top: string; bottom: string };
 export type Hand = "down" | "point" | "hold" | "radio" | "hush" | "chest" | "throat";
-type Item = "ticket" | "bottle" | "injector" | "extinguisher" | "radio";
+type Item = "ticket" | "bottle" | "cup" | "extinguisher" | "radio";
 
 const UNIFORM = { top: "#1F2E57", bottom: "#18233F" };
 const SKIN = "#F2C9A5";
@@ -436,7 +436,6 @@ export interface PersonProps {
   mood?: Mood;
   hand?: Hand;
   item?: Item;
-  rash?: boolean;
 }
 
 function HeldItem({ kind, x, y }: { kind: Item; x: number; y: number }) {
@@ -455,11 +454,11 @@ function HeldItem({ kind, x, y }: { kind: Item; x: number; y: number }) {
           <rect x={x - 1} y={y - 18} width="2.5" height="5" rx="1" fill="#2F6E45" />
         </g>
       );
-    case "injector":
+    case "cup":
       return (
         <g>
-          <rect x={x - 1} y={y - 3} width="17" height="6" rx="3" fill="#FFC53D" />
-          <rect x={x + 12} y={y - 3} width="5" height="6" rx="1.5" fill="#F07A2A" />
+          <path d={`M${x - 1} ${y - 10}h9l-1.5 11h-6z`} fill="#FFFFFF" stroke="#9AA9C0" strokeWidth="0.8" />
+          <path d={`M${x} ${y - 6}h7`} stroke="#8FC3F0" strokeWidth="3" />
         </g>
       );
     case "extinguisher":
@@ -493,7 +492,6 @@ export function Person({
   mood = "calm",
   hand = "down",
   item,
-  rash = false,
 }: PersonProps) {
   const uniform = outfit === "uniform";
   const { top, bottom } = uniform ? UNIFORM : outfit;
@@ -527,7 +525,6 @@ export function Person({
         )}
         {hairStyle === "bun" && <circle cx="-8" cy="-86" r="5" fill={hair} />}
         <circle cx="0" cy="-77" r="11" fill={SKIN} />
-        {rash && <circle cx="0" cy="-74" r="9" fill="#F29C8A" opacity="0.35" />}
         <path d="M-11.3 -78C-12.5 -92.5 12.5 -92.5 11.3 -78C8 -85.5 -8 -85.5 -11.3 -78Z" fill={hair} />
         {hairStyle === "long" && (
           <path d="M-11 -78C-12 -70 -11 -66 -8 -63M11 -78C12 -70 11 -66 8 -63" stroke={hair} strokeWidth="4" strokeLinecap="round" fill="none" />
@@ -540,14 +537,6 @@ export function Person({
           </g>
         )}
         <Face cx={0} cy={-77} r={11} mood={mood} />
-        {rash && (
-          <g fill="#E1343C" opacity="0.6">
-            <circle cx="-7" cy="-72" r="1.5" />
-            <circle cx="7" cy="-72" r="1.5" />
-            <circle cx="-3" cy="-66" r="1.2" />
-            <circle cx="3" cy="-64" r="1.3" />
-          </g>
-        )}
         <path
           d={`M11 -58Q${(11 + hx) / 2 + 4} ${(-58 + hy) / 2} ${hx} ${hy}`}
           stroke={top}
@@ -725,30 +714,151 @@ function NoisyGroup() {
   );
 }
 
-/** Пассажир с острой аллергической реакцией; спутница помогает с автоинжектором. */
-function AllergyPassenger() {
+/** Посадка: пассажир показывает скриншот билета, проводник проверяет его у дверей вагона. */
+function BoardingTicket() {
+  return (
+    <Frame top="#E6EEF8" bottom="#C9D6E8">
+      <rect x="0" y="18" width="160" height="92" fill="#F4F7FB" />
+      <rect x="0" y="34" width="160" height="16" fill="#2B3F66" />
+      {[8, 40, 72].map((x) => (
+        <rect key={x} x={x} y="36" width="24" height="12" rx="3" fill="#CFE3FF" />
+      ))}
+      <rect x="104" y="30" width="40" height="80" rx="4" fill="#3E567F" />
+      <rect x="108" y="36" width="32" height="70" rx="3" fill="#56709A" />
+      <rect x="0" y="96" width="160" height="4" fill="#E1343C" />
+      <rect x="0" y="102" width="160" height="3" fill="#2A5FD8" />
+      <path d="M0 112H160V150H0Z" fill="#BFCDE0" />
+      <path d="M0 118H160" stroke="#FFFFFF" strokeWidth="2" strokeDasharray="8 6" opacity="0.8" />
+      <rect x="10" y="6" width="44" height="18" rx="5" fill="#17223A" />
+      <text x="32" y="19" textAnchor="middle" fontSize="9" fontWeight="700" fill="#FFB45A" fontFamily="Manrope, sans-serif">
+        7 мин
+      </text>
+      <Person x={42} y={146} s={0.9} outfit={{ top: "#7A8699", bottom: "#2F3B55" }} hair="#5B5B5B" mood="worried" hand="point" item="ticket" />
+      <Person x={124} y={146} s={0.9} flip outfit="uniform" mood="thinking" hand="hold" item="radio" />
+      <path d="M70 52h14a5 5 0 0 1 5 5v6a5 5 0 0 1-5 5h-6l-4 4v-4h-4a5 5 0 0 1-5-5v-6a5 5 0 0 1 5-5z" fill="#FFFFFF" />
+      <text x="77" y="65" textAnchor="middle" fontSize="11" fontWeight="800" fill="#1E5FD6" fontFamily="Manrope, sans-serif">
+        ?
+      </text>
+    </Frame>
+  );
+}
+
+/** Посадка: пассажирка с собакой без переноски и велосипед, который перегородит проход. */
+function PetAndBicycle() {
+  return (
+    <Frame top="#E6EEF8" bottom="#C9D6E8">
+      <rect x="0" y="18" width="160" height="92" fill="#F4F7FB" />
+      <rect x="0" y="34" width="160" height="16" fill="#2B3F66" />
+      <rect x="0" y="96" width="160" height="4" fill="#E1343C" />
+      <rect x="0" y="102" width="160" height="3" fill="#2A5FD8" />
+      <path d="M0 112H160V150H0Z" fill="#BFCDE0" />
+      <g stroke="#243047" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="92" cy="130" r="12" />
+        <circle cx="128" cy="130" r="12" />
+        <path d="M92 130l12-20h14l10 20M104 110l6 20M116 104h6M104 110l-4-8h-5" />
+      </g>
+      <Person x={40} y={146} s={0.88} outfit={{ top: "#7BA05B", bottom: "#3A3550" }} hair="#C58B4A" hairStyle="long" mood="happy" hand="down" />
+      <path d="M55 110q10 12 20 22" stroke="#8A5A2B" strokeWidth="1.5" fill="none" />
+      <g fill="#C98A3A">
+        <ellipse cx="80" cy="136" rx="10" ry="6" />
+        <circle cx="89" cy="130" r="5" />
+        <path d="M86 126l2-5 3 4z" />
+        <rect x="72" y="139" width="3" height="7" rx="1" />
+        <rect x="84" y="139" width="3" height="7" rx="1" />
+        <path d="M70 134q-5-3-4-8" stroke="#C98A3A" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      </g>
+      <circle cx="91" cy="129" r="1" fill="#2B2320" />
+      <Person x={140} y={146} s={0.72} flip outfit="uniform" mood="serious" hand="point" />
+      <path d="M8 8l14 0 0 14-14 0z" fill="#FFC53D" />
+      <path d="M15 11v6M15 19v1" stroke="#5A4000" strokeWidth="2" strokeLinecap="round" />
+    </Frame>
+  );
+}
+
+/** Паническая атака: проводник рядом с пассажиркой, дышат вместе, стакан воды. */
+function PanicAttack() {
   return (
     <Frame top="#EDF3FC" bottom="#D3E1F4">
-      <WindowView x={98} y={8} width={56} height={40} />
-      <path d="M0 138L160 132V150H0Z" fill="#C5D3E6" />
-      <rect x="12" y="50" width="50" height="70" rx="12" fill="#2A57C0" />
-      <rect x="18" y="46" width="38" height="12" rx="5" fill="#F4F7FB" />
-      <rect x="6" y="104" width="68" height="20" rx="8" fill="#1F459D" />
-      <Person x={30} y={106} s={0.8} pose="sit" outfit={{ top: "#3D8C9E", bottom: "#2F3B55" }} hair="#3A2E2A" mood="worried" hand="throat" rash />
-      <g stroke="#E1343C" strokeWidth="1.6" strokeLinecap="round">
-        <path d="M44 52l3-4M48 58l5-1M42 47l0-5" />
+      <WindowView x={8} y={10} width={64} height={44} />
+      <path d="M0 136L160 130V150H0Z" fill="#C5D3E6" />
+      <rect x="12" y="60" width="50" height="66" rx="12" fill="#2A57C0" />
+      <rect x="18" y="56" width="38" height="11" rx="5" fill="#F4F7FB" />
+      <rect x="6" y="110" width="68" height="18" rx="8" fill="#1F459D" />
+      <Person x={30} y={112} s={0.8} pose="sit" outfit={{ top: "#7B5EA7", bottom: "#3A3550" }} hair="#C58B4A" hairStyle="long" mood="worried" hand="chest" />
+      <g stroke="#8FC3F0" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.9">
+        <path d="M58 44q6-4 12 0" />
+        <path d="M60 36q5-3 10 0" />
       </g>
-      <rect x="126" y="92" width="30" height="4" rx="2" fill="#D6DFEB" />
-      <path d="M141 96V108" stroke="#B8C6D8" strokeWidth="2" />
-      <ellipse cx="140" cy="90" rx="10" ry="3.2" fill="#FFFFFF" />
-      <path d="M133 89q3-5 6-1q3-5 7 1z" fill="#7BB35E" />
-      <circle cx="137" cy="87.5" r="1.3" fill="#B07A3A" />
-      <circle cx="143" cy="88" r="1.2" fill="#B07A3A" />
-      <Person x={100} y={146} s={0.9} flip outfit={{ top: "#7B5EA7", bottom: "#3A3550" }} hair="#6B3F2A" hairStyle="bun" mood="worried" hand="hold" item="injector" />
-      <circle cx="24" cy="20" r="12" fill="#FFFFFF" stroke="#E1343C" strokeWidth="2.5" />
-      <ellipse cx="24" cy="20" rx="4.5" ry="6" fill="#C98A3A" />
-      <path d="M24 15v10" stroke="#9A6522" strokeWidth="1" />
-      <path d="M16 12L32 28" stroke="#E1343C" strokeWidth="2.5" strokeLinecap="round" />
+      <Person x={118} y={146} s={0.92} flip outfit="uniform" mood="calm" hand="hold" item="cup" />
+      <rect x="88" y="10" width="68" height="28" rx="8" fill="#FFFFFF" />
+      <path d="M106 21h8m4 0h8m4 0h8" stroke="#1E5FD6" strokeWidth="3" strokeLinecap="round" />
+      <text x="124" y="33" textAnchor="middle" fontSize="6" fill="#56657F" fontFamily="Manrope, sans-serif">
+        вдох · пауза · выдох
+      </text>
+    </Frame>
+  );
+}
+
+/** Потерявшийся ребёнок: проводник присел рядом в тамбуре. */
+function LostChild() {
+  return (
+    <Frame top="#E3E9F2" bottom="#C3CEDD">
+      <rect x="18" y="8" width="56" height="120" rx="6" fill="#F2F5FA" />
+      <rect x="26" y="18" width="40" height="36" rx="5" fill="#CFE3FF" />
+      <rect x="86" y="8" width="56" height="120" rx="6" fill="#F2F5FA" />
+      <rect x="94" y="18" width="40" height="36" rx="5" fill="#CFE3FF" />
+      <path d="M0 128H160V150H0Z" fill="#AFBDD2" />
+      <Person x={52} y={146} s={0.95} outfit="uniform" hairStyle="bun" hair="#4A3426" mood="calm" hand="point" />
+      <Person x={108} y={146} s={0.6} flip outfit={{ top: "#3E6FD8", bottom: "#2F3B55" }} hair="#6B3F2A" mood="sad" hand="down" />
+      <path d="M126 72c-4-5-11-1-8 4l8 7 8-7c3-5-4-9-8-4z" fill="#E1343C" opacity="0.85" />
+    </Frame>
+  );
+}
+
+/** Обед в бизнес-классе: тележка, блюдо под крышкой, пассажир за столиком. */
+function BusinessCatering() {
+  return (
+    <Frame top="#F2EEE8" bottom="#E0D6C8">
+      <WindowView x={92} y={8} width={62} height={42} />
+      <path d="M0 134L160 128V150H0Z" fill="#CFC2AF" />
+      <rect x="98" y="60" width="50" height="68" rx="12" fill="#2A57C0" />
+      <rect x="104" y="56" width="38" height="11" rx="5" fill="#F4F7FB" />
+      <rect x="90" y="112" width="66" height="18" rx="8" fill="#1F459D" />
+      <Person x={124} y={114} s={0.78} pose="sit" flip outfit={{ top: "#2E3A4F", bottom: "#1E2636" }} hair="#9A9A9A" mood="thinking" />
+      <rect x="72" y="92" width="34" height="4" rx="2" fill="#8C7A66" />
+      <ellipse cx="88" cy="90" rx="11" ry="3" fill="#FFFFFF" />
+      <path d="M79 90q9-13 18 0z" fill="#D9DEE7" />
+      <circle cx="88" cy="79" r="1.5" fill="#B8C1CF" />
+      <rect x="10" y="100" width="46" height="30" rx="4" fill="#6E7F99" />
+      <rect x="10" y="98" width="46" height="4" rx="2" fill="#56657F" />
+      <circle cx="16" cy="134" r="3" fill="#243047" />
+      <circle cx="50" cy="134" r="3" fill="#243047" />
+      <rect x="18" y="90" width="10" height="8" rx="2" fill="#FFFFFF" />
+      <rect x="32" y="88" width="8" height="10" rx="2" fill="#F2B84B" />
+      <Person x={34} y={146} s={0.82} outfit="uniform" mood="calm" hand="hold" item="cup" />
+    </Frame>
+  );
+}
+
+/** Первый класс: неработающая розетка, недовольный пассажир и проводник с маской для сна. */
+function FirstClassComfort() {
+  return (
+    <Frame top="#F4EFE6" bottom="#E3D8C6">
+      <WindowView x={10} y={8} width={70} height={46} />
+      <path d="M0 134L160 128V150H0Z" fill="#CFC2AF" />
+      <rect x="18" y="58" width="60" height="70" rx="16" fill="#E9DCC3" />
+      <rect x="24" y="54" width="48" height="12" rx="6" fill="#F7F1E6" />
+      <rect x="10" y="110" width="76" height="20" rx="9" fill="#D8C7A8" />
+      <Person x={42} y={112} s={0.8} pose="sit" outfit={{ top: "#1B1F2A", bottom: "#1E2636" }} hair="#5B5B5B" mood="annoyed" />
+      <rect x="84" y="96" width="14" height="10" rx="2" fill="#FFFFFF" stroke="#B8A58A" />
+      <path d="M88 99v4M94 99v4" stroke="#56657F" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M100 88l6 6M106 88l-6 6" stroke="#E1343C" strokeWidth="2" strokeLinecap="round" />
+      <Person x={128} y={146} s={0.9} flip outfit="uniform" mood="calm" hand="hold" />
+      <path d="M100 96q6-4 12 0q-6 5-12 0z" fill="#2B3F66" />
+      <rect x="120" y="10" width="30" height="24" rx="7" fill="#1E5FD6" />
+      <text x="135" y="27" textAnchor="middle" fontSize="13" fontWeight="800" fill="#FFFFFF" fontFamily="Manrope, sans-serif">
+        1
+      </text>
     </Frame>
   );
 }
@@ -814,15 +924,20 @@ function SmokeVestibule() {
 }
 
 const byScenario: Record<string, () => ReactNode> = {
+  "boarding-ticket": BoardingTicket,
+  "pet-and-bicycle": PetAndBicycle,
   "business-seat-conflict": SeatConflict,
   "drunk-passenger": ConductorAndPassenger,
-  "medical-heart-attack": MedicalHelp,
-  "suspicious-item": LeftBag,
-  "train-delay-compensation": DelayBoard,
-  "noisy-group-night": NoisyGroup,
-  "allergy-attack": AllergyPassenger,
-  "wheelchair-boarding": WheelchairBoarding,
+  "noisy-night": NoisyGroup,
+  "passenger-unwell": MedicalHelp,
+  "panic-attack": PanicAttack,
   "smoke-vestibule": SmokeVestibule,
+  "unattended-item": LeftBag,
+  "lost-child": LostChild,
+  "business-catering": BusinessCatering,
+  "first-class-comfort": FirstClassComfort,
+  "train-delay": DelayBoard,
+  "wheelchair-boarding": WheelchairBoarding,
 };
 
 // Для новых сценариев без своей картинки — иллюстрация по категории
