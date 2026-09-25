@@ -421,14 +421,21 @@ function DelayBoard() {
   );
 }
 
-/** Шумная компания с колонкой в вагоне тишины. */
+/** Шумная компания с колонкой ночью: за окном луна и звёзды, в вагоне приглушён свет. */
 function NoisyGroup() {
   return (
-    <Frame top="#EEF4FC" bottom="#D6E4F5">
-      <WindowView x={10} y={10} width={64} height={40} />
-      <rect x="96" y="12" width="56" height="18" rx="5" fill="#FFFFFF" stroke="#C6D6EC" />
-      <text x="124" y="25" textAnchor="middle" fontSize="8" fontWeight="700" fill="#1E5FD6" fontFamily="Manrope, sans-serif">
-        Тишина 🤫
+    <Frame top="#3B4E7E" bottom="#7F95C2">
+      <rect x="10" y="10" width="64" height="40" rx="9" fill="#15204A" stroke="#5A6E9C" strokeWidth="2" />
+      <circle cx="58" cy="22" r="6" fill="#FFE9A8" />
+      <circle cx="61" cy="20" r="5" fill="#15204A" />
+      <g fill="#FFFFFF">
+        <circle cx="22" cy="20" r="1" />
+        <circle cx="36" cy="30" r="0.9" />
+        <circle cx="30" cy="16" r="0.8" />
+      </g>
+      <rect x="98" y="10" width="54" height="18" rx="5" fill="#15204A" />
+      <text x="125" y="23" textAnchor="middle" fontSize="9" fontWeight="700" fill="#FFB45A" fontFamily="Manrope, sans-serif">
+        23:40
       </text>
       <rect x="6" y="96" width="148" height="34" rx="10" fill="#2E5CC4" />
       <path d="M0 132L160 126V150H0Z" fill="#C5D3E6" />
@@ -547,7 +554,7 @@ const byScenario: Record<string, () => ReactNode> = {
   "medical-heart-attack": MedicalHelp,
   "suspicious-item": LeftBag,
   "train-delay-compensation": DelayBoard,
-  "noisy-group-quiet-car": NoisyGroup,
+  "noisy-group-night": NoisyGroup,
   "allergy-child": AllergyChild,
   "wheelchair-boarding": WheelchairBoarding,
   "smoke-vestibule": SmokeVestibule,
