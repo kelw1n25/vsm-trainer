@@ -14,6 +14,7 @@ from app.db import SessionLocal, get_db
 from app.engine.router import router as runs_router
 from app.errors import validation_error_handler
 from app.game_config import game_config
+from app.handbook.router import router as handbook_router
 from app.integration.router import router as integration_router
 from app.leaderboard.router import router as leaderboard_router
 from app.notifications.router import router as notifications_router
@@ -45,6 +46,7 @@ app = FastAPI(
 app.add_exception_handler(RequestValidationError, validation_error_handler)
 app.include_router(auth_router)
 app.include_router(scenarios_router)
+app.include_router(handbook_router)
 app.include_router(runs_router)
 app.include_router(profile_router)
 app.include_router(leaderboard_router)
