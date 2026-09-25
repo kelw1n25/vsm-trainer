@@ -9,8 +9,8 @@ const SOUNDS: Record<string, string> = {
   sigh_male: "/audio/sigh-male.mp3",
 };
 // Музыка — фоном, чтобы не мешать чтению; вздохи заметно громче
-const MUSIC_VOLUME = 0.12;
-const SOUND_VOLUME = 0.75;
+const MUSIC_VOLUME = 0.096;
+const SOUND_VOLUME = 0.6;
 const FADE_MS = 1200;
 
 export class StoryAudio {
