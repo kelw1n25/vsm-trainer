@@ -325,6 +325,178 @@ function WindowView({ x, y, width, height }: { x: number; y: number; width: numb
   );
 }
 
+// ───────── Персонажи ─────────
+// Все люди на иллюстрациях собираются из одного компонента: одинаковые пропорции,
+// голова соединена с корпусом шеей, у всех сотрудников одна форма.
+
+type Outfit = "uniform" | { top: string; bottom: string };
+type Hand = "down" | "point" | "hold" | "radio" | "hush" | "chest" | "throat";
+type Item = "ticket" | "bottle" | "injector" | "extinguisher" | "radio";
+
+const UNIFORM = { top: "#1F2E57", bottom: "#18233F" };
+const SKIN = "#F2C9A5";
+const SHOE = "#141B2E";
+
+// Куда тянется правая рука (координаты фигуры ростом ~92 с опорой в точке 0,0)
+const HAND_POSITION: Record<Hand, [number, number]> = {
+  down: [15, -36],
+  point: [28, -54],
+  hold: [25, -45],
+  radio: [10, -73],
+  hush: [2, -71],
+  chest: [5, -52],
+  throat: [3, -65],
+};
+
+interface PersonProps {
+  x: number;
+  /** Стоя — уровень пола под ногами, сидя — уровень сиденья. */
+  y: number;
+  s?: number;
+  pose?: "stand" | "sit";
+  /** Смотрит влево. */
+  flip?: boolean;
+  outfit: Outfit;
+  hair?: string;
+  hairStyle?: "short" | "bun" | "long";
+  mood?: Mood;
+  hand?: Hand;
+  item?: Item;
+  rash?: boolean;
+}
+
+function HeldItem({ kind, x, y }: { kind: Item; x: number; y: number }) {
+  switch (kind) {
+    case "ticket":
+      return (
+        <g transform={`rotate(-12 ${x} ${y})`}>
+          <rect x={x + 1} y={y - 5} width="12" height="8" rx="1.5" fill="#FFFFFF" stroke="#9AA9C0" />
+          <path d={`M${x + 3} ${y - 2}h7M${x + 3} ${y + 0.5}h4`} stroke="#9AA9C0" strokeWidth="1" />
+        </g>
+      );
+    case "bottle":
+      return (
+        <g>
+          <rect x={x - 2.5} y={y - 14} width="5.5" height="13" rx="2" fill="#3F8F5A" />
+          <rect x={x - 1} y={y - 18} width="2.5" height="5" rx="1" fill="#2F6E45" />
+        </g>
+      );
+    case "injector":
+      return (
+        <g>
+          <rect x={x - 1} y={y - 3} width="17" height="6" rx="3" fill="#FFC53D" />
+          <rect x={x + 12} y={y - 3} width="5" height="6" rx="1.5" fill="#F07A2A" />
+        </g>
+      );
+    case "extinguisher":
+      return (
+        <g>
+          <rect x={x - 5} y={y + 1} width="10" height="20" rx="4.5" fill="#E1343C" />
+          <rect x={x - 3} y={y - 3} width="6" height="5" rx="1" fill="#243047" />
+          <path d={`M${x + 3} ${y - 1}q8 0 9 7`} stroke="#243047" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <rect x={x - 3} y={y + 7} width="6" height="6" rx="1" fill="#FFFFFF" opacity="0.85" />
+        </g>
+      );
+    case "radio":
+      return (
+        <g>
+          <rect x={x - 2.5} y={y - 6} width="5.5" height="11" rx="1.5" fill="#1B1F2A" />
+          <path d={`M${x + 1.5} ${y - 6}v-5`} stroke="#1B1F2A" strokeWidth="1.4" strokeLinecap="round" />
+        </g>
+      );
+  }
+}
+
+function Person({
+  x,
+  y,
+  s = 1,
+  pose = "stand",
+  flip = false,
+  outfit,
+  hair = "#2B2320",
+  hairStyle = "short",
+  mood = "calm",
+  hand = "down",
+  item,
+  rash = false,
+}: PersonProps) {
+  const uniform = outfit === "uniform";
+  const { top, bottom } = uniform ? UNIFORM : outfit;
+  // Сидя верхняя часть тела опускается к сиденью, ноги уходят вперёд
+  const lift = pose === "sit" ? 32 : 0;
+  const [hx, hy] = HAND_POSITION[hand];
+  return (
+    <g transform={`translate(${x} ${y}) scale(${flip ? -s : s} ${s})`}>
+      {pose === "stand" && (
+        <g fill={bottom}>
+          <rect x="-10" y="-34" width="8.5" height="33" rx="3.5" />
+          <rect x="1.5" y="-34" width="8.5" height="33" rx="3.5" />
+          <ellipse cx="-6" cy="0" rx="6.5" ry="2.8" fill={SHOE} />
+          <ellipse cx="6" cy="0" rx="6.5" ry="2.8" fill={SHOE} />
+        </g>
+      )}
+      <g transform={`translate(0 ${lift})`}>
+        <path d="M-11 -58L-15 -36" stroke={top} strokeWidth="6.5" strokeLinecap="round" />
+        <circle cx="-15" cy="-35" r="3" fill={SKIN} />
+        <path d="M-13 -31L-14.5 -54Q-14.5 -63.5 -5 -63.5H5Q14.5 -63.5 14.5 -54L13 -31Z" fill={top} />
+        <rect x="-3.4" y="-70" width="6.8" height="9" rx="2.5" fill="#E6B894" />
+        {uniform ? (
+          <g>
+            <path d="M-5 -63.5L0 -54L5 -63.5Z" fill="#FFFFFF" />
+            <path d="M-1.2 -60.5H1.2L2.2 -50L0 -47.5L-2.2 -50Z" fill="#D23A3A" />
+            <path d="M0 -54V-32" stroke="#2A3B6B" strokeWidth="1" />
+            <rect x="5.5" y="-55" width="5" height="3.5" rx="1" fill="#E7C15A" />
+          </g>
+        ) : (
+          <path d="M-4.5 -63.5L0 -57L4.5 -63.5Z" fill="#FFFFFF" opacity="0.85" />
+        )}
+        {hairStyle === "bun" && <circle cx="-8" cy="-86" r="5" fill={hair} />}
+        <circle cx="0" cy="-77" r="11" fill={SKIN} />
+        {rash && <circle cx="0" cy="-74" r="9" fill="#F29C8A" opacity="0.35" />}
+        <path d="M-11.3 -78C-12.5 -92.5 12.5 -92.5 11.3 -78C8 -85.5 -8 -85.5 -11.3 -78Z" fill={hair} />
+        {hairStyle === "long" && (
+          <path d="M-11 -78C-12 -70 -11 -66 -8 -63M11 -78C12 -70 11 -66 8 -63" stroke={hair} strokeWidth="4" strokeLinecap="round" fill="none" />
+        )}
+        {uniform && (
+          <g>
+            <path d="M-12 -83Q0 -96 12 -83Z" fill={UNIFORM.top} />
+            <rect x="-11.5" y="-85.5" width="23" height="2.6" rx="1" fill="#E7C15A" />
+            <path d="M-12 -82.5H15.5" stroke="#0F1A38" strokeWidth="2.6" strokeLinecap="round" />
+          </g>
+        )}
+        <Face cx={0} cy={-77} r={11} mood={mood} />
+        {rash && (
+          <g fill="#E1343C" opacity="0.6">
+            <circle cx="-7" cy="-72" r="1.5" />
+            <circle cx="7" cy="-72" r="1.5" />
+            <circle cx="-3" cy="-66" r="1.2" />
+            <circle cx="3" cy="-64" r="1.3" />
+          </g>
+        )}
+        <path
+          d={`M11 -58Q${(11 + hx) / 2 + 4} ${(-58 + hy) / 2} ${hx} ${hy}`}
+          stroke={top}
+          strokeWidth="6.5"
+          strokeLinecap="round"
+          fill="none"
+        />
+        {item && <HeldItem kind={item} x={hx} y={hy} />}
+        <circle cx={hx} cy={hy} r="3" fill={SKIN} />
+      </g>
+      {/* Сидя бедро лежит поверх корпуса, голень опущена к полу */}
+      {pose === "sit" && (
+        <g>
+          <path d="M-4 -4H20L22 19" stroke={bottom} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <ellipse cx="25" cy="22" rx="6.5" ry="2.8" fill={SHOE} />
+        </g>
+      )}
+    </g>
+  );
+}
+
+// ───────── Сцены сценариев ─────────
+
 /** Конфликт из-за места: пассажир с билетом и пассажирка, занявшая его кресло 5А. */
 function SeatConflict() {
   return (
@@ -334,152 +506,115 @@ function SeatConflict() {
       <WindowView x={92} y={18} width={62} height={42} />
       <path d="M0 132L160 124V150H0Z" fill="#C5D3E6" />
       <path d="M0 140L160 133" stroke="#B2C3DA" strokeWidth="2" />
-
-      <rect x="118" y="62" width="24" height="12" rx="3" fill="#1E5FD6" />
-      <text x="130" y="71" textAnchor="middle" fontSize="8" fontWeight="800" fill="#FFFFFF" fontFamily="Manrope, sans-serif">
+      <rect x="100" y="72" width="50" height="62" rx="12" fill="#2A57C0" />
+      <rect x="106" y="68" width="38" height="12" rx="5" fill="#F4F7FB" />
+      <rect x="120" y="56" width="24" height="12" rx="3" fill="#1E5FD6" />
+      <text x="132" y="65" textAnchor="middle" fontSize="8" fontWeight="800" fill="#FFFFFF" fontFamily="Manrope, sans-serif">
         5А
       </text>
-      <rect x="98" y="72" width="50" height="62" rx="12" fill="#2A57C0" />
-      <rect x="104" y="68" width="38" height="12" rx="5" fill="#F4F7FB" />
-      <rect x="146" y="102" width="12" height="30" rx="5" fill="#1B3D8C" />
-
-      <path d="M104 126C104 104 112 94 124 94S142 104 142 126Z" fill="#E8735A" />
-      <path d="M109 110H139" stroke="#C85A44" strokeWidth="7" strokeLinecap="round" />
-      <circle cx="124" cy="84" r="10" fill="#F2C9A5" />
-      <path d="M113 86C112 72 136 70 135 86 133 78 116 78 113 86Z" fill="#6B3F2A" />
-      <path d="M113 86C112 94 114 98 117 99" stroke="#6B3F2A" strokeWidth="4" strokeLinecap="round" fill="none" />
-      <Face cx={124} cy={84} r={10} mood="annoyed" />
-      <rect x="92" y="122" width="62" height="18" rx="8" fill="#1F459D" />
-
-      <path d="M22 150L24 92C24 80 32 74 42 74S60 80 60 92L62 150Z" fill="#56657F" />
-      <path d="M36 76L42 92 48 76Z" fill="#FFFFFF" />
-      <circle cx="42" cy="60" r="12" fill="#F0C4A0" />
-      <path d="M30 58C30 45 54 44 54 56 49 50 36 50 30 58Z" fill="#2E2622" />
-      <Face cx={42} cy={60} r={12} mood="angry" />
-      <path d="M60 94C70 92 78 88 84 84" stroke="#56657F" strokeWidth="8" strokeLinecap="round" fill="none" />
-      <rect x="80" y="76" width="14" height="10" rx="2" fill="#FFFFFF" stroke="#9AA9C0" transform="rotate(-12 87 81)" />
-      <path d="M83 80h8M83 83h5" stroke="#9AA9C0" strokeWidth="1" transform="rotate(-12 87 81)" />
-
-      <g stroke="#E1343C" strokeWidth="2" strokeLinecap="round">
-        <path d="M58 44l4-5M62 50l6-2M56 38l1-6" />
-      </g>
-      <path d="M70 22h22a6 6 0 0 1 6 6v8a6 6 0 0 1-6 6H80l-6 6v-6h-4a6 6 0 0 1-6-6v-8a6 6 0 0 1 6-6z" fill="#FFFFFF" />
-      <text x="81" y="37" textAnchor="middle" fontSize="13" fontWeight="800" fill="#E1343C" fontFamily="Manrope, sans-serif">
+      <rect x="92" y="116" width="64" height="18" rx="8" fill="#1F459D" />
+      <Person x={126} y={118} s={0.78} pose="sit" flip outfit={{ top: "#E8735A", bottom: "#3A4A6B" }} hair="#6B3F2A" hairStyle="long" mood="annoyed" />
+      <rect x="148" y="104" width="10" height="28" rx="4" fill="#1B3D8C" />
+      <Person x={42} y={144} s={0.95} outfit={{ top: "#56657F", bottom: "#34405A" }} mood="angry" hand="point" item="ticket" />
+      <path d="M62 14h22a6 6 0 0 1 6 6v8a6 6 0 0 1-6 6H72l-6 6v-6h-4a6 6 0 0 1-6-6v-8a6 6 0 0 1 6-6z" fill="#FFFFFF" />
+      <text x="73" y="29" textAnchor="middle" fontSize="13" fontWeight="800" fill="#E1343C" fontFamily="Manrope, sans-serif">
         !
       </text>
     </Frame>
   );
 }
 
-/** Проводник и пассажир в вагоне. */
+/** Нетрезвый пассажир и проводник. */
 function ConductorAndPassenger() {
   return (
     <Frame top="#E9F1FB" bottom="#D3E2F4">
-      <WindowView x={8} y={10} width={64} height={52} />
-      <rect x="14" y="70" width="46" height="60" rx="10" fill="#2E5CC4" />
-      <rect x="10" y="118" width="62" height="20" rx="6" fill="#244DA8" />
-      <path d="M24 134C24 106 34 94 50 94S74 106 74 134Z" fill="#22315A" />
-      <circle cx="50" cy="80" r="13" fill="#F0C4A0" />
-      <path d="M37 78C37 66 63 64 63 76 58 70 44 70 37 78Z" fill="#3A2E2A" />
-      <Face cx={50} cy={80} r={13} mood="tipsy" />
-      <path d="M64 102C76 94 72 78 60 72" stroke="#22315A" strokeWidth="7" strokeLinecap="round" fill="none" />
-      <rect x="76" y="112" width="8" height="18" rx="3" fill="#7BA05B" opacity="0.9" />
-      <path d="M102 150L104 88C104 78 112 72 122 72S140 78 140 88L142 150Z" fill="#1F2E57" />
-      <path d="M114 74L122 92 130 74Z" fill="#FFFFFF" />
-      <path d="M121 80h2l2 16-3 4-3-4Z" fill="#D23A3A" />
-      <rect x="106" y="98" width="10" height="7" rx="1.5" fill="#E7C15A" />
-      <circle cx="122" cy="58" r="14" fill="#F2C9A5" />
-      <path d="M108 56C108 42 136 40 136 54 130 48 116 48 108 56Z" fill="#2B2320" />
-      <path d="M108 50H136V46C136 40 108 40 108 46Z" fill="#1F2E57" />
-      <Face cx={122} cy={58} r={14} mood="calm" />
-      <path d="M140 92C150 104 148 118 142 126" stroke="#1F2E57" strokeWidth="9" strokeLinecap="round" fill="none" />
+      <WindowView x={8} y={10} width={64} height={46} />
+      <path d="M0 134L160 128V150H0Z" fill="#C5D3E6" />
+      <rect x="10" y="66" width="46" height="62" rx="11" fill="#2E5CC4" />
+      <rect x="16" y="62" width="34" height="11" rx="5" fill="#F4F7FB" />
+      <rect x="6" y="114" width="64" height="18" rx="7" fill="#244DA8" />
+      <Person x={30} y={116} s={0.8} pose="sit" outfit={{ top: "#4F7F52", bottom: "#34405A" }} hair="#3A2E2A" mood="tipsy" hand="hold" item="bottle" />
+      <g stroke="#9AA9C0" strokeWidth="1.5" fill="none" strokeLinecap="round">
+        <path d="M52 50q4-4 8 0" />
+        <path d="M58 42q3-3 6 0" />
+      </g>
+      <Person x={124} y={146} s={0.95} flip outfit="uniform" mood="calm" hand="point" />
     </Frame>
   );
 }
 
-/** Сотрудник оказывает помощь пассажиру. */
+/** Пассажиру плохо с сердцем, проводница вызывает помощь по рации. */
 function MedicalHelp() {
   return (
     <Frame top="#EAF2FC" bottom="#D0E0F4">
-      <WindowView x={92} y={8} width={62} height={54} />
-      <rect x="6" y="106" width="150" height="26" rx="8" fill="#2E5CC4" />
-      <rect x="108" y="92" width="42" height="16" rx="8" fill="#FFFFFF" />
-      <path d="M22 112C42 98 92 98 118 106V118L22 120Z" fill="#9CC0EE" />
-      <circle cx="126" cy="96" r="12" fill="#F0C4A0" />
-      <path d="M116 92C118 82 136 82 138 92 132 88 122 88 116 92Z" fill="#4A3426" />
-      <Face cx={126} cy={96} r={12} mood="pained" />
-      <path d="M34 150C30 118 44 78 70 72 92 68 98 86 94 106L84 150Z" fill="#213463" />
-      <path d="M88 90C100 96 108 100 114 106" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" fill="none" />
-      <circle cx="116" cy="107" r="5" fill="#F2C9A5" />
-      <path d="M62 70l10 8 10-8" stroke="#D8343C" strokeWidth="4" fill="none" strokeLinecap="round" />
-      <circle cx="72" cy="52" r="13" fill="#F2C9A5" />
-      <circle cx="61" cy="43" r="8" fill="#6B3F2A" />
-      <path d="M59 52C59 38 85 36 85 50 79 44 66 44 59 52Z" fill="#6B3F2A" />
-      <Face cx={72} cy={52} r={13} mood="worried" />
-      <rect x="12" y="84" width="22" height="16" rx="3" fill="#FFFFFF" stroke="#D8343C" strokeWidth="1.5" />
-      <path d="M23 88v8M19 92h8" stroke="#D8343C" strokeWidth="2.5" strokeLinecap="round" />
+      <WindowView x={92} y={8} width={62} height={46} />
+      <path d="M0 134L160 128V150H0Z" fill="#C5D3E6" />
+      <rect x="84" y="62" width="50" height="66" rx="12" fill="#2E5CC4" />
+      <rect x="90" y="58" width="38" height="11" rx="5" fill="#F4F7FB" />
+      <rect x="76" y="112" width="68" height="18" rx="7" fill="#244DA8" />
+      <Person x={110} y={114} s={0.8} pose="sit" flip outfit={{ top: "#7DA7D9", bottom: "#34405A" }} hair="#4A3426" mood="pained" hand="chest" />
+      <Person x={38} y={146} s={0.95} outfit="uniform" hairStyle="bun" hair="#6B3F2A" mood="worried" hand="radio" item="radio" />
+      <rect x="60" y="126" width="22" height="16" rx="3" fill="#FFFFFF" stroke="#D8343C" strokeWidth="1.5" />
+      <path d="M71 130v8M67 134h8" stroke="#D8343C" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M66 126v-3h10v3" stroke="#D8343C" strokeWidth="1.5" fill="none" />
     </Frame>
   );
 }
 
-/** Оставленная сумка на сиденье. */
+/** Бесхозная сумка на сиденье, проводник докладывает по рации. */
 function LeftBag() {
   return (
     <Frame top="#6A8FDC" bottom="#243F8F">
-      <WindowView x={28} y={6} width={104} height={40} />
-      <rect x="40" y="38" width="80" height="88" rx="16" fill="#2B56BF" />
-      <rect x="52" y="30" width="56" height="18" rx="9" fill="#3A68D2" />
-      <rect x="28" y="112" width="104" height="28" rx="10" fill="#1E428F" />
-      <ellipse cx="82" cy="118" rx="26" ry="4" fill="#0E1A3A" opacity="0.35" />
-      <path d="M72 64C72 52 92 52 92 64" stroke="#1B1F2A" strokeWidth="5" fill="none" />
-      <rect x="60" y="62" width="44" height="56" rx="13" fill="#1B1F2A" />
-      <rect x="67" y="92" width="30" height="20" rx="6" fill="#2A2F3C" />
-      <path d="M68 78H96" stroke="#3A4150" strokeWidth="2" />
-      <path d="M130 58l12 22h-24z" fill="#FFC53D" stroke="#E0A000" strokeWidth="1.5" strokeLinejoin="round" />
-      <path d="M130 66v7M130 76v1" stroke="#5A4000" strokeWidth="2.2" strokeLinecap="round" />
+      <WindowView x={52} y={6} width={100} height={40} />
+      <path d="M0 134L160 128V150H0Z" fill="#1B3272" />
+      <rect x="62" y="38" width="80" height="88" rx="16" fill="#2B56BF" />
+      <rect x="74" y="30" width="56" height="18" rx="9" fill="#3A68D2" />
+      <rect x="50" y="112" width="104" height="26" rx="10" fill="#1E428F" />
+      <ellipse cx="104" cy="118" rx="26" ry="4" fill="#0E1A3A" opacity="0.35" />
+      <path d="M94 64C94 52 114 52 114 64" stroke="#1B1F2A" strokeWidth="5" fill="none" />
+      <rect x="82" y="62" width="44" height="56" rx="13" fill="#1B1F2A" />
+      <rect x="89" y="92" width="30" height="20" rx="6" fill="#2A2F3C" />
+      <path d="M90 78H118" stroke="#3A4150" strokeWidth="2" />
+      <path d="M142 56l12 22h-24z" fill="#FFC53D" stroke="#E0A000" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M142 64v7M142 74v1" stroke="#5A4000" strokeWidth="2.2" strokeLinecap="round" />
+      <Person x={26} y={146} s={0.92} outfit="uniform" mood="worried" hand="radio" item="radio" />
     </Frame>
   );
 }
 
-/** Табло задержки и поезд на платформе. */
+/** Табло задержки: недовольные пассажиры и проводник на платформе. */
 function DelayBoard() {
   return (
     <Frame top="#EAF1FB" bottom="#CFDFF3">
-      <g stroke="#B9CBE3" strokeWidth="2">
-        <path d="M0 84L80 70 160 84" fill="none" />
-        <path d="M20 80V96M140 80V96" />
-      </g>
-      <rect x="40" y="62" width="4" height="12" fill="#6E7F99" />
-      <rect x="116" y="62" width="4" height="12" fill="#6E7F99" />
-      <rect x="16" y="8" width="128" height="56" rx="8" fill="#17223A" />
-      <circle className="blink" cx="134" cy="18" r="3" fill="#FF8A3D" />
-      <text x="26" y="22" fontSize="9" fill="#9FB0CC" fontFamily="Manrope, sans-serif">
+      <rect x="40" y="58" width="4" height="12" fill="#6E7F99" />
+      <rect x="116" y="58" width="4" height="12" fill="#6E7F99" />
+      <rect x="16" y="6" width="128" height="54" rx="8" fill="#17223A" />
+      <circle className="blink" cx="134" cy="16" r="3" fill="#FF8A3D" />
+      <text x="26" y="20" fontSize="9" fill="#9FB0CC" fontFamily="Manrope, sans-serif">
         15:43 · ВСМ-400
       </text>
-      <text x="80" y="50" fontSize="19" fontWeight="800" fill="#FF8A3D" textAnchor="middle" fontFamily="Manrope, sans-serif">
+      <text x="80" y="46" fontSize="19" fontWeight="800" fill="#FF8A3D" textAnchor="middle" fontFamily="Manrope, sans-serif">
         Задержка
       </text>
-      <rect y="98" width="160" height="38" fill="#F5F8FC" />
-      <rect y="104" width="160" height="12" fill="#2B3F66" />
+      <rect y="74" width="160" height="40" fill="#F5F8FC" />
+      <rect y="80" width="160" height="12" fill="#2B3F66" />
       <g stroke="#DCE6F4" strokeWidth="2">
         {[20, 44, 68, 92, 116, 140].map((x) => (
-          <path key={x} d={`M${x} 104V116`} />
+          <path key={x} d={`M${x} 80V92`} />
         ))}
       </g>
-      <rect y="122" width="160" height="3" fill="#E1343C" />
-      <rect y="127" width="160" height="3" fill="#2A5FD8" />
-      <rect y="136" width="160" height="14" fill="#BFCDE0" />
-      <g fill="#56657F">
-        <circle cx="30" cy="84" r="4" />
-        <path d="M24 98c0-6 3-9 6-9s6 3 6 9z" />
-        <circle cx="128" cy="86" r="3.5" />
-        <path d="M123 98c0-5 2-8 5-8s5 3 5 8z" />
-      </g>
+      <rect y="98" width="160" height="3" fill="#E1343C" />
+      <rect y="103" width="160" height="3" fill="#2A5FD8" />
+      <rect y="114" width="160" height="36" fill="#BFCDE0" />
+      <path d="M0 118H160" stroke="#FFFFFF" strokeWidth="2" strokeDasharray="8 6" opacity="0.8" />
+      <Person x={26} y={146} s={0.55} outfit={{ top: "#E8735A", bottom: "#3A4A6B" }} hair="#6B3F2A" hairStyle="long" mood="annoyed" />
+      <Person x={56} y={146} s={0.58} outfit={{ top: "#56657F", bottom: "#34405A" }} mood="angry" hand="point" />
+      <Person x={124} y={146} s={0.6} flip outfit="uniform" mood="calm" hand="hold" />
     </Frame>
   );
 }
 
-/** Шумная компания с колонкой ночью: за окном луна и звёзды, в вагоне приглушён свет. */
+/** Шумная компания ночью: за окном луна, проводник просит говорить тише. */
 function NoisyGroup() {
   return (
     <Frame top="#3B4E7E" bottom="#7F95C2">
@@ -495,27 +630,23 @@ function NoisyGroup() {
       <text x="125" y="23" textAnchor="middle" fontSize="9" fontWeight="700" fill="#FFB45A" fontFamily="Manrope, sans-serif">
         23:40
       </text>
-      <rect x="6" y="96" width="148" height="34" rx="10" fill="#2E5CC4" />
-      <path d="M0 132L160 126V150H0Z" fill="#C5D3E6" />
+      <path d="M0 134L160 128V150H0Z" fill="#5E7098" />
+      <rect x="2" y="84" width="104" height="30" rx="10" fill="#2E5CC4" />
+      <rect x="0" y="108" width="108" height="16" rx="7" fill="#244DA8" />
       {[
-        { x: 28, color: "#E8735A", hair: "#3A2E2A" },
-        { x: 62, color: "#7BA05B", hair: "#6B3F2A" },
-        { x: 96, color: "#F2B84B", hair: "#2B2320" },
-      ].map(({ x, color, hair }) => (
-        <g key={x}>
-          <path d={`M${x - 14} 116C${x - 14} 96 ${x - 8} 86 ${x} 86S${x + 14} 96 ${x + 14} 116Z`} fill={color} />
-          <circle cx={x} cy="74" r="10" fill="#F2C9A5" />
-          <path d={`M${x - 10} 72C${x - 10} 62 ${x + 10} 62 ${x + 10} 72 ${x + 6} 67 ${x - 6} 67 ${x - 10} 72Z`} fill={hair} />
-          <Face cx={x} cy={74} r={10} mood="happy" />
-        </g>
+        { x: 16, top: "#E8735A", hair: "#3A2E2A", style: "short" as const },
+        { x: 46, top: "#7BA05B", hair: "#6B3F2A", style: "long" as const },
+        { x: 76, top: "#F2B84B", hair: "#2B2320", style: "short" as const },
+      ].map(({ x, top, hair, style }) => (
+        <Person key={x} x={x} y={110} s={0.62} pose="sit" outfit={{ top, bottom: "#34405A" }} hair={hair} hairStyle={style} mood="happy" />
       ))}
-      <rect x="122" y="92" width="22" height="26" rx="5" fill="#1B1F2A" />
-      <circle cx="133" cy="101" r="5" fill="#3A4150" />
-      <circle cx="133" cy="112" r="3" fill="#3A4150" />
-      <g fill="#1E5FD6" className="notes">
-        <path d="M118 58v14a4 4 0 1 1-2-3.5V58h8v4z" />
-        <path d="M140 46v12a3.5 3.5 0 1 1-2-3V46h7v3.5z" />
+      <rect x="96" y="96" width="14" height="18" rx="4" fill="#1B1F2A" />
+      <circle cx="103" cy="102" r="3.5" fill="#3A4150" />
+      <g fill="#FFE9A8" className="notes">
+        <path d="M104 72v12a3.5 3.5 0 1 1-2-3V72h7v3.5z" />
+        <path d="M118 62v10a3 3 0 1 1-2-2.6V62h6v3z" />
       </g>
+      <Person x={138} y={146} s={0.88} flip outfit="uniform" mood="worried" hand="hush" />
     </Frame>
   );
 }
@@ -526,67 +657,20 @@ function AllergyPassenger() {
     <Frame top="#EDF3FC" bottom="#D3E1F4">
       <WindowView x={98} y={8} width={56} height={40} />
       <path d="M0 138L160 132V150H0Z" fill="#C5D3E6" />
-
-      {/* Кресло */}
-      <rect x="12" y="44" width="50" height="72" rx="12" fill="#2A57C0" />
-      <rect x="18" y="40" width="38" height="12" rx="5" fill="#F4F7FB" />
+      <rect x="12" y="50" width="50" height="70" rx="12" fill="#2A57C0" />
+      <rect x="18" y="46" width="38" height="12" rx="5" fill="#F4F7FB" />
       <rect x="6" y="104" width="68" height="20" rx="8" fill="#1F459D" />
-      <rect x="64" y="94" width="10" height="26" rx="4" fill="#1B3D8C" />
-
-      {/* Откидной столик с салатом, в котором были орехи */}
-      <rect x="80" y="90" width="30" height="4" rx="2" fill="#D6DFEB" />
-      <path d="M95 94V104" stroke="#B8C6D8" strokeWidth="2" />
-      <ellipse cx="94" cy="88" rx="10" ry="3.2" fill="#FFFFFF" />
-      <path d="M87 87q3-5 6-1q3-5 7 1z" fill="#7BB35E" />
-      <circle cx="91" cy="85.5" r="1.3" fill="#B07A3A" />
-      <circle cx="97" cy="86" r="1.2" fill="#B07A3A" />
-
-      {/* Пассажир: ноги, корпус, голова */}
-      <path d="M40 110H82" stroke="#2F3B55" strokeWidth="12" strokeLinecap="round" />
-      <path d="M82 110L85 136" stroke="#2F3B55" strokeWidth="10" strokeLinecap="round" />
-      <path d="M80 138h12" stroke="#1B2436" strokeWidth="5" strokeLinecap="round" />
-      <path d="M22 118C22 98 30 86 42 84H50C62 86 68 98 68 118Z" fill="#3D8C9E" />
-      <path d="M40 84L46 94 52 84Z" fill="#FFFFFF" />
-      <rect x="42" y="74" width="8" height="10" rx="3" fill="#EDBE98" />
-      <circle cx="46" cy="64" r="12" fill="#F2C9A5" />
-      <circle cx="46" cy="66" r="10" fill="#F29C8A" opacity="0.35" />
-      <path d="M34 62C33 50 58 49 58 61 55 55 38 55 34 62Z" fill="#3A2E2A" />
-      <path d="M39 62l4-2M53 62l-4-2" stroke="#3A2E2A" strokeWidth="1.3" strokeLinecap="round" />
-      <circle cx="42" cy="65" r="1.3" fill="#2B2320" />
-      <circle cx="50" cy="65" r="1.3" fill="#2B2320" />
-      <ellipse cx="46" cy="71" rx="2.2" ry="1.6" fill="#8A3B34" />
-      <g fill="#E1343C" opacity="0.6">
-        <circle cx="39" cy="68" r="1.5" />
-        <circle cx="53" cy="68" r="1.5" />
-        <circle cx="41" cy="72" r="1.1" />
-        <circle cx="44" cy="80" r="1.3" />
-        <circle cx="49" cy="79" r="1.2" />
-      </g>
-      {/* Рука у горла */}
-      <path d="M62 94C64 86 58 80 51 79" stroke="#3D8C9E" strokeWidth="7" strokeLinecap="round" fill="none" />
-      <circle cx="50" cy="79" r="3.6" fill="#F2C9A5" />
+      <Person x={30} y={106} s={0.8} pose="sit" outfit={{ top: "#3D8C9E", bottom: "#2F3B55" }} hair="#3A2E2A" mood="worried" hand="throat" rash />
       <g stroke="#E1343C" strokeWidth="1.6" strokeLinecap="round">
-        <path d="M60 54l3-4M64 60l5-1M58 49l0-5" />
+        <path d="M44 52l3-4M48 58l5-1M42 47l0-5" />
       </g>
-
-      {/* Спутница присела рядом и подносит автоинжектор к бедру */}
-      <path d="M112 138C110 118 116 106 128 104S146 116 146 138Z" fill="#7B5EA7" />
-      <circle cx="128" cy="90" r="11" fill="#F0C4A0" />
-      <path d="M116 90C115 76 141 75 140 90 137 83 120 83 116 90Z" fill="#6B3F2A" />
-      <circle cx="141" cy="84" r="5" fill="#6B3F2A" />
-      <circle cx="124" cy="91" r="1.2" fill="#2B2320" />
-      <circle cx="131" cy="91" r="1.2" fill="#2B2320" />
-      <path d="M124 87.5l3-1M132 87.5l-3-1" stroke="#6B3F2A" strokeWidth="1.1" strokeLinecap="round" />
-      <ellipse cx="127.5" cy="96" rx="1.8" ry="1.3" fill="#8A4B3A" />
-      <path d="M116 116C104 118 92 116 84 114" stroke="#7B5EA7" strokeWidth="7" strokeLinecap="round" fill="none" />
-      <circle cx="84" cy="114" r="3.4" fill="#F0C4A0" />
-      <g transform="rotate(-8 74 112)">
-        <rect x="64" y="109" width="20" height="7" rx="3.5" fill="#FFC53D" />
-        <rect x="62" y="109.5" width="6" height="6" rx="1.5" fill="#F07A2A" />
-        <path d="M71 110.5v4" stroke="#E0A000" strokeWidth="1" />
-      </g>
-
-      {/* Знак «без орехов» */}
+      <rect x="126" y="92" width="30" height="4" rx="2" fill="#D6DFEB" />
+      <path d="M141 96V108" stroke="#B8C6D8" strokeWidth="2" />
+      <ellipse cx="140" cy="90" rx="10" ry="3.2" fill="#FFFFFF" />
+      <path d="M133 89q3-5 6-1q3-5 7 1z" fill="#7BB35E" />
+      <circle cx="137" cy="87.5" r="1.3" fill="#B07A3A" />
+      <circle cx="143" cy="88" r="1.2" fill="#B07A3A" />
+      <Person x={100} y={146} s={0.9} flip outfit={{ top: "#7B5EA7", bottom: "#3A3550" }} hair="#6B3F2A" hairStyle="bun" mood="worried" hand="hold" item="injector" />
       <circle cx="24" cy="20" r="12" fill="#FFFFFF" stroke="#E1343C" strokeWidth="2.5" />
       <ellipse cx="24" cy="20" rx="4.5" ry="6" fill="#C98A3A" />
       <path d="M24 15v10" stroke="#9A6522" strokeWidth="1" />
@@ -595,41 +679,29 @@ function AllergyPassenger() {
   );
 }
 
-/** Пассажир на кресле-коляске въезжает в вагон по переносному пандусу. */
+/** Пассажир на кресле-коляске въезжает по пандусу, проводник встречает у двери. */
 function WheelchairBoarding() {
   return (
     <Frame top="#EAF1FB" bottom="#CFDFF3">
-      <rect x="92" y="6" width="68" height="120" rx="8" fill="#F5F8FC" />
-      <rect x="104" y="18" width="40" height="100" rx="5" fill="#2B3F66" />
-      <rect x="110" y="26" width="28" height="34" rx="4" fill="#CFE3FF" />
-      <rect x="92" y="112" width="68" height="4" fill="#E1343C" />
-      <rect x="92" y="118" width="68" height="3" fill="#2A5FD8" />
+      <rect x="92" y="6" width="68" height="124" rx="8" fill="#F5F8FC" />
+      <rect x="102" y="16" width="46" height="106" rx="5" fill="#2B3F66" />
+      <rect x="106" y="22" width="38" height="96" rx="3" fill="#3E567F" />
+      <rect x="92" y="116" width="68" height="4" fill="#E1343C" />
+      <rect x="92" y="122" width="68" height="3" fill="#2A5FD8" />
       <path d="M0 132H160V150H0Z" fill="#BFCDE0" />
       <path d="M0 132H160" stroke="#A9B9CF" strokeWidth="2" />
-
-      <path d="M58 134L106 121" stroke="#7E90AE" strokeWidth="5" strokeLinecap="round" />
-      <path d="M58 134L106 121" stroke="#A6B6CD" strokeWidth="2" strokeLinecap="round" />
-
-      <circle cx="44" cy="112" r="18" fill="none" stroke="#243047" strokeWidth="3.5" />
-      <circle cx="44" cy="112" r="14" fill="none" stroke="#8C9DB6" strokeWidth="1.5" />
-      <path d="M44 94V130M26 112H62M31 99L57 125M57 99L31 125" stroke="#8C9DB6" strokeWidth="1" />
-      <circle cx="44" cy="112" r="3" fill="#243047" />
-      <circle cx="80" cy="126" r="5" fill="none" stroke="#243047" strokeWidth="3" />
-      <path d="M30 70L34 104H70" stroke="#243047" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      <path d="M26 68H36" stroke="#243047" strokeWidth="4" strokeLinecap="round" />
-      <path d="M70 104L80 121M74 116H86" stroke="#243047" strokeWidth="3.5" strokeLinecap="round" />
-
-      <path d="M34 102V78C34 70 40 64 48 64S60 70 60 78V100Z" fill="#3E6FD8" />
-      <path d="M40 100H68C72 100 74 102 74 106V108H40Z" fill="#34465F" />
-      <path d="M68 106L74 118" stroke="#34465F" strokeWidth="7" strokeLinecap="round" />
-      <path d="M72 119H82" stroke="#1B2436" strokeWidth="5" strokeLinecap="round" />
-      <path d="M54 76C60 86 56 96 50 104" stroke="#3E6FD8" strokeWidth="7" strokeLinecap="round" fill="none" />
-      <circle cx="50" cy="104" r="3.5" fill="#F2C9A5" />
-      <rect x="44" y="52" width="8" height="10" rx="3" fill="#EDBE98" />
-      <circle cx="48" cy="46" r="10" fill="#F2C9A5" />
-      <path d="M38 45C37 33 59 32 58 44 55 38 42 38 38 45Z" fill="#2E2622" />
-      <Face cx={48} cy={46} r={10} mood="calm" />
-
+      <Person x={124} y={124} s={0.82} flip outfit="uniform" mood="calm" hand="point" />
+      <path d="M60 134L104 124" stroke="#7E90AE" strokeWidth="5" strokeLinecap="round" />
+      <path d="M60 134L104 124" stroke="#A6B6CD" strokeWidth="2" strokeLinecap="round" />
+      <path d="M30 70L33 104H62" stroke="#243047" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path d="M26 69H35" stroke="#243047" strokeWidth="4" strokeLinecap="round" />
+      <Person x={42} y={102} s={0.8} pose="sit" outfit={{ top: "#3E6FD8", bottom: "#34465F" }} hair="#2E2622" mood="calm" />
+      <path d="M62 104L64 121H76" stroke="#243047" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <circle cx="44" cy="114" r="18" fill="none" stroke="#243047" strokeWidth="3.5" />
+      <circle cx="44" cy="114" r="14" fill="none" stroke="#8C9DB6" strokeWidth="1.5" />
+      <path d="M44 96V132M26 114H62M31 101L57 127M57 101L31 127" stroke="#8C9DB6" strokeWidth="1" />
+      <circle cx="44" cy="114" r="3" fill="#243047" />
+      <circle cx="70" cy="128" r="5" fill="none" stroke="#243047" strokeWidth="3" />
       <rect x="6" y="10" width="28" height="28" rx="7" fill="#1E5FD6" />
       <circle cx="20" cy="16.5" r="2.4" fill="#FFFFFF" />
       <path d="M18.5 20V27H24L26.5 32" stroke="#FFFFFF" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -638,7 +710,7 @@ function WheelchairBoarding() {
   );
 }
 
-/** Задымление в тамбуре и огнетушитель. */
+/** Задымление в тамбуре: встревоженный пассажир и проводник с огнетушителем. */
 function SmokeVestibule() {
   const id = useSvgId();
   return (
@@ -648,23 +720,21 @@ function SmokeVestibule() {
           <feGaussianBlur stdDeviation="3" />
         </filter>
       </defs>
-      <rect x="10" y="8" width="64" height="120" rx="6" fill="#F2F5FA" />
-      <rect x="20" y="20" width="44" height="40" rx="5" fill="#CFE3FF" />
+      <rect x="6" y="8" width="56" height="120" rx="6" fill="#F2F5FA" />
+      <rect x="14" y="18" width="40" height="36" rx="5" fill="#CFE3FF" />
       <path d="M0 128H160V150H0Z" fill="#AFBDD2" />
-      <rect x="96" y="92" width="22" height="36" rx="4" fill="#6E7F99" />
-      <rect x="92" y="88" width="30" height="6" rx="2" fill="#56657F" />
+      <rect x="74" y="96" width="20" height="32" rx="4" fill="#6E7F99" />
+      <rect x="70" y="92" width="28" height="6" rx="2" fill="#56657F" />
       <g className="smoke" filter={`url(#${id}-smoke)`} fill="#8D97A8" opacity="0.8">
-        <circle cx="106" cy="76" r="12" />
-        <circle cx="120" cy="58" r="15" />
-        <circle cx="100" cy="44" r="14" />
-        <circle cx="128" cy="32" r="16" />
+        <circle cx="84" cy="80" r="11" />
+        <circle cx="96" cy="62" r="14" />
+        <circle cx="78" cy="48" r="13" />
+        <circle cx="100" cy="36" r="15" />
       </g>
-      <path d="M103 90q3-8 6 0" stroke="#FF8A3D" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <rect x="132" y="84" width="16" height="42" rx="7" fill="#E1343C" />
-      <rect x="135" y="76" width="10" height="10" rx="2" fill="#243047" />
-      <path d="M145 80h8l4 6" stroke="#243047" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <rect x="134" y="96" width="12" height="10" rx="2" fill="#FFFFFF" opacity="0.85" />
-      <circle cx="40" cy="96" r="6" fill="#FFC53D" className="blink" />
+      <path d="M81 94q3-8 6 0" stroke="#FF8A3D" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <circle cx="148" cy="14" r="5" fill="#FFC53D" className="blink" />
+      <Person x={34} y={146} s={0.85} outfit={{ top: "#F2B84B", bottom: "#34405A" }} hair="#3A2E2A" mood="worried" />
+      <Person x={130} y={146} s={0.92} flip outfit="uniform" mood="worried" hand="hold" item="extinguisher" />
     </Frame>
   );
 }
