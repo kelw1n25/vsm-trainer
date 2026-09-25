@@ -243,6 +243,58 @@ function Frame({ children, top, bottom }: { children: ReactNode; top: string; bo
   );
 }
 
+type Mood = "calm" | "happy" | "angry" | "annoyed" | "worried" | "pained" | "tipsy";
+
+/** Лицо персонажа: глаза, брови и рот передают эмоцию — единый стиль для всех иллюстраций. */
+function Face({ cx, cy, r, mood = "calm" }: { cx: number; cy: number; r: number; mood?: Mood }) {
+  const ex = r * 0.36;
+  const ey = cy + r * 0.08;
+  const er = Math.max(0.9, r * 0.11);
+  const by = cy - r * 0.16;
+  const my = cy + r * 0.46;
+  const mw = r * 0.28;
+  const line = { stroke: "#2B2320", strokeWidth: Math.max(1, r * 0.1), strokeLinecap: "round", fill: "none" } as const;
+  const eyes = [cx - ex, cx + ex];
+  return (
+    <g>
+      {mood === "happy" || mood === "pained" || mood === "tipsy"
+        ? eyes.map((x) => (
+            <path
+              key={x}
+              {...line}
+              d={
+                mood === "happy"
+                  ? `M${x - er * 1.4} ${ey}q${er * 1.4} ${-er * 1.8} ${er * 2.8} 0`
+                  : mood === "pained"
+                    ? `M${x - er * 1.4} ${ey}q${er * 1.4} ${er * 1.2} ${er * 2.8} 0`
+                    : `M${x - er * 1.4} ${ey}h${er * 2.8}`
+              }
+            />
+          ))
+        : eyes.map((x) => <circle key={x} cx={x} cy={ey} r={er} fill="#2B2320" />)}
+      {mood === "angry" && <path {...line} d={`M${cx - ex - er * 2} ${by - er}l${er * 3} ${er * 1.6}M${cx + ex + er * 2} ${by - er}l${-er * 3} ${er * 1.6}`} />}
+      {(mood === "worried" || mood === "pained") && (
+        <path {...line} d={`M${cx - ex - er * 2} ${by + er * 0.6}l${er * 3} ${-er * 1.4}M${cx + ex + er * 2} ${by + er * 0.6}l${-er * 3} ${-er * 1.4}`} />
+      )}
+      {mood === "annoyed" && <path {...line} d={`M${cx - ex - er * 1.8} ${by}h${er * 3}M${cx + ex + er * 1.8} ${by}h${-er * 3}`} />}
+      {mood === "tipsy" && (
+        <g fill="#F28B7D" opacity="0.7">
+          <circle cx={cx - ex * 1.3} cy={ey + er * 2.6} r={er * 1.8} />
+          <circle cx={cx + ex * 1.3} cy={ey + er * 2.6} r={er * 1.8} />
+        </g>
+      )}
+      {mood === "calm" && <path {...line} d={`M${cx - mw} ${my}q${mw} ${mw * 0.7} ${mw * 2} 0`} />}
+      {mood === "happy" && <path d={`M${cx - mw * 1.2} ${my - mw * 0.2}q${mw * 1.2} ${mw * 1.8} ${mw * 2.4} 0z`} fill="#8A3B34" />}
+      {mood === "tipsy" && <path {...line} d={`M${cx - mw * 1.3} ${my - mw * 0.2}q${mw * 1.4} ${mw * 1.2} ${mw * 2.6} ${-mw * 0.5}`} />}
+      {mood === "angry" && <ellipse cx={cx} cy={my} rx={mw * 0.8} ry={mw * 0.6} fill="#8A3B34" />}
+      {mood === "worried" && <ellipse cx={cx} cy={my} rx={mw * 0.45} ry={mw * 0.4} fill="#8A3B34" />}
+      {(mood === "annoyed" || mood === "pained") && (
+        <path {...line} d={`M${cx - mw} ${my + mw * 0.3}q${mw} ${-mw * 0.6} ${mw * 2} 0`} />
+      )}
+    </g>
+  );
+}
+
 /** Окно вагона с пейзажем, пролетающим на скорости. */
 function WindowView({ x, y, width, height }: { x: number; y: number; width: number; height: number }) {
   const id = useSvgId();
@@ -296,12 +348,14 @@ function SeatConflict() {
       <circle cx="124" cy="84" r="10" fill="#F2C9A5" />
       <path d="M113 86C112 72 136 70 135 86 133 78 116 78 113 86Z" fill="#6B3F2A" />
       <path d="M113 86C112 94 114 98 117 99" stroke="#6B3F2A" strokeWidth="4" strokeLinecap="round" fill="none" />
+      <Face cx={124} cy={84} r={10} mood="annoyed" />
       <rect x="92" y="122" width="62" height="18" rx="8" fill="#1F459D" />
 
       <path d="M22 150L24 92C24 80 32 74 42 74S60 80 60 92L62 150Z" fill="#56657F" />
       <path d="M36 76L42 92 48 76Z" fill="#FFFFFF" />
       <circle cx="42" cy="60" r="12" fill="#F0C4A0" />
       <path d="M30 58C30 45 54 44 54 56 49 50 36 50 30 58Z" fill="#2E2622" />
+      <Face cx={42} cy={60} r={12} mood="angry" />
       <path d="M60 94C70 92 78 88 84 84" stroke="#56657F" strokeWidth="8" strokeLinecap="round" fill="none" />
       <rect x="80" y="76" width="14" height="10" rx="2" fill="#FFFFFF" stroke="#9AA9C0" transform="rotate(-12 87 81)" />
       <path d="M83 80h8M83 83h5" stroke="#9AA9C0" strokeWidth="1" transform="rotate(-12 87 81)" />
@@ -327,6 +381,7 @@ function ConductorAndPassenger() {
       <path d="M24 134C24 106 34 94 50 94S74 106 74 134Z" fill="#22315A" />
       <circle cx="50" cy="80" r="13" fill="#F0C4A0" />
       <path d="M37 78C37 66 63 64 63 76 58 70 44 70 37 78Z" fill="#3A2E2A" />
+      <Face cx={50} cy={80} r={13} mood="tipsy" />
       <path d="M64 102C76 94 72 78 60 72" stroke="#22315A" strokeWidth="7" strokeLinecap="round" fill="none" />
       <rect x="76" y="112" width="8" height="18" rx="3" fill="#7BA05B" opacity="0.9" />
       <path d="M102 150L104 88C104 78 112 72 122 72S140 78 140 88L142 150Z" fill="#1F2E57" />
@@ -336,6 +391,7 @@ function ConductorAndPassenger() {
       <circle cx="122" cy="58" r="14" fill="#F2C9A5" />
       <path d="M108 56C108 42 136 40 136 54 130 48 116 48 108 56Z" fill="#2B2320" />
       <path d="M108 50H136V46C136 40 108 40 108 46Z" fill="#1F2E57" />
+      <Face cx={122} cy={58} r={14} mood="calm" />
       <path d="M140 92C150 104 148 118 142 126" stroke="#1F2E57" strokeWidth="9" strokeLinecap="round" fill="none" />
     </Frame>
   );
@@ -351,6 +407,7 @@ function MedicalHelp() {
       <path d="M22 112C42 98 92 98 118 106V118L22 120Z" fill="#9CC0EE" />
       <circle cx="126" cy="96" r="12" fill="#F0C4A0" />
       <path d="M116 92C118 82 136 82 138 92 132 88 122 88 116 92Z" fill="#4A3426" />
+      <Face cx={126} cy={96} r={12} mood="pained" />
       <path d="M34 150C30 118 44 78 70 72 92 68 98 86 94 106L84 150Z" fill="#213463" />
       <path d="M88 90C100 96 108 100 114 106" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" fill="none" />
       <circle cx="116" cy="107" r="5" fill="#F2C9A5" />
@@ -358,6 +415,7 @@ function MedicalHelp() {
       <circle cx="72" cy="52" r="13" fill="#F2C9A5" />
       <circle cx="61" cy="43" r="8" fill="#6B3F2A" />
       <path d="M59 52C59 38 85 36 85 50 79 44 66 44 59 52Z" fill="#6B3F2A" />
+      <Face cx={72} cy={52} r={13} mood="worried" />
       <rect x="12" y="84" width="22" height="16" rx="3" fill="#FFFFFF" stroke="#D8343C" strokeWidth="1.5" />
       <path d="M23 88v8M19 92h8" stroke="#D8343C" strokeWidth="2.5" strokeLinecap="round" />
     </Frame>
@@ -448,7 +506,7 @@ function NoisyGroup() {
           <path d={`M${x - 14} 116C${x - 14} 96 ${x - 8} 86 ${x} 86S${x + 14} 96 ${x + 14} 116Z`} fill={color} />
           <circle cx={x} cy="74" r="10" fill="#F2C9A5" />
           <path d={`M${x - 10} 72C${x - 10} 62 ${x + 10} 62 ${x + 10} 72 ${x + 6} 67 ${x - 6} 67 ${x - 10} 72Z`} fill={hair} />
-          <path d={`M${x - 4} 78q4 4 8 0`} stroke="#8A4B3A" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+          <Face cx={x} cy={74} r={10} mood="happy" />
         </g>
       ))}
       <rect x="122" y="92" width="22" height="26" rx="5" fill="#1B1F2A" />
@@ -462,36 +520,77 @@ function NoisyGroup() {
   );
 }
 
-/** Взрослый пассажир с аллергической реакцией и спутница с автоинжектором. */
+/** Пассажир с острой аллергической реакцией; спутница помогает с автоинжектором. */
 function AllergyPassenger() {
   return (
-    <Frame top="#EAF2FC" bottom="#D0E0F4">
-      <WindowView x={96} y={8} width={58} height={46} />
-      <rect x="4" y="96" width="112" height="36" rx="10" fill="#2E5CC4" />
-      <rect x="10" y="62" width="44" height="50" rx="10" fill="#2A57C0" />
-      <path d="M0 132L160 126V150H0Z" fill="#C5D3E6" />
-      <path d="M18 132C16 104 24 88 38 86S60 100 60 132Z" fill="#56657F" />
-      <path d="M34 88L38 100 42 88Z" fill="#FFFFFF" />
-      <circle cx="38" cy="72" r="12" fill="#F2C9A5" />
-      <g fill="#E1343C" opacity="0.7">
-        <circle cx="32" cy="76" r="1.7" />
-        <circle cx="43" cy="78" r="1.7" />
-        <circle cx="38" cy="82" r="1.4" />
-        <circle cx="36" cy="86" r="1.5" />
-        <circle cx="41" cy="88" r="1.3" />
+    <Frame top="#EDF3FC" bottom="#D3E1F4">
+      <WindowView x={98} y={8} width={56} height={40} />
+      <path d="M0 138L160 132V150H0Z" fill="#C5D3E6" />
+
+      {/* Кресло */}
+      <rect x="12" y="44" width="50" height="72" rx="12" fill="#2A57C0" />
+      <rect x="18" y="40" width="38" height="12" rx="5" fill="#F4F7FB" />
+      <rect x="6" y="104" width="68" height="20" rx="8" fill="#1F459D" />
+      <rect x="64" y="94" width="10" height="26" rx="4" fill="#1B3D8C" />
+
+      {/* Откидной столик с салатом, в котором были орехи */}
+      <rect x="80" y="90" width="30" height="4" rx="2" fill="#D6DFEB" />
+      <path d="M95 94V104" stroke="#B8C6D8" strokeWidth="2" />
+      <ellipse cx="94" cy="88" rx="10" ry="3.2" fill="#FFFFFF" />
+      <path d="M87 87q3-5 6-1q3-5 7 1z" fill="#7BB35E" />
+      <circle cx="91" cy="85.5" r="1.3" fill="#B07A3A" />
+      <circle cx="97" cy="86" r="1.2" fill="#B07A3A" />
+
+      {/* Пассажир: ноги, корпус, голова */}
+      <path d="M40 110H82" stroke="#2F3B55" strokeWidth="12" strokeLinecap="round" />
+      <path d="M82 110L85 136" stroke="#2F3B55" strokeWidth="10" strokeLinecap="round" />
+      <path d="M80 138h12" stroke="#1B2436" strokeWidth="5" strokeLinecap="round" />
+      <path d="M22 118C22 98 30 86 42 84H50C62 86 68 98 68 118Z" fill="#3D8C9E" />
+      <path d="M40 84L46 94 52 84Z" fill="#FFFFFF" />
+      <rect x="42" y="74" width="8" height="10" rx="3" fill="#EDBE98" />
+      <circle cx="46" cy="64" r="12" fill="#F2C9A5" />
+      <circle cx="46" cy="66" r="10" fill="#F29C8A" opacity="0.35" />
+      <path d="M34 62C33 50 58 49 58 61 55 55 38 55 34 62Z" fill="#3A2E2A" />
+      <path d="M39 62l4-2M53 62l-4-2" stroke="#3A2E2A" strokeWidth="1.3" strokeLinecap="round" />
+      <circle cx="42" cy="65" r="1.3" fill="#2B2320" />
+      <circle cx="50" cy="65" r="1.3" fill="#2B2320" />
+      <ellipse cx="46" cy="71" rx="2.2" ry="1.6" fill="#8A3B34" />
+      <g fill="#E1343C" opacity="0.6">
+        <circle cx="39" cy="68" r="1.5" />
+        <circle cx="53" cy="68" r="1.5" />
+        <circle cx="41" cy="72" r="1.1" />
+        <circle cx="44" cy="80" r="1.3" />
+        <circle cx="49" cy="79" r="1.2" />
       </g>
-      <path d="M26 70C26 58 50 58 50 70 46 64 30 64 26 70Z" fill="#3A2E2A" />
-      <path d="M52 100C50 92 46 88 42 86" stroke="#56657F" strokeWidth="7" strokeLinecap="round" fill="none" />
-      <path d="M78 132C76 104 84 90 98 88S118 102 118 132Z" fill="#8E6BBF" />
-      <circle cx="98" cy="74" r="11" fill="#F0C4A0" />
-      <path d="M86 74C85 60 111 58 110 74 107 66 90 66 86 74Z" fill="#6B3F2A" />
-      <path d="M87 74C86 84 88 90 91 92" stroke="#6B3F2A" strokeWidth="5" fill="none" strokeLinecap="round" />
-      <path d="M80 104C72 106 66 106 60 104" stroke="#8E6BBF" strokeWidth="7" strokeLinecap="round" fill="none" />
-      <rect x="56" y="98" width="20" height="7" rx="3.5" fill="#FFC53D" transform="rotate(-12 66 101)" />
-      <rect x="54" y="99" width="5" height="5" rx="1" fill="#E1343C" transform="rotate(-12 66 101)" />
-      <circle cx="140" cy="84" r="14" fill="#FFFFFF" stroke="#E1343C" strokeWidth="2.5" />
-      <ellipse cx="140" cy="84" rx="6" ry="7.5" fill="#C98A3A" />
-      <path d="M130 74L150 94" stroke="#E1343C" strokeWidth="2.5" strokeLinecap="round" />
+      {/* Рука у горла */}
+      <path d="M62 94C64 86 58 80 51 79" stroke="#3D8C9E" strokeWidth="7" strokeLinecap="round" fill="none" />
+      <circle cx="50" cy="79" r="3.6" fill="#F2C9A5" />
+      <g stroke="#E1343C" strokeWidth="1.6" strokeLinecap="round">
+        <path d="M60 54l3-4M64 60l5-1M58 49l0-5" />
+      </g>
+
+      {/* Спутница присела рядом и подносит автоинжектор к бедру */}
+      <path d="M112 138C110 118 116 106 128 104S146 116 146 138Z" fill="#7B5EA7" />
+      <circle cx="128" cy="90" r="11" fill="#F0C4A0" />
+      <path d="M116 90C115 76 141 75 140 90 137 83 120 83 116 90Z" fill="#6B3F2A" />
+      <circle cx="141" cy="84" r="5" fill="#6B3F2A" />
+      <circle cx="124" cy="91" r="1.2" fill="#2B2320" />
+      <circle cx="131" cy="91" r="1.2" fill="#2B2320" />
+      <path d="M124 87.5l3-1M132 87.5l-3-1" stroke="#6B3F2A" strokeWidth="1.1" strokeLinecap="round" />
+      <ellipse cx="127.5" cy="96" rx="1.8" ry="1.3" fill="#8A4B3A" />
+      <path d="M116 116C104 118 92 116 84 114" stroke="#7B5EA7" strokeWidth="7" strokeLinecap="round" fill="none" />
+      <circle cx="84" cy="114" r="3.4" fill="#F0C4A0" />
+      <g transform="rotate(-8 74 112)">
+        <rect x="64" y="109" width="20" height="7" rx="3.5" fill="#FFC53D" />
+        <rect x="62" y="109.5" width="6" height="6" rx="1.5" fill="#F07A2A" />
+        <path d="M71 110.5v4" stroke="#E0A000" strokeWidth="1" />
+      </g>
+
+      {/* Знак «без орехов» */}
+      <circle cx="24" cy="20" r="12" fill="#FFFFFF" stroke="#E1343C" strokeWidth="2.5" />
+      <ellipse cx="24" cy="20" rx="4.5" ry="6" fill="#C98A3A" />
+      <path d="M24 15v10" stroke="#9A6522" strokeWidth="1" />
+      <path d="M16 12L32 28" stroke="#E1343C" strokeWidth="2.5" strokeLinecap="round" />
     </Frame>
   );
 }
@@ -529,6 +628,7 @@ function WheelchairBoarding() {
       <rect x="44" y="52" width="8" height="10" rx="3" fill="#EDBE98" />
       <circle cx="48" cy="46" r="10" fill="#F2C9A5" />
       <path d="M38 45C37 33 59 32 58 44 55 38 42 38 38 45Z" fill="#2E2622" />
+      <Face cx={48} cy={46} r={10} mood="calm" />
 
       <rect x="6" y="10" width="28" height="28" rx="7" fill="#1E5FD6" />
       <circle cx="20" cy="16.5" r="2.4" fill="#FFFFFF" />

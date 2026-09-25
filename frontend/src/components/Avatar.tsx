@@ -22,6 +22,10 @@ export function Avatar({ size = 64 }: { size?: number }) {
         <rect x="27.5" y="36" width="9" height="10" rx="3" fill="#EDBE98" />
         <ellipse cx="32" cy="28" rx="10.5" ry="12" fill="#F3CCAA" />
         <path d="M21 27c-1-11 6-16 12-16 7 0 12 5 11 15-2-5-6-8-12-8-5 0-9 3-11 9z" fill="#2A2320" />
+        <path d="M25.5 25.5l4-.8M38.5 25.5l-4-.8" stroke="#2A2320" strokeWidth="1.2" strokeLinecap="round" />
+        <circle cx="28.3" cy="29" r="1.3" fill="#2A2320" />
+        <circle cx="35.7" cy="29" r="1.3" fill="#2A2320" />
+        <path d="M28.5 34.5q3.5 2.6 7 0" stroke="#8A4B3A" strokeWidth="1.3" strokeLinecap="round" fill="none" />
       </g>
     </svg>
   );
