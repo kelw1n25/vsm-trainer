@@ -63,6 +63,12 @@ class RunState(BaseModel):
     id: uuid.UUID
     scenario_id: str
     scenario_title: str
+    category: str
+    difficulty: int
+    route: str
+    service_class: str
+    # Сколько шагов уже пройдено (решений и истёкших таймеров) — для индикатора прогресса
+    steps_taken: int
     status: RunStatus
     loyalty: int
     safety: int

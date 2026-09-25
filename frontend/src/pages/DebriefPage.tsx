@@ -31,8 +31,8 @@ export function DebriefPage() {
   ];
 
   return (
-    <div className="run">
-      <h1>Разбор: {debrief.scenario_title}</h1>
+    <div className="stack">
+      <h1 className="page-title">Разбор: {debrief.scenario_title}</h1>
 
       <section className={`card final final--${debrief.outcome}`}>
         <h2>{outcomeLabels[debrief.outcome]}</h2>
@@ -59,8 +59,8 @@ export function DebriefPage() {
       ))}
 
       <div className="actions">
-        <Link className="button" to="/">
-          К сценариям
+        <Link className="button" to="/scenarios">
+          Вернуться к сценариям
         </Link>
       </div>
     </div>

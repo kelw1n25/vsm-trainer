@@ -1,33 +1,15 @@
-import { NavLink, Outlet } from "react-router";
-import { useAuth } from "../auth";
-import { NotificationBell } from "./NotificationBell";
+import { Outlet, useLocation } from "react-router";
+import { Header } from "./Header";
 
 export function Layout() {
-  const { session, logout } = useAuth();
+  const { pathname } = useLocation();
   return (
-    <>
-      <header className="header">
-        <div className="header__inner">
-          <span className="header__brand">ВСМ-тренажёр</span>
-          <nav className="header__nav">
-            <NavLink to="/" end>
-              Сценарии
-            </NavLink>
-            <NavLink to="/profile">Профиль</NavLink>
-            <NavLink to="/leaderboard">Рейтинг</NavLink>
-            <NavLink to="/analytics">Аналитика</NavLink>
-            {session?.role === "instructor" && <NavLink to="/team">Команда</NavLink>}
-          </nav>
-          <NotificationBell />
-          <span className="header__user">{session?.fullName}</span>
-          <button className="button button--ghost" onClick={logout}>
-            Выйти
-          </button>
-        </div>
-      </header>
-      <main className="page">
+    <div className="shell">
+      <Header />
+      {/* key по адресу: при переходе страница заново проигрывает мягкое появление */}
+      <main className="page" key={pathname}>
         <Outlet />
       </main>
-    </>
+    </div>
   );
 }

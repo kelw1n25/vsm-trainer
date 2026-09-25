@@ -3,12 +3,16 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { AuthProvider, useAuth } from "./auth";
 import { Layout } from "./components/Layout";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
-import { CatalogPage } from "./pages/CatalogPage";
 import { DebriefPage } from "./pages/DebriefPage";
-import { LeaderboardPage } from "./pages/LeaderboardPage";
+import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
+import { NotificationsPage } from "./pages/NotificationsPage";
 import { ProfilePage } from "./pages/ProfilePage";
+import { RatingPage } from "./pages/RatingPage";
 import { RunPage } from "./pages/RunPage";
+import { ScenarioPage } from "./pages/ScenarioPage";
+import { ScenariosPage } from "./pages/ScenariosPage";
+import { SettingsPage } from "./pages/SettingsPage";
 import { TeamPage } from "./pages/TeamPage";
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -29,12 +33,16 @@ export default function App() {
               </RequireAuth>
             }
           >
-            <Route path="/" element={<CatalogPage />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/scenarios" element={<ScenariosPage />} />
+            <Route path="/scenarios/:scenarioId" element={<ScenarioPage />} />
             <Route path="/runs/:runId" element={<RunPage />} />
             <Route path="/runs/:runId/debrief" element={<DebriefPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/rating" element={<RatingPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/team" element={<TeamPage />} />
             <Route path="/team/:employeeId" element={<AnalyticsPage />} />
           </Route>

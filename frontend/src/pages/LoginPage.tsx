@@ -2,6 +2,8 @@ import { useState, type FormEvent } from "react";
 import { Navigate } from "react-router";
 import { ApiError } from "../api";
 import { useAuth } from "../auth";
+import { LogoMark } from "../components/icons";
+import { HeroTrain } from "../components/illustrations";
 
 export function LoginPage() {
   const { session, login } = useAuth();
@@ -27,26 +29,37 @@ export function LoginPage() {
 
   return (
     <main className="login">
-      <form className="card login__form" onSubmit={submit}>
-        <h1>ВСМ-тренажёр проводника</h1>
-        <p className="muted">Нештатные ситуации на скорости 400 км/ч</p>
-        <label>
-          Табельный номер
-          <input value={personnelNumber} onChange={(e) => setPersonnelNumber(e.target.value)} required autoFocus />
-        </label>
-        <label>
-          Пароль
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        </label>
-        {error && <p className="error">{error}</p>}
-        <button className="button" disabled={sending}>
-          {sending ? "Входим…" : "Войти"}
-        </button>
-        <p className="muted">
-          Демо-доступ (данные синтетические): проводник <strong>100001</strong>, инструктор{" "}
-          <strong>900001</strong>, пароль <strong>demo2026</strong>
-        </p>
-      </form>
+      <section className="login__panel">
+        <HeroTrain />
+        <form className="card login__form" onSubmit={submit}>
+          <div className="brand">
+            <LogoMark />
+            <span className="brand__name">ВСМ</span>
+            <span className="brand__caption">
+              Геймификация
+              <br />
+              обучения
+            </span>
+          </div>
+          <h1 className="page-title">Вход для сотрудников</h1>
+          <label>
+            Табельный номер
+            <input value={personnelNumber} onChange={(e) => setPersonnelNumber(e.target.value)} required autoFocus />
+          </label>
+          <label>
+            Пароль
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </label>
+          {error && <p className="error">{error}</p>}
+          <button className="button button--large" disabled={sending}>
+            {sending ? "Входим…" : "Войти"}
+          </button>
+          <p className="muted">
+            Демо-доступ (данные синтетические): проводник <strong>100001</strong>, инструктор <strong>900001</strong>,
+            пароль <strong>demo2026</strong>
+          </p>
+        </form>
+      </section>
     </main>
   );
 }

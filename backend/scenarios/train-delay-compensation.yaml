@@ -6,6 +6,8 @@ category: service
 difficulty: 2
 service_class: Бизнес
 route: Москва — Санкт-Петербург
+description: >
+  Поезд стоит из-за неисправности на пути, группа пассажиров опаздывает на переговоры и требует компенсацию прямо сейчас.
 demo: true
 initial:
   loyalty: 50

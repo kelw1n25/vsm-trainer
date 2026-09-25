@@ -39,7 +39,7 @@ def test_catalog(client, auth):
     catalog = client.get("/api/scenarios", headers=auth).json()
     assert len(catalog) == 5
     assert {s["category"] for s in catalog} == {"conflict", "medical", "service", "safety"}
-    assert all(s["demo"] for s in catalog)
+    assert all(s["demo"] and s["description"] for s in catalog)
 
 
 def test_start_shows_first_node(client, auth):
@@ -50,6 +50,7 @@ def test_start_shows_first_node(client, auth):
     assert [c["id"] for c in state["node"]["choices"]] == ["ask_tickets", "demand_leave", "offer_temp_seat"]
     assert state["node"]["timer_seconds"] == 20
     assert state["node"]["deadline_at"] is not None
+    assert (state["category"], state["difficulty"], state["steps_taken"]) == ("conflict", 2, 0)
 
 
 def test_repeated_start_resumes_run(client, auth):
@@ -63,6 +64,7 @@ def test_best_path_reaches_success(client, auth):
     assert state["final"]["outcome"] == "success"
     assert (state["loyalty"], state["safety"]) == (95, 85)
     assert state["last_steps"][0]["loyalty_delta"] == 15
+    assert state["steps_taken"] == 3
 
 
 def test_trade_off_between_scales(client, auth):

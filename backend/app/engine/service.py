@@ -82,7 +82,7 @@ def start_run(db: Session, employee: Employee, scenario_id: str) -> RunState:
     db.flush()
     _log(db, run, "run_started", {"scenario_id": scenario_id})
     db.commit()
-    return _build_state(run, scenario, definition, now, [], Rewards())
+    return _build_state(db, run, scenario, definition, now, [], Rewards())
 
 
 def get_run(db: Session, employee: Employee, run_id: uuid.UUID) -> RunState:
@@ -91,7 +91,7 @@ def get_run(db: Session, employee: Employee, run_id: uuid.UUID) -> RunState:
     rewards = Rewards()
     steps = _resolve_timeouts(db, run, scenario, definition, now, rewards)
     db.commit()
-    return _build_state(run, scenario, definition, now, steps, rewards)
+    return _build_state(db, run, scenario, definition, now, steps, rewards)
 
 
 def choose(db: Session, employee: Employee, run_id: uuid.UUID, node_id: str, choice_id: str) -> RunState:
@@ -115,7 +115,7 @@ def choose(db: Session, employee: Employee, run_id: uuid.UUID, node_id: str, cho
     elapsed = (now - run.node_entered_at).total_seconds()
     step = apply_choice(db, run, scenario, definition, choice, elapsed, now, rewards)
     db.commit()
-    return _build_state(run, scenario, definition, now, [step], rewards)
+    return _build_state(db, run, scenario, definition, now, [step], rewards)
 
 
 def _lock_run(db: Session, employee: Employee, run_id: uuid.UUID) -> tuple[ScenarioRun, Scenario, ScenarioDefinition]:
@@ -299,6 +299,7 @@ def _log(db: Session, run: ScenarioRun, event_type: str, payload: dict) -> None:
 
 
 def _build_state(
+    db: Session,
     run: ScenarioRun,
     scenario: Scenario,
     definition: ScenarioDefinition,
@@ -332,6 +333,13 @@ def _build_state(
         id=run.id,
         scenario_id=scenario.id,
         scenario_title=scenario.title,
+        category=scenario.category,
+        difficulty=scenario.difficulty,
+        route=scenario.route,
+        service_class=scenario.service_class,
+        steps_taken=db.scalar(
+            select(func.count()).where(Event.run_id == run.id, Event.type.in_(["choice_made", "timeout"]))
+        ),
         status=run.status,
         loyalty=run.loyalty,
         safety=run.safety,

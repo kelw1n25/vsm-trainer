@@ -1,4 +1,4 @@
-import type { RunStatus } from "./types";
+import type { Role, RunStatus } from "./types";
 
 export const categoryLabels: Record<string, string> = {
   conflict: "Конфликт",
@@ -20,6 +20,16 @@ export const outcomeLabels: Record<RunStatus, string> = {
   failure: "Провал",
 };
 
+export const roleLabels: Record<Role, string> = {
+  conductor: "Проводник ВСМ",
+  instructor: "Инструктор",
+};
+
 export function signed(value: number): string {
   return value > 0 ? `+${value}` : String(value);
+}
+
+/** «Смирнов Алексей Андреевич» → «Алексей». */
+export function firstName(fullName: string): string {
+  return fullName.split(" ")[1] ?? fullName;
 }

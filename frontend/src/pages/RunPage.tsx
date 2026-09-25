@@ -2,11 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { api, ApiError } from "../api";
 import { CompetenceList } from "../components/CompetenceList";
+import { DifficultyIndicator } from "../components/DifficultyIndicator";
+import { ArrowRightIcon, ChevronLeftIcon, PinIcon } from "../components/icons";
 import { Rewards } from "../components/Rewards";
 import { ScaleBar } from "../components/ScaleBar";
 import { Timer } from "../components/Timer";
 import { useNow } from "../hooks";
-import { outcomeLabels, signed, speakerLabels } from "../labels";
+import { categoryLabels, outcomeLabels, signed, speakerLabels } from "../labels";
 import type { RunState, Step } from "../types";
 
 // Клиентские часы могут отличаться от серверных: запоминаем разницу при каждом ответе
@@ -19,11 +21,13 @@ function toLoaded(run: RunState): Loaded {
   return { run, clockOffsetMs: Date.parse(run.server_time) - Date.now() };
 }
 
+const LETTERS = "АБВГДЕ";
+
 export function RunPage() {
   const { runId } = useParams() as { runId: string };
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [sending, setSending] = useState(false);
+  const [selected, setSelected] = useState<string | null>(null);
   const now = useNow(200);
 
   const refresh = useCallback(() => {
@@ -53,7 +57,7 @@ export function RunPage() {
 
   async function choose(choiceId: string) {
     if (!node) return;
-    setSending(true);
+    setSelected(choiceId);
     setNotice(null);
     try {
       setLoaded(toLoaded(await api.choose(run.id, node.id, choiceId)));
@@ -65,14 +69,32 @@ export function RunPage() {
         setNotice(e instanceof ApiError ? e.message : "Не удалось отправить ответ");
       }
     } finally {
-      setSending(false);
+      setSelected(null);
     }
   }
 
   return (
-    <div className="run">
-      <h1>{run.scenario_title}</h1>
-      <section className="hud card">
+    <div className="stack run">
+      <Link to={`/scenarios/${run.scenario_id}`} className="back-link">
+        <ChevronLeftIcon /> К сценарию
+      </Link>
+
+      <section className="card run-head">
+        <div className="tags">
+          <span className="tag tag--category">{categoryLabels[run.category] ?? run.category}</span>
+          <span className="tag">Шаг {run.steps_taken + (node ? 1 : 0)}</span>
+        </div>
+        <h1 className="page-title">{run.scenario_title}</h1>
+        <div className="run-head__meta">
+          <p className="route">
+            <PinIcon />
+            {run.route} · {run.service_class}
+          </p>
+          <DifficultyIndicator level={run.difficulty} />
+        </div>
+      </section>
+
+      <section className="card hud">
         <ScaleBar label="Лояльность пассажира" value={run.loyalty} kind="loyalty" />
         <ScaleBar label="Рейтинг безопасности" value={run.safety} kind="safety" />
         {node?.timer_seconds && remainingMs !== null && (
@@ -87,8 +109,8 @@ export function RunPage() {
       <Rewards achievements={run.new_achievements} levelUp={run.level_up} />
 
       {node && (
-        <section className="card situation">
-          <p>{node.situation}</p>
+        <section className="card situation" key={node.id}>
+          <p className="situation__text">{node.situation}</p>
           {node.line && (
             <blockquote className="line">
               <span className="line__speaker">
@@ -98,15 +120,17 @@ export function RunPage() {
               «{node.line.text}»
             </blockquote>
           )}
-          <div className="choices">
-            {node.choices.map((choice) => (
+          <h2 className="situation__question">Что вы будете делать?</h2>
+          <div className="answers">
+            {node.choices.map((choice, index) => (
               <button
                 key={choice.id}
-                className="choice"
-                disabled={sending || timeIsUp}
+                className={`answer ${selected === choice.id ? "answer--selected" : ""}`}
+                disabled={selected !== null || timeIsUp}
                 onClick={() => choose(choice.id)}
               >
-                {choice.text}
+                <span className="answer__letter">{LETTERS[index]}</span>
+                <span>{choice.text}</span>
               </button>
             ))}
           </div>
@@ -115,18 +139,32 @@ export function RunPage() {
 
       {run.final && (
         <section className={`card final final--${run.final.outcome}`}>
-          <h2>{outcomeLabels[run.final.outcome]}</h2>
+          <p className="hero__eyebrow">Результат</p>
+          <h2 className="page-title">{outcomeLabels[run.final.outcome]}</h2>
           <p>{run.final.text}</p>
-          <p>
-            <strong>+{run.final.xp_earned} XP</strong>
-          </p>
+          <div className="kpis kpis--compact">
+            <div className="kpi">
+              <span className="kpi__label">Получено баллов</span>
+              <strong className="kpi__value">+{run.final.xp_earned} XP</strong>
+            </div>
+            <div className="kpi">
+              <span className="kpi__label">Итоговые шкалы</span>
+              <strong className="kpi__value">
+                {run.loyalty} / {run.safety}
+              </strong>
+            </div>
+            <div className="kpi">
+              <span className="kpi__label">Шагов пройдено</span>
+              <strong className="kpi__value">{run.steps_taken}</strong>
+            </div>
+          </div>
           <CompetenceList points={run.final.competence_points} />
           <div className="actions">
             <Link className="button" to={`/runs/${run.id}/debrief`}>
-              Разбор решений
+              Разбор решений <ArrowRightIcon />
             </Link>
-            <Link className="button button--ghost" to="/">
-              К сценариям
+            <Link className="button button--ghost" to="/scenarios">
+              Вернуться к сценариям
             </Link>
           </div>
         </section>
@@ -136,15 +174,13 @@ export function RunPage() {
 }
 
 function StepFeedback({ step }: { step: Step }) {
+  const good = step.loyalty_delta + step.safety_delta >= 0;
   return (
-    <div className={`feedback ${step.kind === "timeout" ? "feedback--timeout" : ""}`}>
-      <span>{step.kind === "timeout" ? "⏱ Время на решение истекло" : "Последствия решения"}</span>
-      <span className={step.loyalty_delta < 0 ? "negative" : "positive"}>
-        Лояльность {signed(step.loyalty_delta)}
-      </span>
-      <span className={step.safety_delta < 0 ? "negative" : "positive"}>
-        Безопасность {signed(step.safety_delta)}
-      </span>
+    <div className={`feedback ${step.kind === "timeout" ? "feedback--timeout" : good ? "feedback--good" : "feedback--bad"}`}>
+      <strong>{step.kind === "timeout" ? "⏱ Время на решение истекло" : good ? "Решение принято" : "Решение принято — есть потери"}</strong>
+      <span className={step.loyalty_delta < 0 ? "negative" : "positive"}>Лояльность {signed(step.loyalty_delta)}</span>
+      <span className={step.safety_delta < 0 ? "negative" : "positive"}>Безопасность {signed(step.safety_delta)}</span>
+      <CompetenceList points={step.competences} inline />
     </div>
   );
 }

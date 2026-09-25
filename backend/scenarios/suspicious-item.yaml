@@ -6,6 +6,8 @@ category: safety
 difficulty: 3
 service_class: Эконом
 route: Москва — Санкт-Петербург
+description: >
+  При обходе вагона вы находите бесхозную сумку под сиденьем. Нужно действовать по регламенту и не допустить паники.
 demo: true
 initial:
   loyalty: 70

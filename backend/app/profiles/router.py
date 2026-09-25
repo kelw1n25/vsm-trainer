@@ -3,7 +3,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.achievements.models import EmployeeAchievement
@@ -44,6 +44,7 @@ class Profile(BaseModel):
     brigade: str
     depot: str
     level: LevelOut
+    runs_completed: int
     competence_points: dict[str, int]
     achievements: list[ProfileAchievement]
     history: list[HistoryItem]
@@ -70,6 +71,11 @@ def get_profile(employee: Employee = Depends(get_current_employee), db: Session 
         brigade=employee.brigade.name,
         depot=employee.brigade.depot.name,
         level=level_for(employee.xp),
+        runs_completed=db.scalar(
+            select(func.count()).where(
+                ScenarioRun.employee_id == employee.id, ScenarioRun.status != RunStatus.IN_PROGRESS
+            )
+        ),
         competence_points={code: employee.competence_points.get(code, 0) for code in game_config.competences},
         # Все ачивки из конфига: полученные — с датой, остальные — как цель
         achievements=[

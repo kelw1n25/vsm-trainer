@@ -117,6 +117,8 @@ class ScenarioDefinition(StrictModel):
     difficulty: Annotated[int, Field(ge=1, le=3)]
     service_class: str
     route: str
+    # Короткое описание для страницы сценария (без спойлеров развилок)
+    description: str = ""
     # true — контент написан командой, а не взят из материалов кейсодержателя
     demo: bool = False
     initial: InitialScales

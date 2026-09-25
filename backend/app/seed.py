@@ -103,6 +103,8 @@ def seed(db: Session) -> None:
     db.flush()
 
     demo, others = conductors[0], conductors[1:]
+    # Имя демо-проводника фиксированное — его видно на главном экране («Привет, Алексей!»)
+    demo.full_name = "Смирнов Алексей Андреевич"
     by_id = {s.id: s for s in scenarios}
     for index, (scenario_id, script) in enumerate(DEMO_HISTORY):
         finished = now - timedelta(days=5, hours=12 - index)

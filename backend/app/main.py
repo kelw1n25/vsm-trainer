@@ -59,6 +59,10 @@ def health(db: Session = Depends(get_db)) -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get("/api/meta", tags=["system"], summary="Справочники для интерфейса: названия компетенций")
-def meta() -> dict[str, dict[str, str]]:
-    return {"competences": game_config.competences}
+@app.get("/api/meta", tags=["system"], summary="Справочники для интерфейса: компетенции, челлендж недели")
+def meta() -> dict:
+    challenge = game_config.weekly_challenge
+    return {
+        "competences": game_config.competences,
+        "weekly_challenge": challenge.model_dump() if challenge else None,
+    }

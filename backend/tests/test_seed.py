@@ -18,6 +18,7 @@ def test_seed_creates_consistent_demo_world(client, db):
     assert db.scalar(select(func.count()).select_from(ScenarioRun)) > 40
 
     auth = demo_login(client, DEMO_CONDUCTOR)
+    assert client.get("/api/profile", headers=auth).json()["full_name"] == "Смирнов Алексей Андреевич"
     analytics = client.get("/api/analytics/me", headers=auth).json()
     assert analytics["total_runs"] == 3
     assert any("медицинских" in m and "таймер" in m for m in analytics["mistakes"])

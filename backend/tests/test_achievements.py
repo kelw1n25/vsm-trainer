@@ -8,6 +8,15 @@ from tests.test_engine import choose, play
 from tests.test_validator import MINIMAL
 
 
+def test_meta_exposes_weekly_challenge(client, monkeypatch):
+    from app.game_config import WeeklyChallenge, game_config
+
+    monkeypatch.setattr(game_config, "weekly_challenge", WeeklyChallenge(scenario_id="drunk-passenger", bonus_xp=50))
+    meta = client.get("/api/meta").json()
+    assert meta["weekly_challenge"] == {"scenario_id": "drunk-passenger", "bonus_xp": 50}
+    assert "first_aid" in meta["competences"]
+
+
 def test_level_for():
     assert (level_for(0).level, level_for(0).next_level_xp) == (1, 300)
     assert level_for(299).level == 1
@@ -65,6 +74,7 @@ def test_profile(client, auth):
     profile = client.get("/api/profile", headers=auth).json()
     assert profile["level"] == {"level": 1, "title": "Стажёр", "xp": 204, "level_xp": 0, "next_level_xp": 300}
     assert profile["competence_points"]["first_aid"] == 0
+    assert profile["runs_completed"] == 1
     earned = {a["code"] for a in profile["achievements"] if a["earned_at"]}
     assert earned == {"diplomat", "flawless"}
     assert len(profile["achievements"]) == 4

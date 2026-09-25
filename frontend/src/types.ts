@@ -20,6 +20,7 @@ export interface LoginResponse {
 
 export interface Meta {
   competences: Record<string, string>;
+  weekly_challenge: { scenario_id: string; bonus_xp: number } | null;
 }
 
 export interface ScenarioSummary {
@@ -29,6 +30,7 @@ export interface ScenarioSummary {
   difficulty: number;
   service_class: string;
   route: string;
+  description: string;
   demo: boolean;
 }
 
@@ -135,6 +137,7 @@ export interface Profile {
   brigade: string;
   depot: string;
   level: Level;
+  runs_completed: number;
   competence_points: Record<string, number>;
   achievements: (Achievement & { earned_at: string | null })[];
   history: HistoryItem[];
@@ -202,6 +205,11 @@ export interface RunState {
   id: string;
   scenario_id: string;
   scenario_title: string;
+  category: string;
+  difficulty: number;
+  route: string;
+  service_class: string;
+  steps_taken: number;
   status: RunStatus;
   loyalty: number;
   safety: number;

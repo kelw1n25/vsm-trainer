@@ -6,6 +6,8 @@ category: medical
 difficulty: 3
 service_class: Эконом
 route: Москва — Санкт-Петербург
+description: >
+  На скорости 400 км/ч пассажиру становится плохо: боль в груди, бледность, пот. От ваших решений в первые минуты зависит его жизнь.
 demo: true
 initial:
   loyalty: 70

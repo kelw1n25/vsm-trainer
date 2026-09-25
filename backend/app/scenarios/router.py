@@ -20,6 +20,7 @@ class ScenarioSummary(BaseModel):
     difficulty: int
     service_class: str
     route: str
+    description: str
     demo: bool
 
 
@@ -34,6 +35,7 @@ def list_scenarios(db: Session = Depends(get_db)) -> list[ScenarioSummary]:
             difficulty=s.difficulty,
             service_class=s.service_class,
             route=s.route,
+            description=s.definition["description"],
             demo=s.definition["demo"],
         )
         for s in scenarios

@@ -1,64 +1,100 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { api, ApiError } from "../api";
-import type { Analytics } from "../types";
+import { ArrowRightIcon } from "../components/icons";
+import { useStartScenario } from "../hooks";
+import { outcomeLabels } from "../labels";
+import type { Analytics, HistoryItem } from "../types";
 
 function percent(value: number | null): string {
   return value === null ? "—" : `${Math.round(value * 100)}%`;
 }
 
+/** Взвешенная по числу прохождений / решений доля по всем категориям. */
+function overall(data: Analytics, pick: (c: Analytics["categories"][number]) => [number | null, number]): number | null {
+  const [sum, weight] = data.categories.reduce(
+    ([s, w], c) => {
+      const [rate, count] = pick(c);
+      return rate === null ? [s, w] : [s + rate * count, w + count];
+    },
+    [0, 0],
+  );
+  return weight ? sum / weight : null;
+}
+
 /** Аналитика своя (/analytics) или проводника для инструктора (/team/:employeeId). */
 export function AnalyticsPage() {
   const { employeeId } = useParams();
-  const navigate = useNavigate();
-  const [data, setData] = useState<Analytics | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const own = employeeId === undefined;
+  const [data, setData] = useState<Analytics | null>(null);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const { start, error: startError } = useStartScenario();
 
   useEffect(() => {
     setData(null);
     (own ? api.myAnalytics() : api.employeeAnalytics(employeeId))
       .then(setData)
       .catch((e) => setError(e instanceof ApiError ? e.message : "Не удалось загрузить аналитику"));
+    // История доступна только по себе: профиль другого сотрудника инструктору не нужен
+    if (own) api.profile().then((profile) => setHistory(profile.history)).catch(() => {});
   }, [own, employeeId]);
 
   if (error) return <p className="error">{error}</p>;
   if (!data) return <p className="muted">Загрузка…</p>;
-
-  async function startRecommended(scenarioId: string) {
-    try {
-      const run = await api.startRun(scenarioId);
-      navigate(`/runs/${run.id}`);
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Не удалось начать сценарий");
-    }
-  }
 
   const progress = data.progress.map((week) => ({
     week: new Date(week.week_start).toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" }),
     xp: week.xp,
   }));
   const maxPoints = Math.max(1, ...data.competences.map((c) => c.points));
+  const weeksXp = data.progress.reduce((sum, week) => sum + week.xp, 0);
 
   return (
-    <div className="run">
-      <h1>{own ? "Моя аналитика" : `Аналитика: ${data.full_name}`}</h1>
+    <div className="stack">
+      <h1 className="page-title">{own ? "Аналитика" : `Аналитика: ${data.full_name}`}</h1>
+
+      <section className="kpis">
+        <div className="card kpi">
+          <span className="kpi__label">Пройдено сценариев</span>
+          <strong className="kpi__value">{data.total_runs}</strong>
+        </div>
+        <div className="card kpi">
+          <span className="kpi__label">Средний результат</span>
+          <strong className="kpi__value">{percent(overall(data, (c) => [c.success_rate, c.runs]))}</strong>
+          <span className="muted">успешных прохождений</span>
+        </div>
+        <div className="card kpi">
+          <span className="kpi__label">Набрано баллов</span>
+          <strong className="kpi__value">{weeksXp} XP</strong>
+          <span className="muted">за 8 недель</span>
+        </div>
+        <div className="card kpi">
+          <span className="kpi__label">Лучшие решения</span>
+          <strong className="kpi__value">{percent(overall(data, (c) => [c.best_choice_rate, c.decisions]))}</strong>
+          <span className="muted">от всех решений</span>
+        </div>
+      </section>
 
       {data.recommendation && (
         <section className="card recommendation">
-          <h2>Рекомендуем: {data.recommendation.title}</h2>
-          <p>{data.recommendation.reason}</p>
+          <div>
+            <p className="hero__eyebrow">Рекомендация</p>
+            <h2>{data.recommendation.title}</h2>
+            <p className="muted">{data.recommendation.reason}</p>
+            {startError && <p className="error">{startError}</p>}
+          </div>
           {own && (
-            <button className="button" onClick={() => startRecommended(data.recommendation!.scenario_id)}>
-              Пройти сценарий
+            <button className="button" onClick={() => start(data.recommendation!.scenario_id)}>
+              Пройти <ArrowRightIcon />
             </button>
           )}
         </section>
       )}
 
       {data.total_runs === 0 ? (
-        <p className="muted">Пройдите первый сценарий — здесь появятся выводы о ваших сильных и слабых сторонах.</p>
+        <p className="muted">Пройдите первый сценарий — здесь появятся выводы о сильных и слабых сторонах.</p>
       ) : (
         <>
           <section className="card">
@@ -76,33 +112,35 @@ export function AnalyticsPage() {
             )}
           </section>
 
-          <section className="card">
-            <h2>XP по неделям</h2>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={progress} margin={{ top: 8, right: 16, bottom: 0, left: -8 }}>
-                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="week" stroke="var(--muted)" fontSize={12} />
-                <YAxis stroke="var(--muted)" fontSize={12} />
-                <Tooltip contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)" }} />
-                <Bar dataKey="xp" name="XP" fill="var(--brand)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </section>
+          <div className="two-columns">
+            <section className="card">
+              <h2>Прогресс: XP по неделям</h2>
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={progress} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
+                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="week" stroke="var(--muted)" fontSize={12} />
+                  <YAxis stroke="var(--muted)" fontSize={12} />
+                  <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--border)" }} />
+                  <Bar dataKey="xp" name="XP" fill="var(--brand)" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </section>
 
-          <section className="card">
-            <h2>Компетенции</h2>
-            {data.competences.map((c) => (
-              <div key={c.code} className="scale">
-                <div className="scale__head">
-                  <span>{c.title}</span>
-                  <strong>{c.points}</strong>
+            <section className="card">
+              <h2>Навыки</h2>
+              {data.competences.map((c) => (
+                <div key={c.code} className="skill">
+                  <div className="skill__head">
+                    <span>{c.title}</span>
+                    <strong>{c.points}</strong>
+                  </div>
+                  <div className="progress">
+                    <div className="progress__fill" style={{ width: `${(c.points / maxPoints) * 100}%` }} />
+                  </div>
                 </div>
-                <div className="scale__track">
-                  <div className="scale__fill scale__fill--loyalty" style={{ width: `${(c.points / maxPoints) * 100}%` }} />
-                </div>
-              </div>
-            ))}
-          </section>
+              ))}
+            </section>
+          </div>
 
           <section className="card">
             <h2>По типам ситуаций</h2>
@@ -133,6 +171,23 @@ export function AnalyticsPage() {
               </table>
             </div>
           </section>
+
+          {own && history.length > 0 && (
+            <section className="card">
+              <h2>История прохождения</h2>
+              <ul className="history">
+                {history.map((item) => (
+                  <li key={item.run_id}>
+                    <span>{new Date(item.finished_at).toLocaleString("ru-RU")}</span>
+                    <span>{item.scenario_title}</span>
+                    <span className={`outcome outcome--${item.outcome}`}>{outcomeLabels[item.outcome]}</span>
+                    <span>+{item.xp_earned} XP</span>
+                    <Link to={`/runs/${item.run_id}/debrief`}>Разбор</Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </>
       )}
     </div>
