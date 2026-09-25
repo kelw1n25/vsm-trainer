@@ -1,0 +1,208 @@
+# ДЕМО-КОНТЕНТ: написан командой до получения материалов кейсодержателя.
+# Порядок действий условный — сверить с регламентом перевозчика из материалов кейса.
+id: suspicious-item
+title: Подозрительный оставленный предмет в вагоне
+category: safety
+difficulty: 3
+service_class: Эконом
+route: Москва — Санкт-Петербург
+demo: true
+initial:
+  loyalty: 70
+  safety: 70
+start_node: start
+
+nodes:
+  - id: start
+    situation: >
+      При обходе вагона вы замечаете под сиденьем бесхозную спортивную сумку.
+      Рядом никого нет.
+    timer_seconds: 20
+    timeout_next: panic
+    timeout_effects:
+      safety: -15
+    choices:
+      - id: ask_around
+        text: Не трогая сумку, спросить у ближайших пассажиров, чья она
+        effects:
+          loyalty: 5
+          safety: 5
+          competences: {safety_rules: 10}
+        next: nobody
+        best: true
+        explanation: >
+          Чаще всего вещь просто забыли. Опрос соседей — первый шаг,
+          и сумку при этом трогать нельзя.
+      - id: open_bag
+        text: Открыть сумку и посмотреть, что внутри
+        effects:
+          safety: -25
+          competences: {safety_rules: -15}
+        next: open_found
+        explanation: >
+          Подозрительный предмет нельзя вскрывать, перемещать и трогать:
+          это может привести в действие взрывное устройство.
+      - id: carry_away
+        text: Отнести сумку в служебное купе
+        effects:
+          safety: -20
+          competences: {safety_rules: -10}
+        next: nobody
+        explanation: >
+          Перемещение предмета опасно и мешает работе специалистов: важно,
+          где и как он лежал.
+
+  - id: nobody
+    situation: Хозяин не нашёлся. Из сумки доносится тиканье.
+    line:
+      speaker: passenger
+      name: Пассажирка рядом
+      text: Там что-то тикает! Это бомба?!
+    timer_seconds: 15
+    timeout_next: panic
+    timeout_effects:
+      safety: -10
+      loyalty: -10
+    choices:
+      - id: report_chief
+        text: >
+          Спокойно попросить пассажиров отойти, отойти самому и доложить начальнику поезда,
+          не называя предмет бомбой при пассажирах и не используя рацию рядом с сумкой
+        effects:
+          loyalty: 5
+          safety: 15
+          set_flags: [chief_informed]
+          competences: {safety_rules: 15, stress_resistance: 5}
+        next: evacuation
+        best: true
+        explanation: >
+          Радиосигнал рядом с предметом может быть опасен, а слово «бомба» вызывает панику.
+          Спокойный тон и доклад старшему — основа регламента.
+      - id: shout_bomb
+        text: Громко крикнуть «Всем покинуть вагон, там бомба!»
+        effects:
+          loyalty: -20
+          safety: -10
+          competences: {communication: -10}
+        next: panic
+        explanation: >
+          Паника в узком проходе опаснее самого предмета: давка, травмы, неуправляемая толпа.
+
+  - id: open_found
+    situation: >
+      В сумке — провода и какой-то блок с часами. Пассажиры это увидели, начинается шум.
+    timer_seconds: 15
+    timeout_next: panic
+    timeout_effects:
+      safety: -15
+    choices:
+      - id: step_back_report
+        text: Немедленно отойти, больше ничего не трогать, отвести людей и доложить начальнику поезда
+        effects:
+          safety: 10
+          set_flags: [chief_informed]
+          competences: {safety_rules: 5}
+        next: evacuation
+        best: true
+        explanation: >
+          Ошибку уже не исправить, но можно не усугублять: отойти, увести людей
+          и передать ситуацию тем, кто принимает решения.
+      - id: close_and_hide
+        text: Закрыть сумку и никому не говорить, чтобы не пугать пассажиров
+        effects:
+          safety: -30
+        next: final_fail
+        explanation: >
+          Скрыть угрозу — худшее решение: люди остаются рядом с опасным предметом,
+          а экипаж теряет время.
+
+  - id: panic
+    situation: В вагоне паника. Пассажиры бегут в соседний вагон и толкаются в проходе.
+    timer_seconds: 15
+    timeout_next: final_fail
+    timeout_effects:
+      safety: -20
+      loyalty: -10
+    choices:
+      - id: control_flow
+        text: >
+          Громко и спокойно направлять людей в соседний вагон по одному, помочь детям и пожилым,
+          доложить начальнику поезда
+        effects:
+          loyalty: 10
+          safety: 15
+          set_flags: [chief_informed]
+          competences: {communication: 10, stress_resistance: 5}
+        next: evacuation
+        best: true
+        explanation: >
+          В панике люди подчиняются ясным простым командам. Проводник становится
+          точкой опоры для всего вагона.
+      - id: run_for_chief
+        text: Побежать за начальником поезда
+        effects:
+          loyalty: -10
+          safety: -15
+        next: final_fail
+        explanation: >
+          Вагон остаётся без управления в самый опасный момент. Для связи есть рация.
+
+  - id: evacuation
+    situation: >
+      Начальник поезда решил остановить поезд на ближайшей станции и вызвать полицию.
+      Вагон нужно освободить.
+    line:
+      speaker: train_chief
+      name: Начальник поезда
+      text: Освобождай вагон, до станции 8 минут.
+    timer_seconds: 25
+    timeout_next: final_partial
+    timeout_effects:
+      safety: -10
+    choices:
+      - id: evacuate_orderly
+        condition:
+          - safety >= 60
+        text: >
+          Организованно перевести пассажиров в соседние вагоны, проверить, что вагон пуст,
+          закрыть двери, встретить полицию и описать предмет
+        effects:
+          loyalty: 10
+          safety: 15
+          competences: {safety_rules: 15, communication: 5}
+        next: final_success
+        best: true
+        explanation: >
+          Полный порядок действий: людей нет, вагон закрыт, полиция получает точное описание.
+          Вариант доступен, если до этого ситуация оставалась под контролем.
+      - id: evacuate_fast
+        text: Быстро выгнать всех из вагона, не проверяя, остался ли кто-то
+        effects:
+          loyalty: -5
+          safety: -5
+        next: final_partial
+        explanation: >
+          Вагон освобождён, но без проверки в нём мог остаться спящий пассажир
+          или человек в туалете.
+      - id: hold_passengers
+        text: Оставить пассажиров на местах, чтобы не создавать суету
+        effects:
+          safety: -20
+        next: final_fail
+        explanation: Люди остаются рядом с возможной угрозой — это недопустимо.
+
+  - id: final_success
+    outcome: success
+    final_text: >
+      Вагон освобождён без пострадавших. Полиция установила, что в сумке — кухонный таймер
+      и зарядные устройства, забытые пассажиром. Экипаж действовал строго по регламенту.
+
+  - id: final_partial
+    outcome: partial
+    final_text: >
+      Угрозы не было, но эвакуация прошла с нарушениями. Будет разбор действий экипажа.
+
+  - id: final_fail
+    outcome: failure
+    final_text: >
+      Действия экипажа создали реальную угрозу жизни пассажиров. Проводится служебное расследование.

@@ -38,7 +38,7 @@ DEPLETED_TEXT = {
 
 
 @dataclass
-class _Rewards:
+class Rewards:
     """Ачивки и повышение уровня, полученные в текущем запросе."""
 
     achievements: list[AchievementOut] = field(default_factory=list)
@@ -82,13 +82,13 @@ def start_run(db: Session, employee: Employee, scenario_id: str) -> RunState:
     db.flush()
     _log(db, run, "run_started", {"scenario_id": scenario_id})
     db.commit()
-    return _build_state(run, scenario, definition, now, [], _Rewards())
+    return _build_state(run, scenario, definition, now, [], Rewards())
 
 
 def get_run(db: Session, employee: Employee, run_id: uuid.UUID) -> RunState:
     run, scenario, definition = _lock_run(db, employee, run_id)
     now = db_now(db)
-    rewards = _Rewards()
+    rewards = Rewards()
     steps = _resolve_timeouts(db, run, scenario, definition, now, rewards)
     db.commit()
     return _build_state(run, scenario, definition, now, steps, rewards)
@@ -97,7 +97,7 @@ def get_run(db: Session, employee: Employee, run_id: uuid.UUID) -> RunState:
 def choose(db: Session, employee: Employee, run_id: uuid.UUID, node_id: str, choice_id: str) -> RunState:
     run, scenario, definition = _lock_run(db, employee, run_id)
     now = db_now(db)
-    rewards = _Rewards()
+    rewards = Rewards()
     if _resolve_timeouts(db, run, scenario, definition, now, rewards):
         # Истечение таймера уже применено и сохраняется, ответ — нет
         db.commit()
@@ -107,24 +107,13 @@ def choose(db: Session, employee: Employee, run_id: uuid.UUID, node_id: str, cho
     if node_id != run.current_node_id:
         raise api_error(409, "stale_node", "Ответ на этот шаг уже принят. Обновите экран.")
 
-    nodes = {node.id: node for node in definition.nodes}
-    node = nodes[run.current_node_id]
-    choice = next((c for c in _visible_choices(node, run) if c.id == choice_id), None)
+    node = next(n for n in definition.nodes if n.id == run.current_node_id)
+    choice = next((c for c in visible_choices(node, run) if c.id == choice_id), None)
     if choice is None:
         raise api_error(422, "unknown_choice", "Такого варианта нет на этом шаге")
 
     elapsed = (now - run.node_entered_at).total_seconds()
-    bonus = scoring.fast_answer_bonus(node.timer_seconds, elapsed)
-    step = _apply(run, choice.effects, bonus, choice.text, "choice")
-    _log(db, run, "choice_made", {
-        "node_id": node.id,
-        "choice_id": choice.id,
-        "best": choice.best,
-        "elapsed_seconds": elapsed,
-        "timer_seconds": node.timer_seconds,
-        **_step_payload(step, run),
-    })
-    _advance(db, run, scenario, definition, nodes[choice.next], now, rewards)
+    step = apply_choice(db, run, scenario, definition, choice, elapsed, now, rewards)
     db.commit()
     return _build_state(run, scenario, definition, now, [step], rewards)
 
@@ -144,7 +133,7 @@ def _resolve_timeouts(
     scenario: Scenario,
     definition: ScenarioDefinition,
     now: datetime,
-    rewards: _Rewards,
+    rewards: Rewards,
 ) -> list[StepOut]:
     """Применяет все истёкшие таймеры по цепочке, если проводник пропустил несколько узлов подряд."""
     nodes = {node.id: node for node in definition.nodes}
@@ -155,15 +144,51 @@ def _resolve_timeouts(
         deadline = _deadline(run, node)
         if deadline is None or now <= deadline + grace:
             break
-        step = _apply(run, node.timeout_effects, {}, "Время на решение истекло", "timeout")
-        _log(db, run, "timeout", {"node_id": node.id, **_step_payload(step, run)})
-        steps.append(step)
         # Следующий узел начинается в момент дедлайна, а не в момент запроса
-        _advance(db, run, scenario, definition, nodes[node.timeout_next], deadline, rewards)
+        steps.append(apply_timeout(db, run, scenario, definition, deadline, rewards))
     return steps
 
 
-def _visible_choices(node: Node, run: ScenarioRun) -> list[Choice]:
+def apply_choice(
+    db: Session,
+    run: ScenarioRun,
+    scenario: Scenario,
+    definition: ScenarioDefinition,
+    choice: Choice,
+    elapsed: float,
+    at: datetime,
+    rewards: Rewards,
+) -> StepOut:
+    """Один шаг «выбор варианта». Используется API и генератором демо-истории."""
+    nodes = {node.id: node for node in definition.nodes}
+    node = nodes[run.current_node_id]
+    bonus = scoring.fast_answer_bonus(node.timer_seconds, elapsed)
+    step = _apply(run, choice.effects, bonus, choice.text, "choice")
+    _log(db, run, "choice_made", {
+        "node_id": node.id,
+        "choice_id": choice.id,
+        "best": choice.best,
+        "elapsed_seconds": elapsed,
+        "timer_seconds": node.timer_seconds,
+        **_step_payload(step, run),
+    })
+    _advance(db, run, scenario, definition, nodes[choice.next], at, rewards)
+    return step
+
+
+def apply_timeout(
+    db: Session, run: ScenarioRun, scenario: Scenario, definition: ScenarioDefinition, at: datetime, rewards: Rewards
+) -> StepOut:
+    """Один шаг «истёк таймер». Используется API и генератором демо-истории."""
+    nodes = {node.id: node for node in definition.nodes}
+    node = nodes[run.current_node_id]
+    step = _apply(run, node.timeout_effects, {}, "Время на решение истекло", "timeout")
+    _log(db, run, "timeout", {"node_id": node.id, **_step_payload(step, run)})
+    _advance(db, run, scenario, definition, nodes[node.timeout_next], at, rewards)
+    return step
+
+
+def visible_choices(node: Node, run: ScenarioRun) -> list[Choice]:
     scales = {"loyalty": run.loyalty, "safety": run.safety}
     return [
         choice
@@ -202,7 +227,7 @@ def _advance(
     definition: ScenarioDefinition,
     target: Node,
     at: datetime,
-    rewards: _Rewards,
+    rewards: Rewards,
 ) -> None:
     """Переход после шага: досрочный провал при нулевой шкале, иначе вход в следующий узел.
 
@@ -221,7 +246,7 @@ def _advance(
 
 
 def _finish(
-    db: Session, run: ScenarioRun, scenario: Scenario, outcome: RunStatus, reason: str, at: datetime, rewards: _Rewards
+    db: Session, run: ScenarioRun, scenario: Scenario, outcome: RunStatus, reason: str, at: datetime, rewards: Rewards
 ) -> None:
     run.status = outcome
     run.finish_reason = reason
@@ -279,7 +304,7 @@ def _build_state(
     definition: ScenarioDefinition,
     now: datetime,
     steps: list[StepOut],
-    rewards: _Rewards,
+    rewards: Rewards,
 ) -> RunState:
     node = next(n for n in definition.nodes if n.id == run.current_node_id)
     node_out = final_out = None
@@ -290,7 +315,7 @@ def _build_state(
             id=node.id,
             situation=node.situation,
             line=LineOut(**node.line.model_dump()) if node.line else None,
-            choices=[ChoiceOut(id=c.id, text=c.text) for c in _visible_choices(node, run)],
+            choices=[ChoiceOut(id=c.id, text=c.text) for c in visible_choices(node, run)],
             timer_seconds=node.timer_seconds,
             deadline_at=deadline,
             timeout_at=deadline + grace if deadline else None,

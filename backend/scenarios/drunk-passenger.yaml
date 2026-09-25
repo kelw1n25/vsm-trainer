@@ -1,0 +1,230 @@
+# ДЕМО-КОНТЕНТ: написан командой до получения материалов кейсодержателя.
+id: drunk-passenger
+title: Пассажир в состоянии опьянения нарушает порядок
+category: conflict
+difficulty: 2
+service_class: Эконом
+route: Москва — Санкт-Петербург
+demo: true
+initial:
+  loyalty: 65
+  safety: 75
+start_node: start
+
+nodes:
+  - id: start
+    situation: >
+      В вагоне эконом-класса пассажир с бутылкой громко поёт, задевает соседей
+      и мешает семье с маленьким ребёнком. К вам подходит сосед.
+    line:
+      speaker: passenger
+      name: Сосед
+      text: Сделайте что-нибудь, у меня ребёнок не может уснуть!
+    timer_seconds: 20
+    timeout_next: aggression
+    timeout_effects:
+      loyalty: -15
+      safety: -5
+    choices:
+      - id: calm_approach
+        text: >
+          Подойти, спокойно представиться, говорить короткими фразами и предложить
+          пересесть в свободный отсек подальше от детей
+        effects:
+          loyalty: 10
+          safety: 5
+          competences: {communication: 10}
+        next: negotiation
+        best: true
+        explanation: >
+          С нетрезвым человеком работают короткие, спокойные фразы и конкретное предложение.
+          Пересадка снимает конфликт с соседями без унижения нарушителя.
+      - id: confiscate
+        text: Сразу забрать у него бутылку
+        effects:
+          loyalty: -5
+          safety: -10
+          competences: {communication: -5}
+        next: aggression
+        explanation: >
+          Резкое действие без разговора воспринимается как нападение и провоцирует агрессию.
+      - id: ignore
+        text: Попросить соседа потерпеть — «скоро он уснёт»
+        effects:
+          loyalty: -20
+          competences: {service: -5}
+        next: aggression
+        explanation: >
+          Бездействие злит пострадавших пассажиров, а нарушитель чувствует безнаказанность.
+
+  - id: negotiation
+    situation: Пассажир соглашается пересесть, но требует ещё алкоголя из вагона-бистро.
+    line:
+      speaker: passenger
+      name: Нетрезвый пассажир
+      text: Ладно, пересяду. Но пусть мне продадут ещё пива!
+    timer_seconds: 20
+    timeout_next: aggression
+    timeout_effects:
+      loyalty: -10
+      safety: -5
+    choices:
+      - id: refuse_offer_alt
+        text: >
+          Вежливо отказать в продаже алкоголя, сославшись на правила перевозки,
+          и предложить воду или чай
+        effects:
+          loyalty: 5
+          safety: 10
+          competences: {safety_rules: 10, communication: 5}
+        next: settled
+        best: true
+        explanation: >
+          Отказ по правилам и альтернатива вместо «нельзя» позволяют сохранить контакт
+          и не дать ситуации усугубиться.
+      - id: sell_beer
+        text: Разрешить купить пиво, чтобы не спорить
+        effects:
+          loyalty: 10
+          safety: -20
+          competences: {safety_rules: -15}
+        next: aggression
+        explanation: >
+          Сиюминутный мир ценой дополнительного алкоголя почти всегда ведёт к новому, более
+          опасному эпизоду.
+      - id: threaten_police
+        text: Сообщить, что на следующей станции его снимет с поезда полиция
+        effects:
+          loyalty: -10
+          safety: 5
+          competences: {communication: -5}
+        next: aggression
+        explanation: >
+          Угроза в ответ на уступку разрушает договорённость. Полиция — это крайняя мера,
+          когда пассажир отказывается сотрудничать.
+
+  - id: aggression
+    situation: Пассажир агрессивен, толкает соседа и замахивается бутылкой.
+    timer_seconds: 15
+    timeout_next: final_fail
+    timeout_effects:
+      safety: -25
+    choices:
+      - id: chief_and_police
+        text: >
+          Отвести пассажиров от нарушителя, вызвать начальника поезда по рации
+          и запросить транспортную полицию на ближайшую станцию
+        effects:
+          safety: 15
+          loyalty: 5
+          set_flags: [chief_called]
+          competences: {safety_rules: 15, stress_resistance: 5}
+        next: chief_on_site
+        best: true
+        explanation: >
+          При угрозе насилия приоритет — безопасность окружающих: убрать людей из зоны
+          конфликта и вызвать тех, у кого есть полномочия.
+      - id: fight
+        text: Попытаться силой отобрать бутылку
+        effects:
+          loyalty: -5
+          safety: -25
+          competences: {safety_rules: -10}
+        next: final_fail
+        explanation: >
+          Силовое противостояние в одиночку с агрессивным человеком — прямой риск травм
+          для проводника и пассажиров.
+      - id: reason_again
+        text: Продолжать уговаривать, стоя рядом с нарушителем
+        effects:
+          safety: -10
+          competences: {communication: 5}
+        next: chief_on_site
+        explanation: >
+          Разговор важен, но без вызова помощи и удаления окружающих из зоны конфликта
+          проводник рискует. Начальника поезда вызвали другие пассажиры.
+
+  - id: chief_on_site
+    situation: Начальник поезда рядом. Нарушитель немного притих.
+    line:
+      speaker: train_chief
+      name: Начальник поезда
+      text: Что предлагаете?
+    choices:
+      - id: report_and_handover
+        condition:
+          - flag chief_called
+        text: >
+          Доложить о нарушении, составить акт, передать пассажира полиции на станции
+          и извиниться перед соседями
+        effects:
+          loyalty: 10
+          safety: 10
+          competences: {safety_rules: 10, service: 5}
+        next: final_success
+        best: true
+        explanation: >
+          Порядок действий зафиксирован документально, пострадавшие получили внимание.
+          Вариант доступен, если начальника поезда вызвали вы — значит, вы контролировали ситуацию.
+      - id: leave_him
+        text: Раз притих — оставить в вагоне без последствий
+        effects:
+          loyalty: -10
+          safety: -10
+        next: final_partial
+        explanation: >
+          Без последствий нарушение, скорее всего, повторится, а соседи чувствуют,
+          что их не защитили.
+      - id: reseat_under_watch
+        text: Пересадить в отдельный отсек под присмотром до конечной
+        effects:
+          loyalty: 5
+          safety: 5
+          competences: {service: 5}
+        next: final_partial
+        explanation: >
+          Компромисс снижает риск, но нарушение не оформлено, и за ним нужно постоянно следить.
+
+  - id: settled
+    situation: >
+      Пассажир пересел и пьёт чай. Соседи успокоились, но один из них снимал происходящее
+      на телефон.
+    line:
+      speaker: passenger
+      name: Пассажир с телефоном
+      text: Выложу это в сеть — пусть все видят, какой у вас сервис!
+    choices:
+      - id: thank_and_service
+        text: >
+          Поблагодарить соседей за терпение и предложить семье с ребёнком места в тихом отсеке
+        effects:
+          loyalty: 15
+          competences: {service: 10, communication: 5}
+        next: final_success
+        best: true
+        explanation: >
+          Проводник замыкает ситуацию на заботе о пострадавших. Видео покажет,
+          что экипаж справился спокойно и профессионально.
+      - id: demand_delete
+        text: Потребовать удалить видео
+        effects:
+          loyalty: -15
+          competences: {communication: -10}
+        next: final_partial
+        explanation: >
+          Требование удалить запись конфликтное и не основано на правилах. Такой спор
+          сам становится новым поводом для жалобы.
+
+  - id: final_success
+    outcome: success
+    final_text: Порядок в вагоне восстановлен, пассажиры благодарят экипаж.
+
+  - id: final_partial
+    outcome: partial
+    final_text: Нарушение прекращено, но осадок у пассажиров остался. Возможна жалоба.
+
+  - id: final_fail
+    outcome: failure
+    final_text: >
+      Конфликт закончился травмой пассажира. На станции поезд встречает полиция,
+      начинается служебная проверка.

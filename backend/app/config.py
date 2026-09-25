@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     jwt_ttl_minutes: int = 720
     # Ключ для внешних систем (HR, LMS): заголовок X-API-Key
     integration_api_key: str = Field(min_length=32)
+    # Создать синтетических сотрудников и историю при старте на пустой БД
+    seed_demo_data: bool = True
 
     @property
     def database_url(self) -> str:

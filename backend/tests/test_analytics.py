@@ -43,7 +43,8 @@ def test_recommendation_targets_weakest_competence(client, auth):
     play(client, auth, "ask_tickets", "explain_calmly", "leave_as_is")
     data = analytics(client, auth)
     assert data["weaknesses"][0] == "Первая помощь и медицинские ситуации"
-    assert data["recommendation"]["scenario_id"] == "business-seat-conflict"
+    # Больше всего очков первой помощи даёт медицинский сценарий
+    assert data["recommendation"]["scenario_id"] == "medical-heart-attack"
     assert "Первая помощь" in data["recommendation"]["reason"]
 
 

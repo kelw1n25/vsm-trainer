@@ -42,6 +42,10 @@ export function LoginPage() {
         <button className="button" disabled={sending}>
           {sending ? "Входим…" : "Войти"}
         </button>
+        <p className="muted">
+          Демо-доступ (данные синтетические): проводник <strong>100001</strong>, инструктор{" "}
+          <strong>900001</strong>, пароль <strong>demo2026</strong>
+        </p>
       </form>
     </main>
   );

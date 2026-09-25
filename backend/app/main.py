@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.analytics.router import router as analytics_router
 from app.auth.router import router as auth_router
+from app.config import settings
 from app.db import SessionLocal, get_db
 from app.engine.router import router as runs_router
 from app.errors import validation_error_handler
@@ -19,6 +20,7 @@ from app.notifications.router import router as notifications_router
 from app.profiles.router import router as profile_router
 from app.scenarios.loader import load_scenarios
 from app.scenarios.router import router as scenarios_router
+from app.seed import seed_if_empty
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s [%(name)s] %(message)s")
 
@@ -27,6 +29,8 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s [%(name)s] %(messa
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     with SessionLocal() as db:
         load_scenarios(db)
+        if settings.seed_demo_data:
+            seed_if_empty(db)
     yield
 
 

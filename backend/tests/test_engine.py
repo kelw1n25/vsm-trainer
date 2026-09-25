@@ -37,8 +37,9 @@ def test_login_errors(client, employee):
 
 def test_catalog(client, auth):
     catalog = client.get("/api/scenarios", headers=auth).json()
-    assert [s["id"] for s in catalog] == [SCENARIO]
-    assert catalog[0]["demo"] is True
+    assert len(catalog) == 5
+    assert {s["category"] for s in catalog} == {"conflict", "medical", "service", "safety"}
+    assert all(s["demo"] for s in catalog)
 
 
 def test_start_shows_first_node(client, auth):
