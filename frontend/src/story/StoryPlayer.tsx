@@ -248,7 +248,10 @@ function Choices({ run, engine, busy, clockOffsetMs }: ChoicesProps) {
 
 function HistoryPanel({ entries, onClose }: { entries: { kind: string; speaker: string | null; text: string }[]; onClose: () => void }) {
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => end.current?.scrollIntoView({ block: "end" }), []);
+  useEffect(() => {
+    // Фигурные скобки обязательны: в новых браузерах scrollIntoView возвращает Promise, а не функцию очистки
+    end.current?.scrollIntoView({ block: "end" });
+  }, []);
   return (
     <div className="story-history" role="dialog" aria-label="История диалогов">
       <header>
