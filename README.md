@@ -49,9 +49,9 @@ docker compose up --build
 | Документ | О чём |
 |----------|-------|
 | [docs/architecture.md](docs/architecture.md) | Компоненты, модули backend, прохождение сценария (Mermaid) |
-| [docs/api.md](docs/api.md) | API и примеры запросов для интеграции с HR/LMS |
+| [docs/api.md](docs/api.md) | API и примеры запросов для интеграции с HR, LMS и биллингом |
 | [docs/user-flow.md](docs/user-flow.md) | Путь проводника от входа до рейтинга |
-| [docs/scenarios.md](docs/scenarios.md) | Формат сценария и «как добавить развилку за 5 минут» |
+| [docs/scenarios.md](docs/scenarios.md) | Формат сценария, «как добавить развилку за 5 минут», примеры 9 сценариев |
 | [docs/limitations.md](docs/limitations.md) | Ограничения решения и план развития |
 
 ## Структура

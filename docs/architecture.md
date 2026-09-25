@@ -23,7 +23,7 @@ flowchart LR
 
     DB[("PostgreSQL")]
     FILES[/"scenarios/*.yaml<br/>config/game.yaml"/]
-    EXT["HR / LMS"]
+    EXT["HR / LMS / биллинг"]
 
     UI -- "REST /api, JWT" --> AUTH
     UI --> ENG & PR & LB & NOT & AN
@@ -65,7 +65,7 @@ flowchart LR
 | `leaderboard` | рейтинг: бригада / депо / компания × неделя / месяц / всё время |
 | `notifications` | уведомления внутри приложения, защита от дублей |
 | `analytics` | прогресс, компетенции, типичные ошибки, рекомендация; журнал событий |
-| `integration` | API для HR и LMS под API-ключом |
+| `integration` | API для HR, LMS и биллинга под API-ключом |
 | `auth` | вход, JWT, роли «проводник» и «инструктор» |
 
 Все правила игры — веса, пороги, ачивки, сроки — лежат в `backend/config/game.yaml`, а не в коде.

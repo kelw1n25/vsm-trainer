@@ -21,7 +21,7 @@
 | 409 | `run_finished`, `run_in_progress` | действие не подходит к статусу прохождения |
 | 422 | `validation_error`, `unknown_choice` | некорректные данные, несуществующий или скрытый вариант |
 
-## Интеграция с HR и LMS
+## Интеграция с HR, LMS и биллингом
 
 Доступ по заголовку `X-API-Key`. Ключ задаётся переменной окружения `INTEGRATION_API_KEY`
 (в демо — значение из `.env.example`). JWT пользователей к этому API не подходит.
@@ -98,6 +98,26 @@ curl -s -X PUT "$API/employees/123456" -H "X-API-Key: $KEY" -H "Content-Type: ap
 
 ```json
 {"personnel_number": "123456", "created": true}
+```
+
+### Объём использования для биллинга
+
+Сводка за календарный месяц по московскому времени: сколько сотрудников каждого депо
+проходили сценарии, сколько прохождений завершено и сколько XP начислено.
+
+```bash
+curl -s -G "$API/billing/usage" -H "X-API-Key: $KEY" --data-urlencode "month=2026-09"
+```
+
+```json
+{
+  "month": "2026-09",
+  "active_employees": 31,
+  "runs_completed": 118,
+  "depots": [
+    {"depot": "Депо Москва", "active_employees": 14, "runs_completed": 55, "xp_awarded": 9870}
+  ]
+}
 ```
 
 ## Пользовательский API
