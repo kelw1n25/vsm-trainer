@@ -2,12 +2,14 @@ import type { ReactNode } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { AuthProvider, useAuth } from "./auth";
 import { Layout } from "./components/Layout";
+import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { CatalogPage } from "./pages/CatalogPage";
 import { DebriefPage } from "./pages/DebriefPage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { RunPage } from "./pages/RunPage";
+import { TeamPage } from "./pages/TeamPage";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { session } = useAuth();
@@ -32,6 +34,9 @@ export default function App() {
             <Route path="/runs/:runId/debrief" element={<DebriefPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/team" element={<TeamPage />} />
+            <Route path="/team/:employeeId" element={<AnalyticsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

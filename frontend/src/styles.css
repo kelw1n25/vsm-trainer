@@ -530,6 +530,14 @@ th {
   font-size: 0.9rem;
 }
 
+.recommendation {
+  border-left: 6px solid var(--brand);
+}
+
+.mistakes li {
+  margin: 4px 0;
+}
+
 .bell {
   position: relative;
 }

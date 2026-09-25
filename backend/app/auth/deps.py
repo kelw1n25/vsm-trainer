@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.auth.security import decode_token
 from app.db import get_db
 from app.errors import api_error
-from app.profiles.models import Employee
+from app.profiles.models import Employee, Role
 
 _bearer = HTTPBearer(auto_error=False)
 
@@ -24,4 +24,10 @@ def get_current_employee(
     employee = db.get(Employee, employee_id)
     if employee is None:
         raise api_error(401, "invalid_token", "Сотрудник не найден, войдите заново")
+    return employee
+
+
+def require_instructor(employee: Employee = Depends(get_current_employee)) -> Employee:
+    if employee.role != Role.INSTRUCTOR:
+        raise api_error(403, "forbidden", "Раздел доступен только инструктору")
     return employee

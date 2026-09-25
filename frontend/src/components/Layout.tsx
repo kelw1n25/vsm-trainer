@@ -15,6 +15,8 @@ export function Layout() {
             </NavLink>
             <NavLink to="/profile">Профиль</NavLink>
             <NavLink to="/leaderboard">Рейтинг</NavLink>
+            <NavLink to="/analytics">Аналитика</NavLink>
+            {session?.role === "instructor" && <NavLink to="/team">Команда</NavLink>}
           </nav>
           <NotificationBell />
           <span className="header__user">{session?.fullName}</span>

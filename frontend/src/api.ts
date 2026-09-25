@@ -1,4 +1,5 @@
 import type {
+  Analytics,
   Debrief,
   Leaderboard,
   LeaderboardPeriod,
@@ -10,6 +11,7 @@ import type {
   RunState,
   ScenarioSummary,
   Session,
+  TeamMember,
 } from "./types";
 
 const SESSION_KEY = "vsm_session";
@@ -90,4 +92,7 @@ export const api = {
     request<Leaderboard>("GET", `/api/leaderboard?scope=${scope}&period=${period}`),
   notifications: () => request<NotificationList>("GET", "/api/notifications"),
   readAllNotifications: () => request<{ status: string }>("POST", "/api/notifications/read-all"),
+  myAnalytics: () => request<Analytics>("GET", "/api/analytics/me"),
+  employeeAnalytics: (employeeId: string) => request<Analytics>("GET", `/api/analytics/employees/${employeeId}`),
+  team: () => request<TeamMember[]>("GET", "/api/analytics/team"),
 };

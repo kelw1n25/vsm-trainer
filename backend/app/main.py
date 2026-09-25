@@ -7,6 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.analytics.router import router as analytics_router
 from app.auth.router import router as auth_router
 from app.db import SessionLocal, get_db
 from app.engine.router import router as runs_router
@@ -43,6 +44,7 @@ app.include_router(runs_router)
 app.include_router(profile_router)
 app.include_router(leaderboard_router)
 app.include_router(notifications_router)
+app.include_router(analytics_router)
 
 
 @app.get("/api/health", tags=["system"])

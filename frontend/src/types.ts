@@ -140,6 +140,39 @@ export interface Profile {
   history: HistoryItem[];
 }
 
+export interface Analytics {
+  employee_id: number;
+  full_name: string;
+  total_runs: number;
+  progress: { week_start: string; xp: number; runs: number; successes: number }[];
+  categories: {
+    category: string;
+    title: string;
+    runs: number;
+    decisions: number;
+    timed_steps: number;
+    success_rate: number | null;
+    best_choice_rate: number | null;
+    timeout_rate: number | null;
+    average_reaction_share: number | null;
+  }[];
+  competences: { code: string; title: string; points: number }[];
+  strengths: string[];
+  weaknesses: string[];
+  mistakes: string[];
+  recommendation: { scenario_id: string; title: string; reason: string } | null;
+}
+
+export interface TeamMember {
+  employee_id: number;
+  full_name: string;
+  brigade: string;
+  level_title: string;
+  xp: number;
+  last_activity_at: string | null;
+  weakest_competence: string | null;
+}
+
 export interface NotificationList {
   unread: number;
   items: { id: number; type: string; title: string; body: string; created_at: string; read: boolean }[];
