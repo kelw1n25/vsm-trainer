@@ -397,3 +397,20 @@ struct BottomNav: View {
         .padding(.bottom, 4)
     }
 }
+
+#if os(iOS)
+import UIKit
+
+/// Системная панель навигации скрыта (вместо неё шапка сайта), а вместе с ней iOS отключает жест «смахнуть назад».
+/// Возвращаем жест: страницы без «← назад» закрываются так же, как в любом приложении iOS.
+extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
+    override open func viewDidLoad() {
+        super.viewDidLoad()
+        interactivePopGestureRecognizer?.delegate = self
+    }
+
+    public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        viewControllers.count > 1
+    }
+}
+#endif

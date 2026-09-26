@@ -166,7 +166,6 @@ struct AnalyticsScreen: View {
 
     var body: some View {
         Page {
-            if !model.own { BackLink(title: "Команда") { navigator.back() } }
             ScreenContent(state: model.state, retry: model.load) { data in
                 PageTitle(model.own ? "Аналитика" : "Аналитика: \(data.fullName)")
                 KpiGrid(items: [
