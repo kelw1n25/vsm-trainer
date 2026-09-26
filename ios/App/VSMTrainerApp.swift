@@ -1,12 +1,14 @@
 import BackgroundTasks
 import SwiftUI
+import UIKit
 import VSMFeatures
 
 @main
 struct VSMTrainerApp: App {
     /// Идентификатор фоновой задачи — тот же, что в `BGTaskSchedulerPermittedIdentifiers` в Info.plist.
     private static let refreshTask = "ru.vsm.trainer.notifications"
-    @State private var container = AppContainer(baseURL: AppConfig.apiBaseURL)
+    // Без сохранённого выбора тема следует системной, как на сайте
+    @State private var container = AppContainer(baseURL: AppConfig.apiBaseURL, systemDark: UITraitCollection.current.userInterfaceStyle == .dark)
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {

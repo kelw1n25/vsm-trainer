@@ -8,22 +8,25 @@ public final class AppContainer {
     public let api: APIClient
     public let trainer: TrainerRepository
     public let runs: RunRepository
-    public let activeRuns: ActiveRunStore
     public let session: SessionViewModel
+    public let preferences: AppPreferences
+    public let storyMemory: StoryMemory
     public let notificationSync: NotificationSync
     public let notifications = SystemNotifications()
 
-    public init(baseURL: URL) {
+    public init(baseURL: URL, systemDark: Bool = false) {
         let tokens = KeychainTokenStore()
         let settings = UserDefaultsStore()
         let relay = SessionExpiryRelay()
         api = APIClient(baseURL: baseURL, tokens: tokens) { relay.fire() }
         trainer = RemoteTrainerRepository(api: api, cache: FileResponseCache())
         runs = RemoteRunRepository(api: api)
-        activeRuns = ActiveRunStore(store: settings)
-        session = SessionViewModel(api: api, tokens: tokens, repository: trainer, activeRuns: activeRuns)
+        session = SessionViewModel(api: api, tokens: tokens, repository: trainer)
+        preferences = AppPreferences(store: settings, systemDark: systemDark)
+        storyMemory = StoryMemory(store: settings)
         notificationSync = NotificationSync(repository: trainer, store: settings)
         relay.target = session
+        Manrope.register()
     }
 
     /// Новые уведомления сервера → системные баннеры. Вызывается при возврате в приложение и фоновой задачей.

@@ -24,7 +24,8 @@ final class LoginFlowUITests: XCTestCase {
 
         // В CI backend не запущен: приложение должно показать ошибку связи или войти, если сервер доступен
         let error = app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'связи'")).firstMatch
-        let home = app.navigationBars["Главная"]
+        // После входа внизу — навигация сайта с пунктом «Главная»
+        let home = app.buttons["Главная"]
         XCTAssertTrue(error.waitForExistence(timeout: 20) || home.exists)
     }
 }
