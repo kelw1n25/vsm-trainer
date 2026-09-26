@@ -69,6 +69,12 @@ class Analytics(BaseModel):
     employee_id: int
     full_name: str
     total_runs: int
+    # Незавершённые прохождения: начал и вышел, не дойдя до финала
+    unfinished_runs: int
+    # Доля доведённых до финала среди всех начатых
+    completion_rate: float | None
+    # Среднее время от показа вариантов до ответа, по всем решениям
+    avg_decision_seconds: float | None
     progress: list[WeekPoint]
     categories: list[CategoryStats]
     competences: list[CompetenceStat]
@@ -92,6 +98,10 @@ def build_analytics(db: Session, employee: Employee) -> Analytics:
     ).all()
 
     categories = _category_stats(runs, steps)
+    unfinished = db.scalar(
+        select(func.count()).where(ScenarioRun.employee_id == employee.id, ScenarioRun.status == RunStatus.IN_PROGRESS)
+    )
+    decision_times = [e.payload["elapsed_seconds"] for e, _ in steps if e.type == "choice_made" and "elapsed_seconds" in e.payload]
     competences = [
         CompetenceStat(code=code, title=title, points=employee.competence_points.get(code, 0))
         for code, title in game_config.competences.items()
@@ -102,6 +112,9 @@ def build_analytics(db: Session, employee: Employee) -> Analytics:
         employee_id=employee.id,
         full_name=employee.full_name,
         total_runs=len(runs),
+        unfinished_runs=unfinished,
+        completion_rate=_rate(len(runs), len(runs) + unfinished),
+        avg_decision_seconds=round(sum(decision_times) / len(decision_times), 1) if decision_times else None,
         progress=_progress(db, employee.id),
         categories=categories,
         competences=competences,

@@ -1,6 +1,6 @@
 from app.auth.security import hash_password
 from tests.conftest import create_employee, login
-from tests.test_engine import PARTIAL_PATH, choose, play
+from tests.test_engine import PARTIAL_PATH, choose, play, start
 from tests.test_timer import at_timed_node, rewind
 
 
@@ -69,3 +69,41 @@ def test_instructor_access(client, db, employee):
     create_employee(db, "900002", role="instructor")  # создаётся в своём отдельном депо
     stranger = login(client, "900002")
     assert client.get(f"/api/analytics/employees/{employee.id}", headers=stranger).status_code == 404
+
+
+def test_completion_rate_and_decision_time(client, auth):
+    play(client, auth, *PARTIAL_PATH)
+    start(client, auth, "passenger-unwell")  # начат и брошен
+    data = analytics(client, auth)
+    assert (data["total_runs"], data["unfinished_runs"], data["completion_rate"]) == (1, 1, 0.5)
+    assert data["avg_decision_seconds"] is not None and data["avg_decision_seconds"] >= 0
+
+
+def test_client_events_are_recorded(client, auth, db):
+    from sqlalchemy import select
+
+    from app.analytics.models import Event
+
+    finished = play(client, auth, *PARTIAL_PATH)
+    for event in (
+        {"type": "debrief_opened", "run_id": finished["id"], "platform": "ios"},
+        {"type": "run_exited", "run_id": start(client, auth, "passenger-unwell")["id"], "platform": "android"},
+    ):
+        assert client.post("/api/analytics/events", json=event, headers=auth).status_code == 202
+
+    notification = client.get("/api/notifications", headers=auth).json()["items"][0]
+    opened = {"type": "notification_opened", "notification_id": notification["id"], "platform": "web"}
+    assert client.post("/api/analytics/events", json=opened, headers=auth).status_code == 202
+
+    recorded = {e.type: e.payload for e in db.scalars(select(Event)).all()}
+    assert recorded["debrief_opened"] == {"platform": "ios"}
+    assert recorded["notification_opened"] == {"platform": "web", "notification_type": notification["type"]}
+
+
+def test_client_events_reject_foreign_and_unknown(client, auth, db):
+    create_employee(db, "100002")
+    foreign = play(client, login(client, "100002"), *PARTIAL_PATH)["id"]
+    event = {"type": "debrief_opened", "run_id": foreign, "platform": "ios"}
+    assert client.post("/api/analytics/events", json=event, headers=auth).status_code == 404
+    unknown = {"type": "xp_granted", "platform": "ios"}
+    assert client.post("/api/analytics/events", json=unknown, headers=auth).status_code == 422
