@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Тренажёр ВСМ</string>
+    <string name="notification_channel">Сценарии и достижения</string>
+    <string name="notification_channel_description">Новые сценарии, челленджи, сгорающие баллы и ачивки</string>
+</resources>

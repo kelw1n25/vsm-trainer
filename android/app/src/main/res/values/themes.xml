@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Системная тема до отрисовки Compose; цвета приложения задаются в presentation/theme -->
+    <style name="Theme.VsmTrainer" parent="android:Theme.Material.NoActionBar" />
+</resources>
