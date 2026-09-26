@@ -47,7 +47,8 @@ struct DebriefView: View {
                     Section("Стандарт: ситуация №\(situation.number)") {
                         Text(situation.title).font(.subheadline.bold())
                         Text(situation.reaction).font(.callout)
-                        ForEach(situation.phrases, id: \.self) { Text("«\($0)»").font(.callout).italic() }
+                        // Фразы в справочнике уже в кавычках — показываем как есть
+                        ForEach(situation.phrases, id: \.self) { Text($0).font(.callout).italic() }
                     }
                 }
             }

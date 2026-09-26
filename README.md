@@ -80,7 +80,7 @@ Backend должен быть запущен (эмулятор обращает�
 
 ```bash
 docker build --platform linux/amd64 -t vsm-android-build android/ci
-docker run --rm --platform linux/amd64 -v "$PWD/android:/project" -v vsm-gradle:/root/.gradle vsm-android-build \
+docker run --rm --platform linux/amd64 -v "$PWD/android:/project" -v vsm-gradle:/root/.gradle -v vsm-android-home:/root/.android vsm-android-build \
   ./gradlew -Pkotlin.compiler.execution.strategy=in-process testDebugUnitTest assembleDebug
 # APK: android/app/build/outputs/apk/debug/app-debug.apk
 ```

@@ -80,7 +80,8 @@ fun DebriefScreen(onBack: () -> Unit, model: DebriefViewModel = hiltViewModel())
                     SectionTitle("Стандарт: ситуация №${situation.number}")
                     Text(situation.title, style = MaterialTheme.typography.titleSmall)
                     Text(situation.reaction)
-                    situation.phrases.forEach { Text("«$it»", fontStyle = FontStyle.Italic) }
+                    // Фразы в справочнике уже в кавычках — показываем как есть
+                    situation.phrases.forEach { Text(it, fontStyle = FontStyle.Italic) }
                 }
             }
         }

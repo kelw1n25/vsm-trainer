@@ -111,8 +111,14 @@ fun LineView(line: Line) {
                     )
                     .padding(10.dp),
             ) {
-                Text(if (mine) "Вы" else line.name.orEmpty(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                Text(line.text)
+                // На фоне реплики игрока — парный ему цвет текста, иначе подпись сливается с фоном
+                val textColor = if (mine) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                Text(
+                    if (mine) "Вы" else line.name.orEmpty(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (mine) textColor else MaterialTheme.colorScheme.primary,
+                )
+                Text(line.text, color = textColor)
             }
         }
     }

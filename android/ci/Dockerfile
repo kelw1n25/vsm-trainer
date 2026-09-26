@@ -1,7 +1,8 @@
 # Окружение сборки Android без установки SDK на машину разработчика:
 #   docker build --platform linux/amd64 -t vsm-android-build android/ci
-#   docker run --rm --platform linux/amd64 -v "$PWD/android:/project" -v vsm-gradle:/root/.gradle vsm-android-build \
+#   docker run --rm --platform linux/amd64 -v "$PWD/android:/project" -v vsm-gradle:/root/.gradle -v vsm-android-home:/root/.android vsm-android-build \
 #     ./gradlew -Pkotlin.compiler.execution.strategy=in-process testDebugUnitTest assembleDebug
+# vsm-android-home хранит debug.keystore: иначе каждая сборка подписана новым ключом и не ставится поверх прежней.
 # in-process: в Docker Desktop по умолчанию 4 ГБ — отдельному демону Kotlin памяти не хватает.
 # linux/amd64 — потому что aapt2 из Android Gradle Plugin выпускается только под x86_64.
 FROM eclipse-temurin:17-jdk
