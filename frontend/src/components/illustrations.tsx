@@ -340,7 +340,7 @@ function WindowView({ x, y, width, height }: { x: number; y: number; width: numb
 }
 
 // ───────── Персонажи ─────────
-// Все люди — одинаковые светло-серые фигурки-манекены без лиц и бликов. Фигура рисуется одним цветом
+// Все люди — одинаковые светло-серые объёмные фигурки-манекены без лиц. Фигура рисуется одним цветом
 // как единая отливка, а объём даёт затенение по краю общего силуэта — поэтому на стыках рук, шеи
 // и ног нет швов, а маленькая иконка и крупная фигура в новелле выглядят одинаково. Сотрудников выделяют фуражка, воротник, галстук и значок. Эмоцию передаёт поза.
 
@@ -348,8 +348,8 @@ export type Outfit = "uniform" | { top: string; bottom: string };
 export type Hand = "down" | "point" | "hold" | "radio" | "hush" | "chest" | "throat";
 export type Item = "ticket" | "bottle" | "cup" | "extinguisher" | "radio";
 
-// Цвет «глины»: фильтр затемняет его к краям силуэта — так получается объём
-const BODY = "#D2D2D2";
+// Цвет «глины»: фильтр добавляет к нему тень, светлый край и блик — так получается объём
+const BODY = "#CBCBCB";
 const UNIFORM_COLOR = "#34487A";
 
 // Наклон головы и корпуса для каждой эмоции (градусы; плюс — голова вниз и вперёд)
@@ -435,29 +435,57 @@ function HeldItem({ kind, x, y }: { kind: Item; x: number; y: number }) {
 }
 
 /**
- * Объём «глиняной» фигуры без бликов: затенение по краю общего силуэта, сдвинутое в сторону тени,
- * и тень по контуру. Всё задано в единицах фигуры (размытие и сдвиг), поэтому результат не зависит
- * от размера на экране — в отличие от фильтров освещения, которые браузер считает в пикселях.
+ * Объём «глиняной» 3D-фигуры по общему силуэту: тень со стороны от света, светлый край со стороны света,
+ * мягкое затемнение к контуру каждой части (округлость), блик в глубине крупных форм и падающая тень. Всё строится из размытого силуэта в единицах
+ * фигуры — поэтому у частей тела нет швов, а иконка и крупная фигура в новелле выглядят одинаково.
+ * Свет падает слева сверху.
  */
 function ClayFilter({ id }: { id: string }) {
   return (
     <filter id={id} x="-40%" y="-20%" width="180%" height="140%" colorInterpolationFilters="sRGB">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="2.6" result="blur" />
-      <feOffset in="blur" dx="-1.4" dy="-1.6" result="lightSide" />
-      <feFlood floodColor="#5A5A5A" floodOpacity="0.55" result="tone" />
-      <feComposite in="tone" in2="lightSide" operator="out" result="shade" />
-      <feComposite in="shade" in2="SourceAlpha" operator="in" result="rim" />
-      <feMerge result="shaded">
+      {/* Округлость: края любой части тела мягко темнеют к контуру, середина остаётся светлой */}
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2.4" result="round" />
+      <feComponentTransfer in="round" result="roundInv">
+        <feFuncA type="linear" slope="-1" intercept="1" />
+      </feComponentTransfer>
+      <feFlood floodColor="#4A4A4A" floodOpacity="0.42" />
+      <feComposite in2="roundInv" operator="in" />
+      <feComposite in2="SourceAlpha" operator="in" result="occlusion" />
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3.6" result="blur" />
+      {/* Собственная тень: там, куда не дотягивается силуэт, сдвинутый к свету, — правый и нижний край */}
+      <feOffset in="blur" dx="-2.6" dy="-2.8" result="towardLight" />
+      <feFlood floodColor="#2E2E2E" floodOpacity="0.7" />
+      <feComposite in2="towardLight" operator="out" />
+      <feComposite in2="SourceAlpha" operator="in" result="shade" />
+      {/* Светлый край со стороны света */}
+      <feOffset in="blur" dx="1.8" dy="2" result="towardShade" />
+      <feFlood floodColor="#FFFFFF" floodOpacity="0.6" />
+      <feComposite in2="towardShade" operator="out" />
+      <feComposite in2="SourceAlpha" operator="in" result="rim" />
+      {/* Блик: мягкое пятно в глубине головы, груди и бёдер, смещённое к свету */}
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4.6" result="deep" />
+      <feOffset in="deep" dx="-2.6" dy="-3" />
+      <feComponentTransfer result="sheenMask">
+        <feFuncA type="table" tableValues="0 0 0 0.35 0.9" />
+      </feComponentTransfer>
+      <feFlood floodColor="#FFFFFF" floodOpacity="0.7" />
+      <feComposite in2="sheenMask" operator="in" />
+      <feComposite in2="SourceAlpha" operator="in" result="sheen" />
+      <feMerge result="modeled">
         <feMergeNode in="SourceGraphic" />
+        <feMergeNode in="occlusion" />
+        <feMergeNode in="shade" />
         <feMergeNode in="rim" />
+        <feMergeNode in="sheen" />
       </feMerge>
-      <feGaussianBlur in="SourceAlpha" stdDeviation="0.9" result="edge" />
-      <feOffset in="edge" dx="0.6" dy="1" result="edgeOffset" />
-      <feFlood floodColor="#000000" floodOpacity="0.2" />
+      {/* Падающая тень по контуру — фигура отделяется от фона */}
+      <feGaussianBlur in="SourceAlpha" stdDeviation="1.8" />
+      <feOffset dx="1.6" dy="2.2" result="edgeOffset" />
+      <feFlood floodColor="#000000" floodOpacity="0.32" />
       <feComposite in2="edgeOffset" operator="in" result="shadow" />
       <feMerge>
         <feMergeNode in="shadow" />
-        <feMergeNode in="shaded" />
+        <feMergeNode in="modeled" />
       </feMerge>
     </filter>
   );
@@ -485,7 +513,15 @@ export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood
   const place = `translate(${x} ${y}) scale(${flip ? -s : s} ${s})`;
   return (
     <g>
-      {pose === "stand" && <ellipse transform={place} cx="0" cy="-0.5" rx="16" ry="2.6" fill="#000000" opacity="0.12" />}
+      {pose === "stand" && (
+        <g transform={place}>
+          <radialGradient id={`${id}-floor`}>
+            <stop offset="0" stopColor="#000000" stopOpacity="0.36" />
+            <stop offset="1" stopColor="#000000" stopOpacity="0" />
+          </radialGradient>
+          <ellipse cx={flip ? -4 : 4} cy="-0.5" rx="21" ry="3.6" fill={`url(#${id}-floor)`} />
+        </g>
+      )}
       {/* Фильтр вне отражения: свет у всех фигур падает с одной стороны, даже у повёрнутых влево */}
       <g filter={`url(#${id}-clay)`}>
         <defs>
@@ -509,10 +545,10 @@ export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood
             {/* Руки начинаются внутри плеч — снаружи ничего не торчит */}
             <path d="M-9.4 -57.5Q-13.8 -47 -13.6 -37" fill="none" stroke={BODY} strokeWidth="6.2" strokeLinecap="round" />
             <Mitten x={-13.6} y={-35} />
-            <path d="M-3.2 -67L-3.2 -63C-8 -63 -12.5 -61.5 -13 -57C-13.2 -53 -10.6 -49 -9.4 -45C-8.8 -41 -8.8 -38 -8.6 -34L8.6 -34C8.8 -38 8.8 -41 9.4 -45C10.6 -49 13.2 -53 13 -57C12.5 -61.5 8 -63 3.2 -63L3.2 -67Z" />
+            <path d="M-4.4 -70C-4.5 -65.6 -6.6 -63.6 -9.4 -62.8C-11.8 -62 -13.2 -60 -13 -57C-13.2 -53 -10.6 -49 -9.4 -45C-8.8 -41 -8.8 -38 -8.6 -34L8.6 -34C8.8 -38 8.8 -41 9.4 -45C10.6 -49 13.2 -53 13 -57C13.2 -60 11.8 -62 9.4 -62.8C6.6 -63.6 4.5 -65.6 4.4 -70Z" />
             {uniform && (
               <g>
-                <path d="M-3.4 -63.3L0 -58.6L3.4 -63.3Z" fill="#FFFFFF" />
+                <path d="M-4.4 -64.6L0 -58.6L4.4 -64.6Q0 -63.2 -4.4 -64.6Z" fill="#FFFFFF" />
                 <path d="M-1.4 -62.6H1.4L1 -60.4H-1Z" fill="#D63C3E" />
                 <path d="M-1 -60.4H1L2 -51.8L0 -49.2L-2 -51.8Z" fill="#E8484A" />
                 <rect x="4" y="-57.2" width="4.6" height="3" rx="0.8" fill="#F2CD5E" />
