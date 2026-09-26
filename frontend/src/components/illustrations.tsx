@@ -401,14 +401,15 @@ function WindowView({ x, y, width, height }: { x: number; y: number; width: numb
 
 // ───────── Персонажи ─────────
 // Все люди — объёмные фигурки-манекены из одного компонента: круглая голова с бликом, гладкое тело,
-// одинаковые пропорции. Сотрудники поезда — красные, пассажиры — серые с оттенком своей одежды.
+// одинаковые пропорции. Все манекены серые; сотрудники поезда — в одинаковой форме, пассажиры — с оттенком своей одежды.
 
 export type Outfit = "uniform" | { top: string; bottom: string };
 export type Hand = "down" | "point" | "hold" | "radio" | "hush" | "chest" | "throat";
 type Item = "ticket" | "bottle" | "cup" | "extinguisher" | "radio";
 
-const STAFF_COLOR = "#D8262E";
-const PASSENGER_GREY = "#C3C8CF";
+const MANNEQUIN_GREY = "#C3C8CF";
+// Форма сотрудника: тёмно-синий китель и брюки
+const UNIFORM_COLOR = "#2A3B66";
 
 // Куда тянется правая рука (координаты фигуры ростом ~92 с опорой в точке 0,0)
 const HAND_POSITION: Record<Hand, [number, number]> = {
@@ -485,10 +486,11 @@ function HeldItem({ kind, x, y }: { kind: Item; x: number; y: number }) {
 
 export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood = "calm", hand = "down", item }: PersonProps) {
   const id = useSvgId();
-  // Пассажира выдаёт лёгкий оттенок его одежды на сером манекене
-  const base = outfit === "uniform" ? STAFF_COLOR : mix(PASSENGER_GREY, outfit.top, 0.22);
-  const light = mix(base, "#FFFFFF", 0.55);
-  const dark = mix(base, "#000000", 0.32);
+  const uniform = outfit === "uniform";
+  // Пассажира выдаёт лёгкий оттенок его одежды на сером манекене, сотрудника — одинаковая форма
+  const base = uniform ? MANNEQUIN_GREY : mix(MANNEQUIN_GREY, outfit.top, 0.22);
+  const cloth = uniform ? UNIFORM_COLOR : base;
+  const dark = mix(cloth, "#000000", 0.32);
   const body = `url(#${id}-body)`;
   const lift = pose === "sit" ? 32 : 0;
   const [hx, hy] = HAND_POSITION[hand];
@@ -498,12 +500,12 @@ export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood
         <radialGradient id={`${id}-head`} cx="0.36" cy="0.3" r="0.75">
           <stop offset="0" stopColor={mix(base, "#FFFFFF", 0.75)} />
           <stop offset="0.45" stopColor={base} />
-          <stop offset="1" stopColor={dark} />
+          <stop offset="1" stopColor={mix(base, "#000000", 0.32)} />
         </radialGradient>
         {/* Свет слева: одна горизонтальная растяжка для всех частей тела в координатах фигуры */}
         <linearGradient id={`${id}-body`} gradientUnits="userSpaceOnUse" x1="-16" y1="0" x2="16" y2="0">
-          <stop offset="0" stopColor={light} />
-          <stop offset="0.45" stopColor={base} />
+          <stop offset="0" stopColor={mix(cloth, "#FFFFFF", uniform ? 0.3 : 0.55)} />
+          <stop offset="0.45" stopColor={cloth} />
           <stop offset="1" stopColor={dark} />
         </linearGradient>
       </defs>
@@ -524,8 +526,22 @@ export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood
           fill={body}
         />
         <rect x="-3.2" y="-69" width="6.4" height="8" rx="3" fill={base} />
+        {uniform && (
+          <g>
+            <path d="M-4.5 -63.3L0 -55L4.5 -63.3Z" fill="#F4F6FA" />
+            <path d="M-1.1 -60.5H1.1L2 -50.5L0 -48L-2 -50.5Z" fill="#D23A3A" />
+            <rect x="4.5" y="-55.5" width="4.5" height="3.2" rx="1" fill="#E7C15A" />
+          </g>
+        )}
         <circle cx="0" cy="-79" r="12.5" fill={`url(#${id}-head)`} />
         <Face cx={0} cy={-78} r={12} mood={mood} ink={mix(base, "#000000", 0.62)} />
+        {uniform && (
+          <g>
+            <path d="M-12.5 -85Q0 -99 12.5 -85Z" fill={UNIFORM_COLOR} />
+            <rect x="-12" y="-87.5" width="24" height="2.6" rx="1" fill="#E7C15A" />
+            <path d="M-12.5 -84.5H16" stroke="#18233F" strokeWidth="2.6" strokeLinecap="round" />
+          </g>
+        )}
         <path
           d={`M9.5 -58Q${(9.5 + hx) / 2 + 4} ${(-58 + hy) / 2} ${hx} ${hy}`}
           stroke={body}
