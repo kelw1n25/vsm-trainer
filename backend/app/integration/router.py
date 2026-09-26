@@ -170,7 +170,7 @@ def upsert_employee(
     employee = db.scalar(select(Employee).where(Employee.personnel_number == personnel_number))
     created = employee is None
     if created:
-        # Пароль HR не передаёт: вход по паролю закрыт, пока не подключён SSO (см. docs/limitations.md)
+        # Пароль HR не передаёт: вход по паролю закрыт, пока не подключён SSO (см. docs/LIMITATIONS.md)
         employee = Employee(personnel_number=personnel_number, password_hash="", competence_points={})
         db.add(employee)
     employee.full_name = body.full_name

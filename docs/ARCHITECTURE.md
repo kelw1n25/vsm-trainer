@@ -11,6 +11,20 @@ flowchart LR
         STORY --- LS
     end
 
+    subgraph IOS["iOS — Swift, SwiftUI"]
+        IUI["VSMFeatures<br/>экраны SwiftUI"]
+        ICORE["VSMCore: ViewModel,<br/>репозитории, APIClient"]
+        IKC[("Keychain · файловый кэш")]
+        IUI --> ICORE --- IKC
+    end
+
+    subgraph AND["Android — Kotlin, Compose"]
+        AUI["presentation<br/>Compose + ViewModel"]
+        ACORE["data: Retrofit/OkHttp,<br/>репозитории, WorkManager"]
+        AKS[("Android Keystore · файловый кэш")]
+        AUI --> ACORE --- AKS
+    end
+
     subgraph Backend["Backend — FastAPI, stateless"]
         AUTH["auth<br/>JWT, роли"]
         SCN["scenarios<br/>загрузка, валидация,<br/>архив веток"]
@@ -29,6 +43,10 @@ flowchart LR
     FILES[/"scenarios/*.yaml<br/>config/game.yaml<br/>config/handbook.yaml"/]
     EXT["HR / LMS / биллинг"]
 
+    ICORE -- "REST /api, JWT + refresh" --> AUTH
+    ICORE --> ENG & PR & LB & NOT & AN
+    ACORE -- "REST /api, JWT + refresh" --> AUTH
+    ACORE --> ENG & PR & LB & NOT & AN
     UI -- "REST /api, JWT" --> AUTH
     UI --> PR & LB & NOT & AN & HB & SCN
     STORY -- "REST /api/runs" --> ENG
@@ -44,6 +62,22 @@ flowchart LR
 `frontend/src/story/StoryEngine.ts` на чистом TypeScript без React: очередь реплик, печать текста, смена сцен,
 журнал, автопрокрутка, пропуск виденного, сохранение места в localStorage. React-компоненты только
 подписываются на его состояние и рисуют сцену. Что происходит в истории, решает сервер.
+
+**Мобильные приложения** — нативные: iOS на Swift/SwiftUI, Android на Kotlin/Jetpack Compose. Интерфейс у каждого
+свой, по гайдлайнам платформы (вкладки и списки iOS, Material 3 на Android), а устройство слоёв одинаковое:
+
+| Слой | iOS (`ios/VSMKit`) | Android (`android/app`) |
+|------|--------------------|-------------------------|
+| Экраны | `VSMFeatures/*View.swift` (SwiftUI) | `presentation/*/…Screen.kt` (Compose) |
+| Состояние экранов | `VSMCore/Presentation/*ViewModel.swift` (`@Observable`) | `presentation/*ViewModel.kt` (`StateFlow`, Hilt) |
+| Данные | `Data/Repositories`: сеть → кэш | `data/repository`: сеть → кэш |
+| Сеть | `Networking/APIClient`, `TokenRefresher` (actor) | Retrofit + OkHttp, `TokenAuthenticator` |
+| Секреты | `Security/KeychainTokenStore` | `security/KeystoreTokenStore` (AES-GCM) |
+| Уведомления | `.backgroundTask(.appRefresh)` → `UNUserNotificationCenter` | `WorkManager` → `NotificationManager` |
+| Внедрение зависимостей | `AppContainer` (через init) | Hilt (`di/AppModule.kt`) |
+
+Бизнес-логики в клиентах нет: они показывают состояние сервера и отправляют действия. Отдельного «мобильного API»
+тоже нет — это те же эндпоинты, что у веб-клиента, плюс обновление сессии refresh-токеном.
 
 **Backend** не хранит состояния в памяти: прохождение, таймер, шкалы и флаги лежат в строке
 `scenario_runs`. Любую копию backend можно перезапустить или добавить за балансировщиком.
@@ -73,11 +107,13 @@ flowchart LR
 | `achievements` | уровни по порогам XP, правила ачивок из конфига |
 | `leaderboard` | рейтинг: бригада / депо / компания × неделя / месяц / всё время |
 | `notifications` | уведомления внутри приложения, защита от дублей |
-| `analytics` | прогресс, компетенции, типичные ошибки, рекомендация; журнал событий |
+| `analytics` | прогресс, компетенции, доля завершённых, время решения, типичные ошибки, рекомендация; журнал событий, клиентские события |
 | `integration` | API для HR, LMS и биллинга под API-ключом |
-| `auth` | вход, JWT, роли «проводник» и «инструктор» |
+| `auth` | вход, JWT, refresh-токены с ротацией, лимит неудачных входов, роли «проводник» и «инструктор» |
 
 Все правила игры — веса, пороги, ачивки, сроки — лежат в `backend/config/game.yaml`, а не в коде.
+Сквозные части: `app/observability.py` — JSON-журнал с `request_id` и ответ `500 internal_error` без деталей;
+`app/errors.py` — единый формат ошибок.
 
 ## Данные
 
@@ -91,6 +127,7 @@ erDiagram
     scenario_runs ||--o{ events : ""
     employees ||--o{ employee_achievements : ""
     employees ||--o{ notifications : ""
+    employees ||--o{ refresh_tokens : ""
 
     scenarios { string id PK "из имени файла"
                 jsonb definition "граф узлов"
@@ -108,6 +145,23 @@ erDiagram
     events { string type "choice_made, timeout, run_finished, ..."
              jsonb payload }
 ```
+
+### Сущности брифа и где они хранятся
+
+| Сущность | Где |
+|----------|-----|
+| User, EmployeeProfile | `employees` (ФИО, табельный номер, роль, XP, `competence_points`, последняя активность) |
+| Team, Depot, Company | `brigades`, `depots`; компания — все депо |
+| Scenario, ScenarioNode, ScenarioChoice, ScenarioCondition, ScenarioOutcome | граф в `scenarios.definition` (JSONB) из YAML: `nodes[].choices[]`, `condition`, `effects`, `next`, `outcome`; схема — `app/scenarios/schema.py` |
+| ScenarioSession | `scenario_runs`: текущий узел, шкалы, флаги, скрытые параметры, метки таймера, итог |
+| ScenarioAction, AnalyticsEvent | `events`: `choice_made`, `timeout`, `run_finished`, клиентские события |
+| PassengerLoyalty, SafetyRating | `scenario_runs.loyalty`, `scenario_runs.safety` (0–100) |
+| Competency, CompetencyScore | коды и названия — `config/game.yaml: competences`; очки — `employees.competence_points`, по прохождению — `scenario_runs.competence_points` |
+| Achievement, UserAchievement | правила — `config/game.yaml: achievements`; выданные — `employee_achievements` (уникально по сотруднику и коду) |
+| Leaderboard | не хранится: SQL по `scenario_runs.xp_earned` за период — всегда актуален |
+| Notification | `notifications` (уникально по `dedup_key`) |
+| UserProgress | уровень считается из XP по порогам `config/game.yaml: levels`; прогресс по неделям — из `scenario_runs` |
+| Сессия устройства | `refresh_tokens` |
 
 ## Прохождение сценария
 
