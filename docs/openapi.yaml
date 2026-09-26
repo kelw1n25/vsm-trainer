@@ -328,6 +328,33 @@ paths:
                 $ref: '#/components/schemas/Profile'
       security:
       - HTTPBearer: []
+  /api/profile/avatar:
+    put:
+      tags:
+      - profile
+      summary: 'Сохранить аватар: фон, головной убор и галстук из готовых вариантов'
+      operationId: update_avatar_api_profile_avatar_put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Avatar'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Avatar'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
   /api/leaderboard:
     get:
       tags:
@@ -824,6 +851,38 @@ components:
       - mistakes
       - recommendation
       title: Analytics
+    Avatar:
+      properties:
+        background:
+          type: string
+          enum:
+          - blue
+          - mint
+          - sand
+          - lilac
+          - coral
+          - night
+          title: Background
+          default: blue
+        headwear:
+          type: string
+          enum:
+          - cap
+          - none
+          title: Headwear
+          default: cap
+        tie:
+          type: string
+          enum:
+          - red
+          - blue
+          - green
+          - graphite
+          title: Tie
+          default: red
+      additionalProperties: false
+      type: object
+      title: Avatar
     BillingUsage:
       properties:
         month:
@@ -1802,6 +1861,8 @@ components:
             type: integer
           type: object
           title: Competence Points
+        avatar:
+          $ref: '#/components/schemas/Avatar'
         achievements:
           items:
             $ref: '#/components/schemas/ProfileAchievement'
@@ -1823,6 +1884,7 @@ components:
       - level
       - runs_completed
       - competence_points
+      - avatar
       - achievements
       - history
       title: Profile

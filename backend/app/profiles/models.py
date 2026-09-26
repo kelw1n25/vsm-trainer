@@ -48,6 +48,8 @@ class Employee(CreatedAtMixin, Base):
     xp: Mapped[int] = mapped_column(default=0)
     # {"communication": 12, "first_aid": 5, ...} — список компетенций задаётся в конфиге
     competence_points: Mapped[dict[str, int]] = mapped_column(JSONB, default=dict)
+    # Аватар-конструктор {"background", "headwear", "tie"} — см. profiles/avatar.py; пусто — по умолчанию
+    avatar: Mapped[dict[str, str]] = mapped_column(JSONB, default=dict, server_default="{}")
     # Сгорание баллов: дни без прохождений считаются от более поздней из двух дат
     last_activity_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_burn_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

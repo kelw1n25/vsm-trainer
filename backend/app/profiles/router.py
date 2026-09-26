@@ -12,6 +12,7 @@ from app.auth.deps import get_current_employee
 from app.db import get_db
 from app.engine.models import RunStatus, ScenarioRun
 from app.game_config import game_config
+from app.profiles.avatar import Avatar, avatar_of
 from app.profiles.models import Employee, Role
 from app.scenarios.models import Scenario
 
@@ -46,6 +47,7 @@ class Profile(BaseModel):
     level: LevelOut
     runs_completed: int
     competence_points: dict[str, int]
+    avatar: Avatar
     achievements: list[ProfileAchievement]
     history: list[HistoryItem]
 
@@ -77,6 +79,7 @@ def get_profile(employee: Employee = Depends(get_current_employee), db: Session 
             )
         ),
         competence_points={code: employee.competence_points.get(code, 0) for code in game_config.competences},
+        avatar=avatar_of(employee.avatar),
         # Все ачивки из конфига: полученные — с датой, остальные — как цель
         achievements=[
             ProfileAchievement(**describe(code).model_dump(), earned_at=earned.get(code))
@@ -97,3 +100,12 @@ def get_profile(employee: Employee = Depends(get_current_employee), db: Session 
             for run, scenario in runs
         ],
     )
+
+
+@router.put("/avatar", summary="Сохранить аватар: фон, головной убор и галстук из готовых вариантов")
+def update_avatar(
+    avatar: Avatar, employee: Employee = Depends(get_current_employee), db: Session = Depends(get_db)
+) -> Avatar:
+    employee.avatar = avatar.model_dump()
+    db.commit()
+    return avatar
