@@ -1,0 +1,83 @@
+# Проверки на каждый push и pull request: lint → test → build для всех четырёх частей.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: vsm
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: vsm_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U vsm -d vsm_test" --health-interval 3s --health-timeout 3s --health-retries 10
+    env:
+      POSTGRES_USER: vsm
+      POSTGRES_PASSWORD: ci-only-password
+      POSTGRES_DB: vsm_test
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      # Lint: модули импортируются и компилируются без ошибок
+      - run: python -m compileall -q app scripts
+      # Тесты на настоящем PostgreSQL; test_openapi ловит устаревший docs/openapi.yaml
+      - run: python -m pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      # tsc — проверка типов, затем production-сборка
+      - run: npm run build
+
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Тесты ядра (VSMCore)
+        working-directory: ios/VSMKit
+        run: swift test
+      - name: Сборка приложения для симулятора
+        working-directory: ios
+        run: |
+          brew install xcodegen
+          xcodegen generate
+          xcodebuild build -project VSMTrainer.xcodeproj -scheme VSMTrainer \
+            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO
+
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      # lint — Android Lint, test — JVM-тесты и Compose UI-тесты на Robolectric, assembleDebug — APK
+      - run: ./gradlew lintDebug testDebugUnitTest assembleDebug
