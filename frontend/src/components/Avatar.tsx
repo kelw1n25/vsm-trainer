@@ -31,9 +31,13 @@ export function Avatar({ size = 64 }: { size?: number }) {
         <rect x="38" y="52" width="6" height="4" rx="1" fill="#E7C15A" />
         <rect x="28.5" y="37" width="7" height="10" rx="3.5" fill="#C9C9C9" />
         <circle cx="32" cy="27" r="14" fill={`url(#${id}-head)`} />
-        <path d="M18 20Q32 3 46 20Z" fill="#2A3B66" />
-        <rect x="18.5" y="17.5" width="27" height="2.8" rx="1" fill="#E7C15A" />
-        <path d="M18 20.5H49" stroke="#18233F" strokeWidth="2.8" strokeLinecap="round" />
+        {/* Фуражка анфас: тулья, околыш с кантом, кокарда и симметричный козырёк */}
+        <path d="M18.6 19.6C15 15.4 20.4 6.6 32 6.2C43.6 6.6 49 15.4 45.4 19.6Z" fill="#34487A" />
+        <rect x="18.4" y="17.4" width="27.2" height="4" rx="1.3" fill="#1E2848" />
+        <path d="M18.6 17.6H45.4" stroke="#E7C15A" strokeWidth="0.8" />
+        <ellipse cx="32" cy="16" rx="2.4" ry="2.7" fill="#E7C15A" />
+        <ellipse cx="32" cy="16" rx="1" ry="1.2" fill="#C9483E" />
+        <path d="M17.8 21.2C25 23 39 23 46.2 21.2C44.6 25 39 26 32 26C25 26 19.4 25 17.8 21.2Z" fill="#141B30" />
       </g>
     </svg>
   );

@@ -556,16 +556,6 @@ export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood
             )}
             <g transform={`rotate(${posture.head} 0 -67)`}>
               <circle cx="0" cy="-79.5" r="13.2" />
-              {uniform && (
-                <g>
-                  {/* Фуражка: тулья, околыш, кокарда и козырёк */}
-                  <path d="M-12.6 -87C-13 -95.5 -6 -99.5 0 -99.5C6 -99.5 13 -95.5 12.6 -87Z" fill={UNIFORM_COLOR} />
-                  <rect x="-12.4" y="-89.4" width="24.8" height="2.8" rx="1" fill="#222E52" />
-                  <path d="M-12 -88.4H12" stroke="#F2CD5E" strokeWidth="0.8" />
-                  <circle cx="0" cy="-92.6" r="1.7" fill="#F2CD5E" />
-                  <path d="M-12.2 -86.6C-2 -84.8 10 -84.8 17.4 -87.2C14.4 -83.4 4 -82.6 -12.2 -84.8Z" fill="#1A2440" />
-                </g>
-              )}
             </g>
             <path
               d={`M9.4 -57.5Q${(9.4 + hx) / 2 + 4} ${(-57.5 + hy) / 2} ${hx} ${hy}`}
@@ -579,6 +569,35 @@ export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood
           </g>
         </g>
       </g>
+      {/* Фуражка поверх фильтра: у неё свой объём, а «глиняные» блики её не засвечивают */}
+      {uniform && (
+        <g transform={place}>
+          <defs>
+            <linearGradient id={`${id}-cap`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#4F66A3" />
+              <stop offset="0.55" stopColor={UNIFORM_COLOR} />
+              <stop offset="1" stopColor="#233258" />
+            </linearGradient>
+            <linearGradient id={`${id}-visor`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#2A3553" />
+              <stop offset="1" stopColor="#0E1424" />
+            </linearGradient>
+          </defs>
+          <g transform={`translate(0 ${lift}) rotate(${posture.body} 0 -36) rotate(${posture.head} 0 -67)`}>
+            {/* Фуражка анфас: расширяющаяся кверху тулья, околыш с кантом, кокарда и цельный козырёк */}
+            <path d="M-12.4 -88.6C-15.8 -92.4 -11.6 -99.6 0 -100C11.6 -99.6 15.8 -92.4 12.4 -88.6Z" fill={`url(#${id}-cap)`} />
+            <path d="M-10 -97.2C-5 -99 5 -99 10 -97.2" fill="none" stroke="#4E64A0" strokeWidth="0.9" strokeLinecap="round" />
+            <rect x="-12.6" y="-89.4" width="25.2" height="3.6" rx="1.2" fill="#1E2848" />
+            <path d="M-12.4 -89.2H12.4" stroke="#F2CD5E" strokeWidth="0.7" />
+            <ellipse cx="0" cy="-90.8" rx="2.3" ry="2.6" fill="#F2CD5E" />
+            <ellipse cx="0" cy="-90.8" rx="1" ry="1.2" fill="#C9483E" />
+            {/* Тень от козырька на голове */}
+            <ellipse cx="0" cy="-81.8" rx="10.6" ry="1.3" fill="#000000" opacity="0.1" />
+            <path d="M-13 -86.2C-6 -84.4 6 -84.4 13 -86.2C11.4 -82.6 6 -81.6 0 -81.6C-6 -81.6 -11.4 -82.6 -13 -86.2Z" fill={`url(#${id}-visor)`} />
+            <path d="M-10.6 -85.2C-4 -84 4 -84 10.6 -85.2" fill="none" stroke="#3A4668" strokeWidth="0.6" strokeLinecap="round" />
+          </g>
+        </g>
+      )}
     </g>
   );
 }
