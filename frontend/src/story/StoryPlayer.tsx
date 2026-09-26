@@ -74,6 +74,16 @@ export function StoryPlayer() {
     [run?.characters],
   );
 
+  // Высота голоса: детский и женский выше, мужской ниже, у проводника — ровный средний
+  useEffect(() => {
+    const voices: Record<string, number> = { player: 190 };
+    for (const character of run?.characters ?? []) {
+      const { look } = character;
+      voices[character.id] = look.child ? 330 : look.hair_style === "short" ? 150 : 250;
+    }
+    audio.setVoices(voices);
+  }, [audio, run?.characters]);
+
   if (phase === "error") {
     return (
       <div className="story story--message">

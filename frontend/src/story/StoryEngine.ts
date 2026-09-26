@@ -37,7 +37,12 @@ export interface StoryView {
 /** Кто проигрывает звуки реплик — движок не знает, как именно (в браузере это StoryAudio). */
 export interface SoundPlayer {
   play(name: string): void;
+  /** «Голос» персонажа во время печати реплики. */
+  talk(speaker: string, soft?: boolean): void;
 }
+
+// Щелчок голоса — на каждый третий напечатанный символ, кроме пробелов и знаков препинания
+const TALK_EVERY_CHARS = 3;
 
 interface Segment {
   scene: Scene;
@@ -224,6 +229,10 @@ export class StoryEngine {
         return;
       }
       if (".!?…".includes(line.text[shown - 1]) && line.text[shown] === " ") this.pauseTicks = SENTENCE_PAUSE_TICKS;
+      const char = line.text[shown - 1];
+      if (line.kind !== "narration" && shown % TALK_EVERY_CHARS === 0 && /[\p{L}\p{N}]/u.test(char)) {
+        this.sounds?.talk(line.speaker, line.kind === "thought");
+      }
       this.update({ shownChars: shown });
     }, TYPE_INTERVAL_MS);
   }
