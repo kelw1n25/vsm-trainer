@@ -302,13 +302,17 @@ data class Analytics(
     val recommendation: Recommendation? = null,
 )
 
-/** Действие на клиенте, которое сервер сам увидеть не может (`POST /api/analytics/events`). */
+/**
+ * Действие на клиенте, которое сервер сам увидеть не может (`POST /api/analytics/events`).
+ * У `platform` нет значения по умолчанию намеренно: kotlinx.serialization не пишет в JSON поля
+ * со значением по умолчанию, и сервер отклонил бы событие без платформы.
+ */
 @Serializable
 data class ClientEvent(
     val type: String,
     @SerialName("run_id") val runId: String? = null,
     @SerialName("notification_id") val notificationId: Int? = null,
-    val platform: String = "android",
+    val platform: String,
 )
 
 @Serializable

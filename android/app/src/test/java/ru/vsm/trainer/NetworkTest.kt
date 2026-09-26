@@ -146,4 +146,15 @@ class NetworkTest {
             assertEquals("internal_error", error.code)
         }
     }
+
+    @Test
+    fun clientEventCarriesPlatform() = runTest {
+        respond { MockResponse().setResponseCode(202).setBody("""{"status": "accepted"}""") }
+        withContext(Dispatchers.IO) {
+            RemoteTrainerRepository(api, InMemoryResponseCache(), testJson).recordEvent("run_exited", runId = "r1")
+        }
+        val body = server.takeRequest().body.readUtf8()
+        assertTrue("сервер отклоняет событие без платформы: $body", "\"platform\":\"android\"" in body)
+        assertTrue(body, "\"run_id\":\"r1\"" in body)
+    }
 }

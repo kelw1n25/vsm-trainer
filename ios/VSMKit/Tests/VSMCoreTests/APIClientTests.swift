@@ -89,6 +89,18 @@ final class APIClientTests: XCTestCase {
     }
 }
 
+final class ClientEventTests: XCTestCase {
+    func testClientEventCarriesPlatform() async throws {
+        let transport = StubTransport { _ in (202, Data(#"{"status": "accepted"}"#.utf8)) }
+        let api = APIClient(baseURL: baseURL, transport: transport, tokens: InMemoryTokenStore(tokens()))
+        await RemoteTrainerRepository(api: api, cache: InMemoryResponseCache()).recordEvent("run_exited", runId: "r1", notificationId: nil)
+        let body = try XCTUnwrap(transport.requests.first?.httpBody)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        XCTAssertEqual(json["platform"] as? String, "ios", "сервер отклоняет событие без платформы")
+        XCTAssertEqual(json["run_id"] as? String, "r1")
+    }
+}
+
 final class ExpectationFlag: @unchecked Sendable {
     private let lock = NSLock()
     private var value = false

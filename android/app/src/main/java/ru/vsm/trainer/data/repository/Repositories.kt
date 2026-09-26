@@ -76,7 +76,7 @@ class RemoteTrainerRepository(
 
     /** Аналитическое событие не должно мешать пользователю: ошибку отправки не показываем. */
     override suspend fun recordEvent(type: String, runId: String?, notificationId: Int?) {
-        runCatching { apiCall { api.recordEvent(ClientEvent(type, runId, notificationId)) } }
+        runCatching { apiCall { api.recordEvent(ClientEvent(type, runId, notificationId, platform = "android")) } }
     }
 
     override fun clearCache() = cache.clear()
