@@ -12,13 +12,11 @@ def api_error(status: int, code: str, message: str, headers: dict[str, str] | No
 
 
 async def validation_error_handler(_: Request, error: RequestValidationError) -> JSONResponse:
-    fields = [".".join(str(part) for part in item["loc"] if part != "body") for item in error.errors()]
-    return JSONResponse(
-        status_code=422,
-        content={
-            "detail": {
-                "code": "validation_error",
-                "message": f"Некорректные данные запроса. Проверьте поля: {', '.join(fields)}",
-            }
-        },
-    )
+    errors = error.errors()
+    # Тело — не JSON: позиция символа в ответе человеку ничего не скажет
+    if any(item["type"] == "json_invalid" for item in errors):
+        message = "Тело запроса — некорректный JSON"
+    else:
+        fields = [".".join(str(part) for part in item["loc"] if part != "body") for item in errors]
+        message = f"Некорректные данные запроса. Проверьте поля: {', '.join(fields)}"
+    return JSONResponse(status_code=422, content={"detail": {"code": "validation_error", "message": message}})
