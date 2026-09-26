@@ -310,14 +310,14 @@ export type Mood =
   | "serious";
 
 /** Лицо персонажа: глаза, брови и рот передают эмоцию — единый стиль для всех иллюстраций. */
-function Face({ cx, cy, r, mood = "calm" }: { cx: number; cy: number; r: number; mood?: Mood }) {
+function Face({ cx, cy, r, mood = "calm", ink = "#2B2320" }: { cx: number; cy: number; r: number; mood?: Mood; ink?: string }) {
   const ex = r * 0.36;
   const ey = cy + r * 0.08;
   const er = Math.max(0.9, r * 0.11);
   const by = cy - r * 0.16;
   const my = cy + r * 0.46;
   const mw = r * 0.28;
-  const line = { stroke: "#2B2320", strokeWidth: Math.max(1, r * 0.1), strokeLinecap: "round", fill: "none" } as const;
+  const line = { stroke: ink, strokeWidth: Math.max(1, r * 0.1), strokeLinecap: "round", fill: "none" } as const;
   const eyes = [cx - ex, cx + ex];
   return (
     <g>
@@ -335,7 +335,7 @@ function Face({ cx, cy, r, mood = "calm" }: { cx: number; cy: number; r: number;
               }
             />
           ))
-        : eyes.map((x) => <circle key={x} cx={x} cy={ey} r={mood === "surprised" ? er * 1.3 : er} fill="#2B2320" />)}
+        : eyes.map((x) => <circle key={x} cx={x} cy={ey} r={mood === "surprised" ? er * 1.3 : er} fill={ink} />)}
       {mood === "angry" && <path {...line} d={`M${cx - ex - er * 2} ${by - er}l${er * 3} ${er * 1.6}M${cx + ex + er * 2} ${by - er}l${-er * 3} ${er * 1.6}`} />}
       {mood === "surprised" && (
         <path {...line} d={`M${cx - ex - er * 1.6} ${by - er * 1.2}q${er * 1.6} ${-er * 1.4} ${er * 3.2} 0M${cx + ex - er * 1.6} ${by - er * 1.2}q${er * 1.6} ${-er * 1.4} ${er * 3.2} 0`} />
@@ -355,11 +355,11 @@ function Face({ cx, cy, r, mood = "calm" }: { cx: number; cy: number; r: number;
         </g>
       )}
       {mood === "calm" && <path {...line} d={`M${cx - mw} ${my}q${mw} ${mw * 0.7} ${mw * 2} 0`} />}
-      {mood === "happy" && <path d={`M${cx - mw * 1.2} ${my - mw * 0.2}q${mw * 1.2} ${mw * 1.8} ${mw * 2.4} 0z`} fill="#8A3B34" />}
+      {mood === "happy" && <path d={`M${cx - mw * 1.2} ${my - mw * 0.2}q${mw * 1.2} ${mw * 1.8} ${mw * 2.4} 0z`} fill={ink} />}
       {mood === "tipsy" && <path {...line} d={`M${cx - mw * 1.3} ${my - mw * 0.2}q${mw * 1.4} ${mw * 1.2} ${mw * 2.6} ${-mw * 0.5}`} />}
-      {mood === "angry" && <ellipse cx={cx} cy={my} rx={mw * 0.8} ry={mw * 0.6} fill="#8A3B34" />}
-      {mood === "worried" && <ellipse cx={cx} cy={my} rx={mw * 0.45} ry={mw * 0.4} fill="#8A3B34" />}
-      {mood === "surprised" && <ellipse cx={cx} cy={my} rx={mw * 0.5} ry={mw * 0.65} fill="#8A3B34" />}
+      {mood === "angry" && <ellipse cx={cx} cy={my} rx={mw * 0.8} ry={mw * 0.6} fill={ink} />}
+      {mood === "worried" && <ellipse cx={cx} cy={my} rx={mw * 0.45} ry={mw * 0.4} fill={ink} />}
+      {mood === "surprised" && <ellipse cx={cx} cy={my} rx={mw * 0.5} ry={mw * 0.65} fill={ink} />}
       {mood === "thinking" && <path {...line} d={`M${cx - mw * 0.6} ${my}h${mw * 1.4}`} />}
       {mood === "serious" && <path {...line} d={`M${cx - mw} ${my}h${mw * 2}`} />}
       {(mood === "annoyed" || mood === "pained" || mood === "sad") && (
@@ -400,16 +400,15 @@ function WindowView({ x, y, width, height }: { x: number; y: number; width: numb
 }
 
 // ───────── Персонажи ─────────
-// Все люди на иллюстрациях собираются из одного компонента: одинаковые пропорции,
-// голова соединена с корпусом шеей, у всех сотрудников одна форма.
+// Все люди — объёмные фигурки-манекены из одного компонента: круглая голова с бликом, гладкое тело,
+// одинаковые пропорции. Сотрудники поезда — красные, пассажиры — серые с оттенком своей одежды.
 
 export type Outfit = "uniform" | { top: string; bottom: string };
 export type Hand = "down" | "point" | "hold" | "radio" | "hush" | "chest" | "throat";
 type Item = "ticket" | "bottle" | "cup" | "extinguisher" | "radio";
 
-const UNIFORM = { top: "#1F2E57", bottom: "#18233F" };
-const SKIN = "#F2C9A5";
-const SHOE = "#141B2E";
+const STAFF_COLOR = "#D8262E";
+const PASSENGER_GREY = "#C3C8CF";
 
 // Куда тянется правая рука (координаты фигуры ростом ~92 с опорой в точке 0,0)
 const HAND_POSITION: Record<Hand, [number, number]> = {
@@ -422,6 +421,12 @@ const HAND_POSITION: Record<Hand, [number, number]> = {
   throat: [3, -65],
 };
 
+function mix(from: string, to: string, share: number): string {
+  const channel = (hex: string, i: number) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+  const parts = [0, 1, 2].map((i) => Math.round(channel(from, i) * (1 - share) + channel(to, i) * share));
+  return `#${parts.map((value) => value.toString(16).padStart(2, "0")).join("")}`;
+}
+
 export interface PersonProps {
   x: number;
   /** Стоя — уровень пола под ногами, сидя — уровень сиденья. */
@@ -431,8 +436,6 @@ export interface PersonProps {
   /** Смотрит влево. */
   flip?: boolean;
   outfit: Outfit;
-  hair?: string;
-  hairStyle?: "short" | "bun" | "long";
   mood?: Mood;
   hand?: Hand;
   item?: Item;
@@ -480,78 +483,63 @@ function HeldItem({ kind, x, y }: { kind: Item; x: number; y: number }) {
   }
 }
 
-export function Person({
-  x,
-  y,
-  s = 1,
-  pose = "stand",
-  flip = false,
-  outfit,
-  hair = "#2B2320",
-  hairStyle = "short",
-  mood = "calm",
-  hand = "down",
-  item,
-}: PersonProps) {
-  const uniform = outfit === "uniform";
-  const { top, bottom } = uniform ? UNIFORM : outfit;
-  // Сидя верхняя часть тела опускается к сиденью, ноги уходят вперёд
+export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood = "calm", hand = "down", item }: PersonProps) {
+  const id = useSvgId();
+  // Пассажира выдаёт лёгкий оттенок его одежды на сером манекене
+  const base = outfit === "uniform" ? STAFF_COLOR : mix(PASSENGER_GREY, outfit.top, 0.22);
+  const light = mix(base, "#FFFFFF", 0.55);
+  const dark = mix(base, "#000000", 0.32);
+  const body = `url(#${id}-body)`;
   const lift = pose === "sit" ? 32 : 0;
   const [hx, hy] = HAND_POSITION[hand];
   return (
     <g transform={`translate(${x} ${y}) scale(${flip ? -s : s} ${s})`}>
-      {pose === "stand" && (
-        <g fill={bottom}>
-          <rect x="-10" y="-34" width="8.5" height="33" rx="3.5" />
-          <rect x="1.5" y="-34" width="8.5" height="33" rx="3.5" />
-          <ellipse cx="-6" cy="0" rx="6.5" ry="2.8" fill={SHOE} />
-          <ellipse cx="6" cy="0" rx="6.5" ry="2.8" fill={SHOE} />
+      <defs>
+        <radialGradient id={`${id}-head`} cx="0.36" cy="0.3" r="0.75">
+          <stop offset="0" stopColor={mix(base, "#FFFFFF", 0.75)} />
+          <stop offset="0.45" stopColor={base} />
+          <stop offset="1" stopColor={dark} />
+        </radialGradient>
+        {/* Свет слева: одна горизонтальная растяжка для всех частей тела в координатах фигуры */}
+        <linearGradient id={`${id}-body`} gradientUnits="userSpaceOnUse" x1="-16" y1="0" x2="16" y2="0">
+          <stop offset="0" stopColor={light} />
+          <stop offset="0.45" stopColor={base} />
+          <stop offset="1" stopColor={dark} />
+        </linearGradient>
+      </defs>
+      {pose === "stand" ? (
+        <g stroke={body} strokeLinecap="round" fill="none">
+          <path d="M-4.6 -32L-6 -4" strokeWidth="8.5" />
+          <path d="M4.6 -32L6 -4" strokeWidth="8.5" />
+          <ellipse cx="-7.5" cy="-1.8" rx="6.5" ry="3" fill={dark} stroke="none" />
+          <ellipse cx="7.5" cy="-1.8" rx="6.5" ry="3" fill={dark} stroke="none" />
         </g>
-      )}
+      ) : null}
       <g transform={`translate(0 ${lift})`}>
-        <path d="M-11 -58L-15 -36" stroke={top} strokeWidth="6.5" strokeLinecap="round" />
-        <circle cx="-15" cy="-35" r="3" fill={SKIN} />
-        <path d="M-13 -31L-14.5 -54Q-14.5 -63.5 -5 -63.5H5Q14.5 -63.5 14.5 -54L13 -31Z" fill={top} />
-        <rect x="-3.4" y="-70" width="6.8" height="9" rx="2.5" fill="#E6B894" />
-        {uniform ? (
-          <g>
-            <path d="M-5 -63.5L0 -54L5 -63.5Z" fill="#FFFFFF" />
-            <path d="M-1.2 -60.5H1.2L2.2 -50L0 -47.5L-2.2 -50Z" fill="#D23A3A" />
-            <path d="M0 -54V-32" stroke="#2A3B6B" strokeWidth="1" />
-            <rect x="5.5" y="-55" width="5" height="3.5" rx="1" fill="#E7C15A" />
-          </g>
-        ) : (
-          <path d="M-4.5 -63.5L0 -57L4.5 -63.5Z" fill="#FFFFFF" opacity="0.85" />
-        )}
-        {hairStyle === "bun" && <circle cx="-8" cy="-86" r="5" fill={hair} />}
-        <circle cx="0" cy="-77" r="11" fill={SKIN} />
-        <path d="M-11.3 -78C-12.5 -92.5 12.5 -92.5 11.3 -78C8 -85.5 -8 -85.5 -11.3 -78Z" fill={hair} />
-        {hairStyle === "long" && (
-          <path d="M-11 -78C-12 -70 -11 -66 -8 -63M11 -78C12 -70 11 -66 8 -63" stroke={hair} strokeWidth="4" strokeLinecap="round" fill="none" />
-        )}
-        {uniform && (
-          <g>
-            <path d="M-12 -83Q0 -96 12 -83Z" fill={UNIFORM.top} />
-            <rect x="-11.5" y="-85.5" width="23" height="2.6" rx="1" fill="#E7C15A" />
-            <path d="M-12 -82.5H15.5" stroke="#0F1A38" strokeWidth="2.6" strokeLinecap="round" />
-          </g>
-        )}
-        <Face cx={0} cy={-77} r={11} mood={mood} />
+        <path d="M-9.5 -58L-13.5 -37" stroke={body} strokeWidth="6.5" strokeLinecap="round" />
+        <circle cx="-13.8" cy="-35.5" r="3.6" fill={base} />
+        {/* Корпус манекена: плечи, грудь, талия, бёдра — без складок и деталей одежды */}
         <path
-          d={`M11 -58Q${(11 + hx) / 2 + 4} ${(-58 + hy) / 2} ${hx} ${hy}`}
-          stroke={top}
+          d="M-9 -31C-10 -36 -8.5 -40 -8 -43C-9.5 -48 -11.5 -53 -11.5 -57Q-11 -63 -3 -63.5H3Q11 -63 11.5 -57C11.5 -53 9.5 -48 8 -43C8.5 -40 10 -36 9 -31Q0 -27.5 -9 -31Z"
+          fill={body}
+        />
+        <rect x="-3.2" y="-69" width="6.4" height="8" rx="3" fill={base} />
+        <circle cx="0" cy="-79" r="12.5" fill={`url(#${id}-head)`} />
+        <Face cx={0} cy={-78} r={12} mood={mood} ink={mix(base, "#000000", 0.62)} />
+        <path
+          d={`M9.5 -58Q${(9.5 + hx) / 2 + 4} ${(-58 + hy) / 2} ${hx} ${hy}`}
+          stroke={body}
           strokeWidth="6.5"
           strokeLinecap="round"
           fill="none"
         />
         {item && <HeldItem kind={item} x={hx} y={hy} />}
-        <circle cx={hx} cy={hy} r="3" fill={SKIN} />
+        <circle cx={hx} cy={hy} r="3.6" fill={base} />
       </g>
-      {/* Сидя бедро лежит поверх корпуса, голень опущена к полу */}
       {pose === "sit" && (
-        <g>
-          <path d="M-4 -4H20L22 19" stroke={bottom} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <ellipse cx="25" cy="22" rx="6.5" ry="2.8" fill={SHOE} />
+        <g stroke={body} strokeLinecap="round" strokeLinejoin="round" fill="none">
+          <path d="M-4 -3H20L22 18" strokeWidth="9" />
+          <ellipse cx="25" cy="21" rx="6.5" ry="3" fill={dark} stroke="none" />
         </g>
       )}
     </g>
@@ -576,7 +564,7 @@ function SeatConflict() {
         5А
       </text>
       <rect x="92" y="116" width="64" height="18" rx="8" fill="#1F459D" />
-      <Person x={126} y={118} s={0.78} pose="sit" flip outfit={{ top: "#E8735A", bottom: "#3A4A6B" }} hair="#6B3F2A" hairStyle="long" mood="annoyed" />
+      <Person x={126} y={118} s={0.78} pose="sit" flip outfit={{ top: "#E8735A", bottom: "#3A4A6B" }} mood="annoyed" />
       <rect x="148" y="104" width="10" height="28" rx="4" fill="#1B3D8C" />
       <Person x={42} y={144} s={0.95} outfit={{ top: "#56657F", bottom: "#34405A" }} mood="angry" hand="point" item="ticket" />
       <path d="M62 14h22a6 6 0 0 1 6 6v8a6 6 0 0 1-6 6H72l-6 6v-6h-4a6 6 0 0 1-6-6v-8a6 6 0 0 1 6-6z" fill="#FFFFFF" />
@@ -596,7 +584,7 @@ function ConductorAndPassenger() {
       <rect x="10" y="66" width="46" height="62" rx="11" fill="#2E5CC4" />
       <rect x="16" y="62" width="34" height="11" rx="5" fill="#F4F7FB" />
       <rect x="6" y="114" width="64" height="18" rx="7" fill="#244DA8" />
-      <Person x={30} y={116} s={0.8} pose="sit" outfit={{ top: "#4F7F52", bottom: "#34405A" }} hair="#3A2E2A" mood="tipsy" hand="hold" item="bottle" />
+      <Person x={30} y={116} s={0.8} pose="sit" outfit={{ top: "#4F7F52", bottom: "#34405A" }} mood="tipsy" hand="hold" item="bottle" />
       <g stroke="#9AA9C0" strokeWidth="1.5" fill="none" strokeLinecap="round">
         <path d="M52 50q4-4 8 0" />
         <path d="M58 42q3-3 6 0" />
@@ -615,8 +603,8 @@ function MedicalHelp() {
       <rect x="84" y="62" width="50" height="66" rx="12" fill="#2E5CC4" />
       <rect x="90" y="58" width="38" height="11" rx="5" fill="#F4F7FB" />
       <rect x="76" y="112" width="68" height="18" rx="7" fill="#244DA8" />
-      <Person x={110} y={114} s={0.8} pose="sit" flip outfit={{ top: "#7DA7D9", bottom: "#34405A" }} hair="#4A3426" mood="pained" hand="chest" />
-      <Person x={38} y={146} s={0.95} outfit="uniform" hairStyle="bun" hair="#6B3F2A" mood="worried" hand="radio" item="radio" />
+      <Person x={110} y={114} s={0.8} pose="sit" flip outfit={{ top: "#7DA7D9", bottom: "#34405A" }} mood="pained" hand="chest" />
+      <Person x={38} y={146} s={0.95} outfit="uniform" mood="worried" hand="radio" item="radio" />
       <rect x="60" y="126" width="22" height="16" rx="3" fill="#FFFFFF" stroke="#D8343C" strokeWidth="1.5" />
       <path d="M71 130v8M67 134h8" stroke="#D8343C" strokeWidth="2.5" strokeLinecap="round" />
       <path d="M66 126v-3h10v3" stroke="#D8343C" strokeWidth="1.5" fill="none" />
@@ -670,7 +658,7 @@ function DelayBoard() {
       <rect y="103" width="160" height="3" fill="#2A5FD8" />
       <rect y="114" width="160" height="36" fill="#BFCDE0" />
       <path d="M0 118H160" stroke="#FFFFFF" strokeWidth="2" strokeDasharray="8 6" opacity="0.8" />
-      <Person x={26} y={146} s={0.55} outfit={{ top: "#E8735A", bottom: "#3A4A6B" }} hair="#6B3F2A" hairStyle="long" mood="annoyed" />
+      <Person x={26} y={146} s={0.55} outfit={{ top: "#E8735A", bottom: "#3A4A6B" }} mood="annoyed" />
       <Person x={56} y={146} s={0.58} outfit={{ top: "#56657F", bottom: "#34405A" }} mood="angry" hand="point" />
       <Person x={124} y={146} s={0.6} flip outfit="uniform" mood="calm" hand="hold" />
     </Frame>
@@ -697,11 +685,11 @@ function NoisyGroup() {
       <rect x="2" y="84" width="104" height="30" rx="10" fill="#2E5CC4" />
       <rect x="0" y="108" width="108" height="16" rx="7" fill="#244DA8" />
       {[
-        { x: 16, top: "#E8735A", hair: "#3A2E2A", style: "short" as const },
-        { x: 46, top: "#7BA05B", hair: "#6B3F2A", style: "long" as const },
-        { x: 76, top: "#F2B84B", hair: "#2B2320", style: "short" as const },
-      ].map(({ x, top, hair, style }) => (
-        <Person key={x} x={x} y={110} s={0.62} pose="sit" outfit={{ top, bottom: "#34405A" }} hair={hair} hairStyle={style} mood="happy" />
+        { x: 16, top: "#E8735A" },
+        { x: 46, top: "#7BA05B" },
+        { x: 76, top: "#F2B84B" },
+      ].map(({ x, top }) => (
+        <Person key={x} x={x} y={110} s={0.62} pose="sit" outfit={{ top, bottom: "#34405A" }} mood="happy" />
       ))}
       <rect x="96" y="96" width="14" height="18" rx="4" fill="#1B1F2A" />
       <circle cx="103" cy="102" r="3.5" fill="#3A4150" />
@@ -733,7 +721,7 @@ function BoardingTicket() {
       <text x="32" y="19" textAnchor="middle" fontSize="9" fontWeight="700" fill="#FFB45A" fontFamily="Manrope, sans-serif">
         7 мин
       </text>
-      <Person x={42} y={146} s={0.9} outfit={{ top: "#7A8699", bottom: "#2F3B55" }} hair="#5B5B5B" mood="worried" hand="point" item="ticket" />
+      <Person x={42} y={146} s={0.9} outfit={{ top: "#7A8699", bottom: "#2F3B55" }} mood="worried" hand="point" item="ticket" />
       <Person x={124} y={146} s={0.9} flip outfit="uniform" mood="thinking" hand="hold" item="radio" />
       <path d="M70 52h14a5 5 0 0 1 5 5v6a5 5 0 0 1-5 5h-6l-4 4v-4h-4a5 5 0 0 1-5-5v-6a5 5 0 0 1 5-5z" fill="#FFFFFF" />
       <text x="77" y="65" textAnchor="middle" fontSize="11" fontWeight="800" fill="#1E5FD6" fontFamily="Manrope, sans-serif">
@@ -757,7 +745,7 @@ function PetAndBicycle() {
         <circle cx="128" cy="130" r="12" />
         <path d="M92 130l12-20h14l10 20M104 110l6 20M116 104h6M104 110l-4-8h-5" />
       </g>
-      <Person x={40} y={146} s={0.88} outfit={{ top: "#7BA05B", bottom: "#3A3550" }} hair="#C58B4A" hairStyle="long" mood="happy" hand="down" />
+      <Person x={40} y={146} s={0.88} outfit={{ top: "#7BA05B", bottom: "#3A3550" }} mood="happy" hand="down" />
       <path d="M55 110q10 12 20 22" stroke="#8A5A2B" strokeWidth="1.5" fill="none" />
       <g fill="#C98A3A">
         <ellipse cx="80" cy="136" rx="10" ry="6" />
@@ -784,7 +772,7 @@ function PanicAttack() {
       <rect x="12" y="60" width="50" height="66" rx="12" fill="#2A57C0" />
       <rect x="18" y="56" width="38" height="11" rx="5" fill="#F4F7FB" />
       <rect x="6" y="110" width="68" height="18" rx="8" fill="#1F459D" />
-      <Person x={30} y={112} s={0.8} pose="sit" outfit={{ top: "#7B5EA7", bottom: "#3A3550" }} hair="#C58B4A" hairStyle="long" mood="worried" hand="chest" />
+      <Person x={30} y={112} s={0.8} pose="sit" outfit={{ top: "#7B5EA7", bottom: "#3A3550" }} mood="worried" hand="chest" />
       <g stroke="#8FC3F0" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.9">
         <path d="M58 44q6-4 12 0" />
         <path d="M60 36q5-3 10 0" />
@@ -808,8 +796,8 @@ function LostChild() {
       <rect x="86" y="8" width="56" height="120" rx="6" fill="#F2F5FA" />
       <rect x="94" y="18" width="40" height="36" rx="5" fill="#CFE3FF" />
       <path d="M0 128H160V150H0Z" fill="#AFBDD2" />
-      <Person x={52} y={146} s={0.95} outfit="uniform" hairStyle="bun" hair="#4A3426" mood="calm" hand="point" />
-      <Person x={108} y={146} s={0.6} flip outfit={{ top: "#3E6FD8", bottom: "#2F3B55" }} hair="#6B3F2A" mood="sad" hand="down" />
+      <Person x={52} y={146} s={0.95} outfit="uniform" mood="calm" hand="point" />
+      <Person x={108} y={146} s={0.6} flip outfit={{ top: "#3E6FD8", bottom: "#2F3B55" }} mood="sad" hand="down" />
       <path d="M126 72c-4-5-11-1-8 4l8 7 8-7c3-5-4-9-8-4z" fill="#E1343C" opacity="0.85" />
     </Frame>
   );
@@ -824,7 +812,7 @@ function BusinessCatering() {
       <rect x="98" y="60" width="50" height="68" rx="12" fill="#2A57C0" />
       <rect x="104" y="56" width="38" height="11" rx="5" fill="#F4F7FB" />
       <rect x="90" y="112" width="66" height="18" rx="8" fill="#1F459D" />
-      <Person x={124} y={114} s={0.78} pose="sit" flip outfit={{ top: "#2E3A4F", bottom: "#1E2636" }} hair="#9A9A9A" mood="thinking" />
+      <Person x={124} y={114} s={0.78} pose="sit" flip outfit={{ top: "#2E3A4F", bottom: "#1E2636" }} mood="thinking" />
       <rect x="72" y="92" width="34" height="4" rx="2" fill="#8C7A66" />
       <ellipse cx="88" cy="90" rx="11" ry="3" fill="#FFFFFF" />
       <path d="M79 90q9-13 18 0z" fill="#D9DEE7" />
@@ -849,7 +837,7 @@ function FirstClassComfort() {
       <rect x="18" y="58" width="60" height="70" rx="16" fill="#E9DCC3" />
       <rect x="24" y="54" width="48" height="12" rx="6" fill="#F7F1E6" />
       <rect x="10" y="110" width="76" height="20" rx="9" fill="#D8C7A8" />
-      <Person x={42} y={112} s={0.8} pose="sit" outfit={{ top: "#1B1F2A", bottom: "#1E2636" }} hair="#5B5B5B" mood="annoyed" />
+      <Person x={42} y={112} s={0.8} pose="sit" outfit={{ top: "#1B1F2A", bottom: "#1E2636" }} mood="annoyed" />
       <rect x="84" y="96" width="14" height="10" rx="2" fill="#FFFFFF" stroke="#B8A58A" />
       <path d="M88 99v4M94 99v4" stroke="#56657F" strokeWidth="1.5" strokeLinecap="round" />
       <path d="M100 88l6 6M106 88l-6 6" stroke="#E1343C" strokeWidth="2" strokeLinecap="round" />
@@ -879,7 +867,7 @@ function WheelchairBoarding() {
       <path d="M60 134L104 124" stroke="#A6B6CD" strokeWidth="2" strokeLinecap="round" />
       <path d="M30 70L33 104H62" stroke="#243047" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
       <path d="M26 69H35" stroke="#243047" strokeWidth="4" strokeLinecap="round" />
-      <Person x={42} y={102} s={0.8} pose="sit" outfit={{ top: "#3E6FD8", bottom: "#34465F" }} hair="#2E2622" mood="calm" />
+      <Person x={42} y={102} s={0.8} pose="sit" outfit={{ top: "#3E6FD8", bottom: "#34465F" }} mood="calm" />
       <path d="M62 104L64 121H76" stroke="#243047" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
       <circle cx="44" cy="114" r="18" fill="none" stroke="#243047" strokeWidth="3.5" />
       <circle cx="44" cy="114" r="14" fill="none" stroke="#8C9DB6" strokeWidth="1.5" />
@@ -917,7 +905,7 @@ function SmokeVestibule() {
       </g>
       <path d="M81 94q3-8 6 0" stroke="#FF8A3D" strokeWidth="3" fill="none" strokeLinecap="round" />
       <circle cx="148" cy="14" r="5" fill="#FFC53D" className="blink" />
-      <Person x={34} y={146} s={0.85} outfit={{ top: "#F2B84B", bottom: "#34405A" }} hair="#3A2E2A" mood="worried" />
+      <Person x={34} y={146} s={0.85} outfit={{ top: "#F2B84B", bottom: "#34405A" }} mood="worried" />
       <Person x={130} y={146} s={0.92} flip outfit="uniform" mood="worried" hand="hold" item="extinguisher" />
     </Frame>
   );

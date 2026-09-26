@@ -1,6 +1,6 @@
 import { useId } from "react";
 
-/** Иллюстрированный аватар текущего пользователя: проводник в форме. */
+/** Аватар текущего пользователя: проводник — красная фигурка-манекен, как в сценах новеллы. */
 export function Avatar({ size = 64 }: { size?: number }) {
   const id = useId().replace(/:/g, "");
   return (
@@ -13,19 +13,25 @@ export function Avatar({ size = 64 }: { size?: number }) {
           <stop offset="0" stopColor="#EAF2FF" />
           <stop offset="1" stopColor="#C9DDFB" />
         </linearGradient>
+        <radialGradient id={`${id}-head`} cx="0.36" cy="0.3" r="0.75">
+          <stop offset="0" stopColor="#F7C6C8" />
+          <stop offset="0.45" stopColor="#D8262E" />
+          <stop offset="1" stopColor="#931A1F" />
+        </radialGradient>
+        <linearGradient id={`${id}-body`} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#EC9396" />
+          <stop offset="0.45" stopColor="#D8262E" />
+          <stop offset="1" stopColor="#931A1F" />
+        </linearGradient>
       </defs>
       <g clipPath={`url(#${id}-clip)`}>
         <rect width="64" height="64" fill={`url(#${id}-bg)`} />
-        <path d="M8 64c1-12 10-18 24-18s23 6 24 18z" fill="#1C2B55" />
-        <path d="M25 46l7 10 7-10z" fill="#FFFFFF" />
-        <path d="M31 49h2l1.5 9-2.5 3-2.5-3z" fill="#D8343C" />
-        <rect x="27.5" y="36" width="9" height="10" rx="3" fill="#EDBE98" />
-        <ellipse cx="32" cy="28" rx="10.5" ry="12" fill="#F3CCAA" />
-        <path d="M21 27c-1-11 6-16 12-16 7 0 12 5 11 15-2-5-6-8-12-8-5 0-9 3-11 9z" fill="#2A2320" />
-        <path d="M25.5 25.5l4-.8M38.5 25.5l-4-.8" stroke="#2A2320" strokeWidth="1.2" strokeLinecap="round" />
-        <circle cx="28.3" cy="29" r="1.3" fill="#2A2320" />
-        <circle cx="35.7" cy="29" r="1.3" fill="#2A2320" />
-        <path d="M28.5 34.5q3.5 2.6 7 0" stroke="#8A4B3A" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+        <path d="M10 64c1-13 9-19 22-19s21 6 22 19z" fill={`url(#${id}-body)`} />
+        <rect x="28" y="37" width="8" height="9" rx="4" fill="#D8262E" />
+        <circle cx="32" cy="27" r="13" fill={`url(#${id}-head)`} />
+        <circle cx="27.6" cy="27.5" r="1.4" fill="#5A1014" />
+        <circle cx="36.4" cy="27.5" r="1.4" fill="#5A1014" />
+        <path d="M28.3 32.5q3.7 2.6 7.4 0" stroke="#5A1014" strokeWidth="1.3" strokeLinecap="round" fill="none" />
       </g>
     </svg>
   );

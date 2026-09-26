@@ -233,8 +233,6 @@ function Sprite({ character, look, expression, state, talking = false }: SpriteP
           // Персонажи справа повёрнуты к центру сцены
           flip={character.position === "right"}
           outfit={outfit}
-          hair={look.hair}
-          hairStyle={look.hair_style}
           mood={MOODS[expression]}
           hand={HANDS[expression] ?? "down"}
         />
