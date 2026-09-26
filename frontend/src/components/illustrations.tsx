@@ -401,13 +401,13 @@ function WindowView({ x, y, width, height }: { x: number; y: number; width: numb
 
 // ───────── Персонажи ─────────
 // Все люди — объёмные фигурки-манекены из одного компонента: круглая голова с бликом, гладкое тело,
-// одинаковые пропорции. Все манекены серые; сотрудники поезда — в одинаковой форме, пассажиры — с оттенком своей одежды.
+// одинаковые пропорции, телесный цвет кожи. Сотрудники поезда — в одинаковой форме, пассажиры — в своей одежде.
 
 export type Outfit = "uniform" | { top: string; bottom: string };
 export type Hand = "down" | "point" | "hold" | "radio" | "hush" | "chest" | "throat";
 type Item = "ticket" | "bottle" | "cup" | "extinguisher" | "radio";
 
-const MANNEQUIN_GREY = "#C3C8CF";
+const SKIN = "#E9BE9C";
 // Форма сотрудника: тёмно-синий китель и брюки
 const UNIFORM_COLOR = "#2A3B66";
 
@@ -487,11 +487,12 @@ function HeldItem({ kind, x, y }: { kind: Item; x: number; y: number }) {
 export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood = "calm", hand = "down", item }: PersonProps) {
   const id = useSvgId();
   const uniform = outfit === "uniform";
-  // Пассажира выдаёт лёгкий оттенок его одежды на сером манекене, сотрудника — одинаковая форма
-  const base = uniform ? MANNEQUIN_GREY : mix(MANNEQUIN_GREY, outfit.top, 0.22);
-  const cloth = uniform ? UNIFORM_COLOR : base;
-  const dark = mix(cloth, "#000000", 0.32);
+  const base = SKIN;
+  const cloth = uniform ? UNIFORM_COLOR : outfit.top;
+  const trousers = uniform ? UNIFORM_COLOR : outfit.bottom;
+  const dark = mix(trousers, "#000000", 0.35);
   const body = `url(#${id}-body)`;
+  const legs = `url(#${id}-legs)`;
   const lift = pose === "sit" ? 32 : 0;
   const [hx, hy] = HAND_POSITION[hand];
   return (
@@ -504,13 +505,18 @@ export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood
         </radialGradient>
         {/* Свет слева: одна горизонтальная растяжка для всех частей тела в координатах фигуры */}
         <linearGradient id={`${id}-body`} gradientUnits="userSpaceOnUse" x1="-16" y1="0" x2="16" y2="0">
-          <stop offset="0" stopColor={mix(cloth, "#FFFFFF", uniform ? 0.3 : 0.55)} />
+          <stop offset="0" stopColor={mix(cloth, "#FFFFFF", 0.3)} />
           <stop offset="0.45" stopColor={cloth} />
-          <stop offset="1" stopColor={dark} />
+          <stop offset="1" stopColor={mix(cloth, "#000000", 0.32)} />
+        </linearGradient>
+        <linearGradient id={`${id}-legs`} gradientUnits="userSpaceOnUse" x1="-16" y1="0" x2="16" y2="0">
+          <stop offset="0" stopColor={mix(trousers, "#FFFFFF", 0.25)} />
+          <stop offset="0.45" stopColor={trousers} />
+          <stop offset="1" stopColor={mix(trousers, "#000000", 0.3)} />
         </linearGradient>
       </defs>
       {pose === "stand" ? (
-        <g stroke={body} strokeLinecap="round" fill="none">
+        <g stroke={legs} strokeLinecap="round" fill="none">
           <path d="M-4.6 -32L-6 -4" strokeWidth="8.5" />
           <path d="M4.6 -32L6 -4" strokeWidth="8.5" />
           <ellipse cx="-7.5" cy="-1.8" rx="6.5" ry="3" fill={dark} stroke="none" />
@@ -534,7 +540,7 @@ export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood
           </g>
         )}
         <circle cx="0" cy="-79" r="12.5" fill={`url(#${id}-head)`} />
-        <Face cx={0} cy={-78} r={12} mood={mood} ink={mix(base, "#000000", 0.62)} />
+        <Face cx={0} cy={-78} r={12} mood={mood} ink="#3A2A22" />
         {uniform && (
           <g>
             <path d="M-12.5 -85Q0 -99 12.5 -85Z" fill={UNIFORM_COLOR} />
@@ -553,7 +559,7 @@ export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood
         <circle cx={hx} cy={hy} r="3.6" fill={base} />
       </g>
       {pose === "sit" && (
-        <g stroke={body} strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <g stroke={legs} strokeLinecap="round" strokeLinejoin="round" fill="none">
           <path d="M-4 -3H20L22 18" strokeWidth="9" />
           <ellipse cx="25" cy="21" rx="6.5" ry="3" fill={dark} stroke="none" />
         </g>
