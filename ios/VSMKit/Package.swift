@@ -11,7 +11,8 @@ var targets: [Target] = [
 var products: [Product] = [.library(name: "VSMCore", targets: ["VSMCore"])]
 
 #if canImport(SwiftUI)
-targets.append(.target(name: "VSMFeatures", dependencies: ["VSMCore"]))
+// Ресурсы — ассеты сайта (персонажи, фоны, иллюстрации, фото), шрифт Manrope с лицензией OFL и звуки новеллы
+targets.append(.target(name: "VSMFeatures", dependencies: ["VSMCore"], resources: [.copy("Resources")]))
 products.append(.library(name: "VSMFeatures", targets: ["VSMFeatures"]))
 #endif
 
