@@ -25,7 +25,7 @@ import ru.vsm.trainer.domain.story.SoundPlayer
 
 /**
  * Звук новеллы — как `story/audio.ts` сайта: тихая музыка по кругу с плавным нарастанием, вздохи персонажей
- * и «голос» при печати — короткий мягкий щелчок своей высоты у каждого персонажа. Громкости те же, что на сайте.
+ * и «голос» при печати — короткий мягкий щелчок своей высоты у каждого персонажа.
  */
 class StoryAudio @Inject constructor(@ApplicationContext private val context: Context) : SoundPlayer {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -44,7 +44,11 @@ class StoryAudio @Inject constructor(@ApplicationContext private val context: Co
     /** Музыка с плавным нарастанием до MUSIC_VOLUME. */
     fun startMusic() {
         if (muted || music != null) return
-        music = MediaPlayer.create(context, R.raw.music)?.apply {
+        // Тот же игровой поток, что у вздохов: громкость меняется кнопками телефона вместе с остальным звуком новеллы
+        music = MediaPlayer().apply {
+            setAudioAttributes(attributes)
+            context.resources.openRawResourceFd(R.raw.music).use { setDataSource(it.fileDescriptor, it.startOffset, it.length) }
+            prepare()
             isLooping = true
             setVolume(0f, 0f)
             start()
@@ -129,9 +133,11 @@ class StoryAudio @Inject constructor(@ApplicationContext private val context: Co
     }
 
     private companion object {
-        const val MUSIC_VOLUME = 0.008f
-        const val SOUND_VOLUME = 0.05f
-        const val VOICE_VOLUME = 0.018f
+        // Соотношение как на сайте (вздохи заметно громче музыки, «голос» тише вздохов), но уровни — под динамик
+        // телефона: громкости сайта (0.008 / 0.05 / 0.018) рассчитаны на браузер и наушники и на телефоне не слышны
+        const val MUSIC_VOLUME = 0.1f
+        const val SOUND_VOLUME = 0.6f
+        const val VOICE_VOLUME = 0.12f
         const val VOICE_DECAY_S = 0.07
         const val FADE_MS = 1200f
         const val SAMPLE_RATE = 22050

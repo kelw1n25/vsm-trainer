@@ -133,7 +133,11 @@ fun AppNavigation(onLogout: () -> Unit, shell: ShellViewModel = hiltViewModel())
                 route?.startsWith("scenario/") == true || route?.startsWith("map/") == true -> Tab.SCENARIOS
                 else -> Tab.entries.firstOrNull { route?.startsWith(it.route) == true }
             }
-            BottomNav(current) { nav.openTab(it.route) }
+            BottomNav(current) { tab ->
+                // Подсвеченная вкладка (например, «Сценарии» на странице сценария) ведёт к своему списку,
+                // как ссылка на сайте, а не восстанавливает ту же страницу
+                if (tab != current || !nav.popBackStack(tab.route, inclusive = false)) nav.openTab(tab.route)
+            }
         }
     }
     }

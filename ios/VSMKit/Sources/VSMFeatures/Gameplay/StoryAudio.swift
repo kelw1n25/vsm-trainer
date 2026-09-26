@@ -2,12 +2,14 @@ import AVFoundation
 import VSMCore
 
 /// Звук новеллы — как `story/audio.ts` сайта: тихая музыка по кругу с плавным нарастанием, вздохи персонажей
-/// и «голос» при печати — короткий мягкий щелчок своей высоты у каждого персонажа. Громкости те же, что на сайте.
+/// и «голос» при печати — короткий мягкий щелчок своей высоты у каждого персонажа.
 @MainActor
 final class StoryAudio: StorySoundPlayer {
-    private static let musicVolume: Float = 0.008
-    private static let soundVolume: Float = 0.05
-    private static let voiceVolume: Float = 0.018
+    // Соотношение как на сайте (вздохи заметно громче музыки, «голос» тише вздохов), но уровни — под динамик
+    // телефона: громкости сайта (0.008 / 0.05 / 0.018) рассчитаны на браузер и наушники и на телефоне не слышны
+    private static let musicVolume: Float = 0.1
+    private static let soundVolume: Float = 0.6
+    private static let voiceVolume: Float = 0.12
     private static let voiceDecay = 0.07
     private static let fade: TimeInterval = 1.2
 
