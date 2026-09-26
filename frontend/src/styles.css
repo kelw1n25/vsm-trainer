@@ -193,6 +193,17 @@ button {
   gap: 24px;
 }
 
+/* Элементы сетки могут быть уже своего содержимого: широкие таблицы и графики прокручиваются внутри, а не раздвигают страницу */
+.stack > *,
+.two-columns > * {
+  min-width: 0;
+}
+
+h1,
+h2 {
+  overflow-wrap: break-word;
+}
+
 .narrow {
   max-width: 760px;
 }
@@ -1726,8 +1737,59 @@ input:focus {
 }
 
 @media (max-width: 480px) {
+  .header {
+    gap: 12px;
+  }
+
+  .header__actions {
+    gap: 10px;
+  }
+
+  .brand {
+    gap: 10px;
+  }
+
+  .brand__name {
+    font-size: 26px;
+  }
+
   .brand__caption {
     display: none;
+  }
+
+  .user__avatar .avatar {
+    width: 52px;
+    height: 52px;
+  }
+
+  .my-place {
+    padding: 20px;
+  }
+
+  .my-place__info,
+  .level {
+    min-width: 0;
+  }
+
+  .level {
+    width: 100%;
+  }
+
+  .tab {
+    padding: 0 12px;
+  }
+
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .kpi {
+    padding: 16px;
+    overflow-wrap: anywhere;
+  }
+
+  .kpi__value {
+    font-size: 1.3rem;
   }
 
   .brand__name {
@@ -1754,6 +1816,12 @@ input:focus {
 
   .scenario-card__image .scenario-image {
     height: 150px;
+  }
+}
+
+@media (max-width: 360px) {
+  .user__chevron {
+    display: none;
   }
 }
 
