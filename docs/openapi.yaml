@@ -1,0 +1,2443 @@
+openapi: 3.1.0
+info:
+  title: ВСМ-тренажёр проводника
+  description: Нелинейные сценарии с таймером, шкалами и очками компетенций.
+  version: 0.1.0
+paths:
+  /api/auth/login:
+    post:
+      tags:
+      - auth
+      summary: Вход по табельному номеру и паролю
+      operationId: login_api_auth_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/auth/refresh:
+    post:
+      tags:
+      - auth
+      summary: Обменять refresh-токен на новую пару токенов (ротация)
+      operationId: refresh_api_auth_refresh_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/auth/logout:
+    post:
+      tags:
+      - auth
+      summary: 'Выйти: отозвать refresh-токен этого устройства'
+      operationId: logout_api_auth_logout_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Logout Api Auth Logout Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/scenarios:
+    get:
+      tags:
+      - scenarios
+      summary: Каталог сценариев
+      operationId: list_scenarios_api_scenarios_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ScenarioSummary'
+                type: array
+                title: Response List Scenarios Api Scenarios Get
+      security:
+      - HTTPBearer: []
+  /api/scenarios/{scenario_id}/story-map:
+    get:
+      tags:
+      - scenarios
+      summary: 'Архив веток: открытые развилки и финалы сотрудника'
+      operationId: story_map_api_scenarios__scenario_id__story_map_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: scenario_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Scenario Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoryMap'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/scenarios/schema:
+    get:
+      tags:
+      - scenarios
+      summary: JSON-схема файла сценария
+      operationId: scenario_schema_api_scenarios_schema_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Scenario Schema Api Scenarios Schema Get
+  /api/handbook:
+    get:
+      tags:
+      - handbook
+      summary: 'Справочник: ситуации на борту, ролевая модель, классы обслуживания'
+      operationId: get_handbook_api_handbook_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Handbook'
+      security:
+      - HTTPBearer: []
+  /api/runs:
+    post:
+      tags:
+      - runs
+      summary: Начать сценарий (или продолжить незавершённый)
+      operationId: start_run_api_runs_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartRunRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunState'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/runs/{run_id}:
+    get:
+      tags:
+      - runs
+      summary: Текущее состояние прохождения
+      operationId: get_run_api_runs__run_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Run Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunState'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/runs/{run_id}/reveal:
+    post:
+      tags:
+      - runs
+      summary: 'Сцена дочитана: показать варианты и запустить таймер'
+      operationId: reveal_api_runs__run_id__reveal_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Run Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevealRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunState'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/runs/{run_id}/choices:
+    post:
+      tags:
+      - runs
+      summary: Выбрать вариант на текущем шаге
+      operationId: choose_api_runs__run_id__choices_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Run Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChoiceRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunState'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/runs/{run_id}/debrief:
+    get:
+      tags:
+      - runs
+      summary: Разбор завершённого сценария
+      operationId: debrief_api_runs__run_id__debrief_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Run Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Debrief'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/profile:
+    get:
+      tags:
+      - profile
+      summary: 'Профиль текущего сотрудника: уровень, компетенции, ачивки, история'
+      operationId: get_profile_api_profile_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+      security:
+      - HTTPBearer: []
+  /api/leaderboard:
+    get:
+      tags:
+      - leaderboard
+      summary: 'Рейтинг: бригада / депо / компания за неделю / месяц / всё время'
+      operationId: leaderboard_api_leaderboard_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: scope
+        in: query
+        required: false
+        schema:
+          enum:
+          - brigade
+          - depot
+          - company
+          type: string
+          default: brigade
+          title: Scope
+      - name: period
+        in: query
+        required: false
+        schema:
+          enum:
+          - week
+          - month
+          - all
+          type: string
+          default: week
+          title: Period
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Leaderboard'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/notifications:
+    get:
+      tags:
+      - notifications
+      summary: Уведомления текущего сотрудника (заодно применяет сгорание и выдаёт новые)
+      operationId: list_notifications_api_notifications_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationList'
+      security:
+      - HTTPBearer: []
+  /api/notifications/{notification_id}/read:
+    post:
+      tags:
+      - notifications
+      summary: Отметить уведомление прочитанным
+      operationId: mark_read_api_notifications__notification_id__read_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: notification_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Notification Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+                title: Response Mark Read Api Notifications  Notification Id  Read Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/notifications/read-all:
+    post:
+      tags:
+      - notifications
+      summary: Отметить все уведомления прочитанными
+      operationId: mark_all_read_api_notifications_read_all_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Mark All Read Api Notifications Read All Post
+      security:
+      - HTTPBearer: []
+  /api/analytics/events:
+    post:
+      tags:
+      - analytics
+      summary: Записать действие пользователя на клиенте
+      operationId: record_event_api_analytics_events_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientEvent'
+        required: true
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Record Event Api Analytics Events Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/analytics/me:
+    get:
+      tags:
+      - analytics
+      summary: Аналитика текущего сотрудника
+      operationId: my_analytics_api_analytics_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Analytics'
+      security:
+      - HTTPBearer: []
+  /api/analytics/team:
+    get:
+      tags:
+      - analytics
+      summary: Проводники депо инструктора (только для инструктора)
+      operationId: team_api_analytics_team_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TeamMember'
+                type: array
+                title: Response Team Api Analytics Team Get
+      security:
+      - HTTPBearer: []
+  /api/analytics/employees/{employee_id}:
+    get:
+      tags:
+      - analytics
+      summary: Аналитика проводника своего депо (только для инструктора)
+      operationId: employee_analytics_api_analytics_employees__employee_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: employee_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Employee Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Analytics'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/integration/employees/{personnel_number}:
+    get:
+      tags:
+      - integration
+      summary: Профиль компетенций сотрудника (для HR/LMS)
+      operationId: competence_profile_api_integration_employees__personnel_number__get
+      parameters:
+      - name: personnel_number
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^\d{4,20}$
+          description: Табельный номер
+          title: Personnel Number
+        description: Табельный номер
+      - name: x-api-key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Ключ интеграции
+          title: X-Api-Key
+        description: Ключ интеграции
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompetenceProfile'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - integration
+      summary: Создать или обновить сотрудника из HR-системы
+      operationId: upsert_employee_api_integration_employees__personnel_number__put
+      parameters:
+      - name: personnel_number
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^\d{4,20}$
+          description: Табельный номер
+          title: Personnel Number
+        description: Табельный номер
+      - name: x-api-key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Ключ интеграции
+          title: X-Api-Key
+        description: Ключ интеграции
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeUpsert'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeUpsertResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/integration/results:
+    get:
+      tags:
+      - integration
+      summary: Завершённые прохождения после момента since (для журнала LMS)
+      operationId: results_api_integration_results_get
+      parameters:
+      - name: since
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+          description: Вернуть прохождения, завершённые строго позже (ISO 8601 с часовым поясом)
+          title: Since
+        description: Вернуть прохождения, завершённые строго позже (ISO 8601 с часовым поясом)
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 100
+          title: Limit
+      - name: x-api-key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Ключ интеграции
+          title: X-Api-Key
+        description: Ключ интеграции
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RunResult'
+                title: Response Results Api Integration Results Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/integration/billing/usage:
+    get:
+      tags:
+      - integration
+      summary: Объём использования за месяц по депо (для биллинга)
+      operationId: billing_usage_api_integration_billing_usage_get
+      parameters:
+      - name: month
+        in: query
+        required: true
+        schema:
+          type: string
+          pattern: ^\d{4}-(0[1-9]|1[0-2])$
+          description: Календарный месяц по Москве, ГГГГ-ММ
+          title: Month
+        description: Календарный месяц по Москве, ГГГГ-ММ
+      - name: x-api-key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Ключ интеграции
+          title: X-Api-Key
+        description: Ключ интеграции
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingUsage'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/health:
+    get:
+      tags:
+      - system
+      summary: Health
+      operationId: health_api_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Health Api Health Get
+  /api/meta:
+    get:
+      tags:
+      - system
+      summary: 'Справочники для интерфейса: компетенции, челлендж недели'
+      operationId: meta_api_meta_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Meta Api Meta Get
+components:
+  schemas:
+    AchievementOut:
+      properties:
+        code:
+          type: string
+          title: Code
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+      type: object
+      required:
+      - code
+      - title
+      - description
+      title: AchievementOut
+    Analytics:
+      properties:
+        employee_id:
+          type: integer
+          title: Employee Id
+        full_name:
+          type: string
+          title: Full Name
+        total_runs:
+          type: integer
+          title: Total Runs
+        unfinished_runs:
+          type: integer
+          title: Unfinished Runs
+        completion_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Completion Rate
+        avg_decision_seconds:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Avg Decision Seconds
+        progress:
+          items:
+            $ref: '#/components/schemas/WeekPoint'
+          type: array
+          title: Progress
+        categories:
+          items:
+            $ref: '#/components/schemas/CategoryStats'
+          type: array
+          title: Categories
+        competences:
+          items:
+            $ref: '#/components/schemas/CompetenceStat'
+          type: array
+          title: Competences
+        strengths:
+          items:
+            type: string
+          type: array
+          title: Strengths
+        weaknesses:
+          items:
+            type: string
+          type: array
+          title: Weaknesses
+        mistakes:
+          items:
+            type: string
+          type: array
+          title: Mistakes
+        recommendation:
+          anyOf:
+          - $ref: '#/components/schemas/Recommendation'
+          - type: 'null'
+      type: object
+      required:
+      - employee_id
+      - full_name
+      - total_runs
+      - unfinished_runs
+      - completion_rate
+      - avg_decision_seconds
+      - progress
+      - categories
+      - competences
+      - strengths
+      - weaknesses
+      - mistakes
+      - recommendation
+      title: Analytics
+    BillingUsage:
+      properties:
+        month:
+          type: string
+          title: Month
+        active_employees:
+          type: integer
+          title: Active Employees
+        runs_completed:
+          type: integer
+          title: Runs Completed
+        depots:
+          items:
+            $ref: '#/components/schemas/DepotUsage'
+          type: array
+          title: Depots
+      type: object
+      required:
+      - month
+      - active_employees
+      - runs_completed
+      - depots
+      title: BillingUsage
+    CategoryStats:
+      properties:
+        category:
+          type: string
+          title: Category
+        title:
+          type: string
+          title: Title
+        runs:
+          type: integer
+          title: Runs
+        decisions:
+          type: integer
+          title: Decisions
+        timed_steps:
+          type: integer
+          title: Timed Steps
+        success_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Success Rate
+        best_choice_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Best Choice Rate
+        timeout_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Timeout Rate
+        average_reaction_share:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Average Reaction Share
+      type: object
+      required:
+      - category
+      - title
+      - runs
+      - decisions
+      - timed_steps
+      - success_rate
+      - best_choice_rate
+      - timeout_rate
+      - average_reaction_share
+      title: CategoryStats
+    CharacterOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        role:
+          type: string
+          title: Role
+        look:
+          additionalProperties:
+            anyOf:
+            - type: string
+            - type: boolean
+          type: object
+          title: Look
+      type: object
+      required:
+      - id
+      - name
+      - role
+      - look
+      title: CharacterOut
+    ChoiceOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        text:
+          type: string
+          title: Text
+      type: object
+      required:
+      - id
+      - text
+      title: ChoiceOut
+    ChoiceRequest:
+      properties:
+        node_id:
+          type: string
+          title: Node Id
+        choice_id:
+          type: string
+          title: Choice Id
+      type: object
+      required:
+      - node_id
+      - choice_id
+      title: ChoiceRequest
+    ClientEvent:
+      properties:
+        type:
+          type: string
+          enum:
+          - debrief_opened
+          - notification_opened
+          - run_exited
+          title: Type
+        run_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Run Id
+        notification_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Notification Id
+        platform:
+          type: string
+          enum:
+          - web
+          - ios
+          - android
+          title: Platform
+      type: object
+      required:
+      - type
+      - platform
+      title: ClientEvent
+      description: 'Действие, которое видит только клиент: сервер не знает, открыт ли экран или закрыто ли приложение.'
+    CompetenceProfile:
+      properties:
+        personnel_number:
+          type: string
+          title: Personnel Number
+        full_name:
+          type: string
+          title: Full Name
+        role:
+          $ref: '#/components/schemas/Role'
+        brigade:
+          type: string
+          title: Brigade
+        depot:
+          type: string
+          title: Depot
+        level:
+          type: integer
+          title: Level
+        level_title:
+          type: string
+          title: Level Title
+        xp:
+          type: integer
+          title: Xp
+        competences:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Competences
+        achievements:
+          items:
+            type: string
+          type: array
+          title: Achievements
+        runs_completed:
+          type: integer
+          title: Runs Completed
+        success_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Success Rate
+        last_activity_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Activity At
+      type: object
+      required:
+      - personnel_number
+      - full_name
+      - role
+      - brigade
+      - depot
+      - level
+      - level_title
+      - xp
+      - competences
+      - achievements
+      - runs_completed
+      - success_rate
+      - last_activity_at
+      title: CompetenceProfile
+    CompetenceStat:
+      properties:
+        code:
+          type: string
+          title: Code
+        title:
+          type: string
+          title: Title
+        points:
+          type: integer
+          title: Points
+      type: object
+      required:
+      - code
+      - title
+      - points
+      title: CompetenceStat
+    Debrief:
+      properties:
+        run_id:
+          type: string
+          format: uuid
+          title: Run Id
+        scenario_id:
+          type: string
+          title: Scenario Id
+        scenario_title:
+          type: string
+          title: Scenario Title
+        outcome:
+          $ref: '#/components/schemas/RunStatus'
+        reason:
+          type: string
+          title: Reason
+        ending:
+          type: string
+          title: Ending
+        final_text:
+          type: string
+          title: Final Text
+        xp_earned:
+          type: integer
+          title: Xp Earned
+        competence_points:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Competence Points
+        initial_loyalty:
+          type: integer
+          title: Initial Loyalty
+        initial_safety:
+          type: integer
+          title: Initial Safety
+        loyalty:
+          type: integer
+          title: Loyalty
+        safety:
+          type: integer
+          title: Safety
+        decisions:
+          type: integer
+          title: Decisions
+        best_decisions:
+          type: integer
+          title: Best Decisions
+        timeouts:
+          type: integer
+          title: Timeouts
+        average_reaction_seconds:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Average Reaction Seconds
+        steps:
+          items:
+            $ref: '#/components/schemas/DebriefStep'
+          type: array
+          title: Steps
+        situations:
+          items:
+            $ref: '#/components/schemas/Situation'
+          type: array
+          title: Situations
+      type: object
+      required:
+      - run_id
+      - scenario_id
+      - scenario_title
+      - outcome
+      - reason
+      - ending
+      - final_text
+      - xp_earned
+      - competence_points
+      - initial_loyalty
+      - initial_safety
+      - loyalty
+      - safety
+      - decisions
+      - best_decisions
+      - timeouts
+      - average_reaction_seconds
+      - steps
+      - situations
+      title: Debrief
+    DebriefStep:
+      properties:
+        kind:
+          type: string
+          title: Kind
+        situation:
+          type: string
+          title: Situation
+        chosen_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Chosen Text
+        explanation:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Explanation
+        was_best:
+          type: boolean
+          title: Was Best
+        best_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Best Text
+        best_explanation:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Best Explanation
+        loyalty_delta:
+          type: integer
+          title: Loyalty Delta
+        safety_delta:
+          type: integer
+          title: Safety Delta
+        loyalty_after:
+          type: integer
+          title: Loyalty After
+        safety_after:
+          type: integer
+          title: Safety After
+        competences:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Competences
+        elapsed_seconds:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Elapsed Seconds
+        timer_seconds:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Timer Seconds
+      type: object
+      required:
+      - kind
+      - situation
+      - chosen_text
+      - explanation
+      - was_best
+      - best_text
+      - best_explanation
+      - loyalty_delta
+      - safety_delta
+      - loyalty_after
+      - safety_after
+      - competences
+      - elapsed_seconds
+      - timer_seconds
+      title: DebriefStep
+    DepotUsage:
+      properties:
+        depot:
+          type: string
+          title: Depot
+        active_employees:
+          type: integer
+          title: Active Employees
+        runs_completed:
+          type: integer
+          title: Runs Completed
+        xp_awarded:
+          type: integer
+          title: Xp Awarded
+      type: object
+      required:
+      - depot
+      - active_employees
+      - runs_completed
+      - xp_awarded
+      title: DepotUsage
+    EmployeeUpsert:
+      properties:
+        full_name:
+          type: string
+          maxLength: 200
+          minLength: 3
+          title: Full Name
+        role:
+          $ref: '#/components/schemas/Role'
+          default: conductor
+        brigade:
+          type: string
+          maxLength: 100
+          minLength: 1
+          title: Brigade
+        depot:
+          type: string
+          maxLength: 100
+          minLength: 1
+          title: Depot
+      type: object
+      required:
+      - full_name
+      - brigade
+      - depot
+      title: EmployeeUpsert
+    EmployeeUpsertResult:
+      properties:
+        personnel_number:
+          type: string
+          title: Personnel Number
+        created:
+          type: boolean
+          title: Created
+      type: object
+      required:
+      - personnel_number
+      - created
+      title: EmployeeUpsertResult
+    FinalOut:
+      properties:
+        outcome:
+          $ref: '#/components/schemas/RunStatus'
+        reason:
+          type: string
+          enum:
+          - final
+          - loyalty_depleted
+          - safety_depleted
+          title: Reason
+        ending:
+          type: string
+          title: Ending
+        text:
+          type: string
+          title: Text
+        scene:
+          $ref: '#/components/schemas/SceneOut'
+        dialogue:
+          items:
+            $ref: '#/components/schemas/LineOut'
+          type: array
+          title: Dialogue
+        xp_earned:
+          type: integer
+          title: Xp Earned
+        competence_points:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Competence Points
+      type: object
+      required:
+      - outcome
+      - reason
+      - ending
+      - text
+      - scene
+      - dialogue
+      - xp_earned
+      - competence_points
+      title: FinalOut
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    Handbook:
+      properties:
+        role_model:
+          $ref: '#/components/schemas/RoleModel'
+        service_classes:
+          items:
+            $ref: '#/components/schemas/ServiceClass'
+          type: array
+          title: Service Classes
+        standards:
+          items:
+            $ref: '#/components/schemas/Standard'
+          type: array
+          title: Standards
+        situations:
+          items:
+            $ref: '#/components/schemas/Situation'
+          type: array
+          title: Situations
+      type: object
+      required:
+      - role_model
+      - service_classes
+      - standards
+      - situations
+      title: Handbook
+    HistoryItem:
+      properties:
+        run_id:
+          type: string
+          format: uuid
+          title: Run Id
+        scenario_id:
+          type: string
+          title: Scenario Id
+        scenario_title:
+          type: string
+          title: Scenario Title
+        category:
+          type: string
+          title: Category
+        outcome:
+          $ref: '#/components/schemas/RunStatus'
+        xp_earned:
+          type: integer
+          title: Xp Earned
+        loyalty:
+          type: integer
+          title: Loyalty
+        safety:
+          type: integer
+          title: Safety
+        finished_at:
+          type: string
+          format: date-time
+          title: Finished At
+      type: object
+      required:
+      - run_id
+      - scenario_id
+      - scenario_title
+      - category
+      - outcome
+      - xp_earned
+      - loyalty
+      - safety
+      - finished_at
+      title: HistoryItem
+    Leaderboard:
+      properties:
+        scope:
+          type: string
+          enum:
+          - brigade
+          - depot
+          - company
+          title: Scope
+        period:
+          type: string
+          enum:
+          - week
+          - month
+          - all
+          title: Period
+        title:
+          type: string
+          title: Title
+        participants:
+          type: integer
+          title: Participants
+        rows:
+          items:
+            $ref: '#/components/schemas/LeaderboardRow'
+          type: array
+          title: Rows
+      type: object
+      required:
+      - scope
+      - period
+      - title
+      - participants
+      - rows
+      title: Leaderboard
+    LeaderboardRow:
+      properties:
+        rank:
+          type: integer
+          title: Rank
+        employee_id:
+          type: integer
+          title: Employee Id
+        full_name:
+          type: string
+          title: Full Name
+        brigade:
+          type: string
+          title: Brigade
+        depot:
+          type: string
+          title: Depot
+        level_title:
+          type: string
+          title: Level Title
+        points:
+          type: integer
+          title: Points
+        is_me:
+          type: boolean
+          title: Is Me
+      type: object
+      required:
+      - rank
+      - employee_id
+      - full_name
+      - brigade
+      - depot
+      - level_title
+      - points
+      - is_me
+      title: LeaderboardRow
+    LevelOut:
+      properties:
+        level:
+          type: integer
+          title: Level
+        title:
+          type: string
+          title: Title
+        xp:
+          type: integer
+          title: Xp
+        level_xp:
+          type: integer
+          title: Level Xp
+        next_level_xp:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Next Level Xp
+      type: object
+      required:
+      - level
+      - title
+      - xp
+      - level_xp
+      - next_level_xp
+      title: LevelOut
+    LineOut:
+      properties:
+        speaker:
+          type: string
+          title: Speaker
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+        role:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Role
+        kind:
+          type: string
+          enum:
+          - speech
+          - thought
+          - narration
+          title: Kind
+        text:
+          type: string
+          title: Text
+        expression:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Expression
+        sound:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Sound
+      type: object
+      required:
+      - speaker
+      - name
+      - role
+      - kind
+      - text
+      - expression
+      - sound
+      title: LineOut
+    LoginRequest:
+      properties:
+        personnel_number:
+          type: string
+          maxLength: 20
+          minLength: 1
+          title: Personnel Number
+        password:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Password
+      type: object
+      required:
+      - personnel_number
+      - password
+      title: LoginRequest
+    LoginResponse:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+        token_type:
+          type: string
+          title: Token Type
+          default: bearer
+        expires_in:
+          type: integer
+          title: Expires In
+        refresh_token:
+          type: string
+          title: Refresh Token
+        employee_id:
+          type: integer
+          title: Employee Id
+        full_name:
+          type: string
+          title: Full Name
+        role:
+          $ref: '#/components/schemas/Role'
+      type: object
+      required:
+      - access_token
+      - expires_in
+      - refresh_token
+      - employee_id
+      - full_name
+      - role
+      title: LoginResponse
+    MapChoice:
+      properties:
+        id:
+          type: string
+          title: Id
+        explored:
+          type: boolean
+          title: Explored
+        text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Text
+        next:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next
+      type: object
+      required:
+      - id
+      - explored
+      - text
+      - next
+      title: MapChoice
+    MapEnding:
+      properties:
+        id:
+          type: string
+          title: Id
+        outcome:
+          type: string
+          title: Outcome
+        reached:
+          type: boolean
+          title: Reached
+        ending:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ending
+      type: object
+      required:
+      - id
+      - outcome
+      - reached
+      - ending
+      title: MapEnding
+    MapNode:
+      properties:
+        id:
+          type: string
+          title: Id
+        situation:
+          type: string
+          title: Situation
+        choices:
+          items:
+            $ref: '#/components/schemas/MapChoice'
+          type: array
+          title: Choices
+        timer:
+          type: boolean
+          title: Timer
+        timeout_explored:
+          type: boolean
+          title: Timeout Explored
+        timeout_next:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Timeout Next
+      type: object
+      required:
+      - id
+      - situation
+      - choices
+      - timer
+      - timeout_explored
+      - timeout_next
+      title: MapNode
+    NodeOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        scene:
+          $ref: '#/components/schemas/SceneOut'
+        dialogue:
+          items:
+            $ref: '#/components/schemas/LineOut'
+          type: array
+          title: Dialogue
+        choices_shown:
+          type: boolean
+          title: Choices Shown
+        choices:
+          items:
+            $ref: '#/components/schemas/ChoiceOut'
+          type: array
+          title: Choices
+        timer_seconds:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Timer Seconds
+        deadline_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deadline At
+        timeout_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Timeout At
+      type: object
+      required:
+      - id
+      - scene
+      - dialogue
+      - choices_shown
+      - choices
+      - timer_seconds
+      - deadline_at
+      - timeout_at
+      title: NodeOut
+    NotificationList:
+      properties:
+        unread:
+          type: integer
+          title: Unread
+        items:
+          items:
+            $ref: '#/components/schemas/NotificationOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - unread
+      - items
+      title: NotificationList
+    NotificationOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        type:
+          type: string
+          title: Type
+        title:
+          type: string
+          title: Title
+        body:
+          type: string
+          title: Body
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        read:
+          type: boolean
+          title: Read
+      type: object
+      required:
+      - id
+      - type
+      - title
+      - body
+      - created_at
+      - read
+      title: NotificationOut
+    Profile:
+      properties:
+        id:
+          type: integer
+          title: Id
+        full_name:
+          type: string
+          title: Full Name
+        personnel_number:
+          type: string
+          title: Personnel Number
+        role:
+          $ref: '#/components/schemas/Role'
+        brigade:
+          type: string
+          title: Brigade
+        depot:
+          type: string
+          title: Depot
+        level:
+          $ref: '#/components/schemas/LevelOut'
+        runs_completed:
+          type: integer
+          title: Runs Completed
+        competence_points:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Competence Points
+        achievements:
+          items:
+            $ref: '#/components/schemas/ProfileAchievement'
+          type: array
+          title: Achievements
+        history:
+          items:
+            $ref: '#/components/schemas/HistoryItem'
+          type: array
+          title: History
+      type: object
+      required:
+      - id
+      - full_name
+      - personnel_number
+      - role
+      - brigade
+      - depot
+      - level
+      - runs_completed
+      - competence_points
+      - achievements
+      - history
+      title: Profile
+    ProfileAchievement:
+      properties:
+        code:
+          type: string
+          title: Code
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        earned_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Earned At
+      type: object
+      required:
+      - code
+      - title
+      - description
+      - earned_at
+      title: ProfileAchievement
+    Recommendation:
+      properties:
+        scenario_id:
+          type: string
+          title: Scenario Id
+        title:
+          type: string
+          title: Title
+        reason:
+          type: string
+          title: Reason
+      type: object
+      required:
+      - scenario_id
+      - title
+      - reason
+      title: Recommendation
+    RefreshRequest:
+      properties:
+        refresh_token:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Refresh Token
+      type: object
+      required:
+      - refresh_token
+      title: RefreshRequest
+    RevealRequest:
+      properties:
+        node_id:
+          type: string
+          title: Node Id
+      type: object
+      required:
+      - node_id
+      title: RevealRequest
+    Role:
+      type: string
+      enum:
+      - conductor
+      - instructor
+      title: Role
+    RoleModel:
+      properties:
+        title:
+          type: string
+          title: Title
+        steps:
+          items:
+            $ref: '#/components/schemas/RoleModelStep'
+          type: array
+          minItems: 1
+          title: Steps
+      type: object
+      required:
+      - title
+      - steps
+      title: RoleModel
+    RoleModelStep:
+      properties:
+        code:
+          type: string
+          title: Code
+        title:
+          type: string
+          title: Title
+        phrases:
+          items:
+            type: string
+          type: array
+          minItems: 1
+          title: Phrases
+      type: object
+      required:
+      - code
+      - title
+      - phrases
+      title: RoleModelStep
+    RunResult:
+      properties:
+        run_id:
+          type: string
+          format: uuid
+          title: Run Id
+        personnel_number:
+          type: string
+          title: Personnel Number
+        scenario_id:
+          type: string
+          title: Scenario Id
+        scenario_title:
+          type: string
+          title: Scenario Title
+        category:
+          type: string
+          title: Category
+        outcome:
+          $ref: '#/components/schemas/RunStatus'
+        xp_earned:
+          type: integer
+          title: Xp Earned
+        loyalty:
+          type: integer
+          title: Loyalty
+        safety:
+          type: integer
+          title: Safety
+        finished_at:
+          type: string
+          format: date-time
+          title: Finished At
+      type: object
+      required:
+      - run_id
+      - personnel_number
+      - scenario_id
+      - scenario_title
+      - category
+      - outcome
+      - xp_earned
+      - loyalty
+      - safety
+      - finished_at
+      title: RunResult
+    RunState:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        scenario_id:
+          type: string
+          title: Scenario Id
+        scenario_title:
+          type: string
+          title: Scenario Title
+        category:
+          type: string
+          title: Category
+        difficulty:
+          type: integer
+          title: Difficulty
+        route:
+          type: string
+          title: Route
+        service_class:
+          type: string
+          title: Service Class
+        characters:
+          items:
+            $ref: '#/components/schemas/CharacterOut'
+          type: array
+          title: Characters
+        steps_taken:
+          type: integer
+          title: Steps Taken
+        steps_left:
+          type: integer
+          title: Steps Left
+        status:
+          $ref: '#/components/schemas/RunStatus'
+        loyalty:
+          type: integer
+          title: Loyalty
+        safety:
+          type: integer
+          title: Safety
+        node:
+          anyOf:
+          - $ref: '#/components/schemas/NodeOut'
+          - type: 'null'
+        final:
+          anyOf:
+          - $ref: '#/components/schemas/FinalOut'
+          - type: 'null'
+        last_steps:
+          items:
+            $ref: '#/components/schemas/StepOut'
+          type: array
+          title: Last Steps
+        new_achievements:
+          items:
+            $ref: '#/components/schemas/AchievementOut'
+          type: array
+          title: New Achievements
+        level_up:
+          anyOf:
+          - $ref: '#/components/schemas/LevelOut'
+          - type: 'null'
+        server_time:
+          type: string
+          format: date-time
+          title: Server Time
+      type: object
+      required:
+      - id
+      - scenario_id
+      - scenario_title
+      - category
+      - difficulty
+      - route
+      - service_class
+      - characters
+      - steps_taken
+      - steps_left
+      - status
+      - loyalty
+      - safety
+      - node
+      - final
+      - last_steps
+      - new_achievements
+      - level_up
+      - server_time
+      title: RunState
+    RunStatus:
+      type: string
+      enum:
+      - in_progress
+      - success
+      - partial
+      - failure
+      title: RunStatus
+    ScenarioSummary:
+      properties:
+        id:
+          type: string
+          title: Id
+        title:
+          type: string
+          title: Title
+        category:
+          type: string
+          title: Category
+        difficulty:
+          type: integer
+          title: Difficulty
+        service_class:
+          type: string
+          title: Service Class
+        route:
+          type: string
+          title: Route
+        description:
+          type: string
+          title: Description
+        situations:
+          items:
+            type: integer
+          type: array
+          title: Situations
+        endings_total:
+          type: integer
+          title: Endings Total
+      type: object
+      required:
+      - id
+      - title
+      - category
+      - difficulty
+      - service_class
+      - route
+      - description
+      - situations
+      - endings_total
+      title: ScenarioSummary
+    SceneCharacterOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        position:
+          type: string
+          title: Position
+        expression:
+          type: string
+          title: Expression
+        pose:
+          type: string
+          title: Pose
+        hand:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Hand
+        item:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Item
+      type: object
+      required:
+      - id
+      - position
+      - expression
+      - pose
+      - hand
+      - item
+      title: SceneCharacterOut
+    SceneOut:
+      properties:
+        background:
+          type: string
+          title: Background
+        characters:
+          items:
+            $ref: '#/components/schemas/SceneCharacterOut'
+          type: array
+          title: Characters
+      type: object
+      required:
+      - background
+      - characters
+      title: SceneOut
+    ServiceClass:
+      properties:
+        code:
+          type: string
+          enum:
+          - first
+          - business
+          - comfort
+          - standard
+          title: Code
+        title:
+          type: string
+          title: Title
+        layout:
+          type: string
+          title: Layout
+        aisle_mm:
+          type: integer
+          title: Aisle Mm
+        pitch_mm:
+          type: integer
+          title: Pitch Mm
+        seat_mm:
+          type: integer
+          title: Seat Mm
+        max_wait_minutes:
+          type: integer
+          title: Max Wait Minutes
+        summary:
+          type: string
+          title: Summary
+      type: object
+      required:
+      - code
+      - title
+      - layout
+      - aisle_mm
+      - pitch_mm
+      - seat_mm
+      - max_wait_minutes
+      - summary
+      title: ServiceClass
+    Situation:
+      properties:
+        number:
+          type: integer
+          minimum: 1.0
+          title: Number
+        title:
+          type: string
+          title: Title
+        stage:
+          type: string
+          enum:
+          - boarding
+          - onboard
+          title: Stage
+        category:
+          type: string
+          enum:
+          - conflict
+          - medical
+          - service
+          - safety
+          title: Category
+        reaction:
+          type: string
+          title: Reaction
+        phrases:
+          items:
+            type: string
+          type: array
+          minItems: 1
+          title: Phrases
+        comment:
+          items:
+            type: string
+          type: array
+          minItems: 1
+          title: Comment
+      type: object
+      required:
+      - number
+      - title
+      - stage
+      - category
+      - reaction
+      - phrases
+      - comment
+      title: Situation
+    Standard:
+      properties:
+        title:
+          type: string
+          title: Title
+        text:
+          type: string
+          title: Text
+      type: object
+      required:
+      - title
+      - text
+      title: Standard
+    StartRunRequest:
+      properties:
+        scenario_id:
+          type: string
+          title: Scenario Id
+      type: object
+      required:
+      - scenario_id
+      title: StartRunRequest
+    StepOut:
+      properties:
+        kind:
+          type: string
+          enum:
+          - choice
+          - timeout
+          title: Kind
+        text:
+          type: string
+          title: Text
+        reaction:
+          items:
+            $ref: '#/components/schemas/LineOut'
+          type: array
+          title: Reaction
+        loyalty_delta:
+          type: integer
+          title: Loyalty Delta
+        safety_delta:
+          type: integer
+          title: Safety Delta
+        competences:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Competences
+      type: object
+      required:
+      - kind
+      - text
+      - reaction
+      - loyalty_delta
+      - safety_delta
+      - competences
+      title: StepOut
+      description: Последствия только что произошедшего шага — реакция персонажей звучит перед следующей сценой.
+    StoryMap:
+      properties:
+        scenario_id:
+          type: string
+          title: Scenario Id
+        start_node:
+          type: string
+          title: Start Node
+        playthroughs:
+          type: integer
+          title: Playthroughs
+        choices_total:
+          type: integer
+          title: Choices Total
+        choices_explored:
+          type: integer
+          title: Choices Explored
+        nodes:
+          items:
+            $ref: '#/components/schemas/MapNode'
+          type: array
+          title: Nodes
+        endings:
+          items:
+            $ref: '#/components/schemas/MapEnding'
+          type: array
+          title: Endings
+      type: object
+      required:
+      - scenario_id
+      - start_node
+      - playthroughs
+      - choices_total
+      - choices_explored
+      - nodes
+      - endings
+      title: StoryMap
+    TeamMember:
+      properties:
+        employee_id:
+          type: integer
+          title: Employee Id
+        full_name:
+          type: string
+          title: Full Name
+        brigade:
+          type: string
+          title: Brigade
+        level_title:
+          type: string
+          title: Level Title
+        xp:
+          type: integer
+          title: Xp
+        last_activity_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Activity At
+        weakest_competence:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Weakest Competence
+      type: object
+      required:
+      - employee_id
+      - full_name
+      - brigade
+      - level_title
+      - xp
+      - last_activity_at
+      - weakest_competence
+      title: TeamMember
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    WeekPoint:
+      properties:
+        week_start:
+          type: string
+          format: date-time
+          title: Week Start
+        xp:
+          type: integer
+          title: Xp
+        runs:
+          type: integer
+          title: Runs
+        successes:
+          type: integer
+          title: Successes
+      type: object
+      required:
+      - week_start
+      - xp
+      - runs
+      - successes
+      title: WeekPoint
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer
