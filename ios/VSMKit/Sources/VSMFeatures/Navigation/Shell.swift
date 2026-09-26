@@ -370,15 +370,18 @@ struct BottomNav: View {
                             .foregroundStyle(active ? colors.heading : colors.navText)
                             .lineLimit(1)
                             .minimumScaleFactor(0.85)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .padding(.horizontal, 4)
+                            // Полоска — сразу под подписью и чуть шире её, как `.nav a.active::after` сайта; у нижнего края
+                            // пилюли её срезало бы скругление крайних пунктов («Главная», «Справочник»)
                             .overlay(alignment: .bottom) {
-                                UnevenRoundedRectangle(topLeadingRadius: 3, topTrailingRadius: 3)
+                                Capsule()
                                     .fill(colors.brand)
                                     .frame(height: 3)
-                                    .padding(.horizontal, 6)
+                                    .offset(y: 8)
                                     .scaleEffect(x: active ? 1 : 0, anchor: .center)
                                     .opacity(active ? 1 : 0)
                             }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)

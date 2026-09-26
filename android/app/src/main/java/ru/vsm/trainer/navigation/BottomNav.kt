@@ -5,12 +5,15 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,15 +59,19 @@ fun BottomNav(current: Tab?, onSelect: (Tab) -> Unit) {
                 Modifier.weight(weight).fillMaxHeight().semantics { selected = active }.clickable(role = Role.Tab) { onSelect(tab) },
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    tab.title, style = if (active) VsmType.navActive else VsmType.nav, color = if (active) colors.heading else colors.navText,
-                    maxLines = 1, softWrap = false, modifier = Modifier.padding(horizontal = 2.dp),
-                )
-                Box(
-                    Modifier.align(Alignment.BottomCenter).fillMaxWidth(0.8f).height(3.dp)
-                        .graphicsLayer { scaleX = underline; alpha = underline }
-                        .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)).background(colors.brand),
-                )
+                // Полоска — сразу под подписью и чуть шире её, как `.nav a.active::after` сайта; у нижнего края
+                // пилюли её срезало бы скругление крайних пунктов («Главная», «Справочник»)
+                Column(Modifier.width(IntrinsicSize.Max), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        tab.title, style = if (active) VsmType.navActive else VsmType.nav, color = if (active) colors.heading else colors.navText,
+                        maxLines = 1, softWrap = false, modifier = Modifier.padding(horizontal = 4.dp),
+                    )
+                    Box(
+                        Modifier.padding(top = 5.dp).fillMaxWidth().height(3.dp)
+                            .graphicsLayer { scaleX = underline; alpha = underline }
+                            .clip(RoundedCornerShape(3.dp)).background(colors.brand),
+                    )
+                }
             }
         }
     }
