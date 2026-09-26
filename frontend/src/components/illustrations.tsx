@@ -369,7 +369,7 @@ const POSTURE: Record<Mood, { head: number; body: number }> = {
 
 // Куда тянется правая рука (координаты фигуры ростом ~92 с опорой в точке 0,0)
 const HAND_POSITION: Record<Hand, [number, number]> = {
-  down: [15, -36],
+  down: [14, -35],
   point: [28, -54],
   hold: [25, -45],
   radio: [10, -73],
@@ -458,20 +458,24 @@ export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood
       </defs>
       {pose === "stand" && (
         <g>
-          <path d="M-4.2 -36L-5.2 -5M4.2 -36L5.2 -5" stroke={body} strokeWidth="7" strokeLinecap="round" fill="none" />
-          {/* Крупные округлые ступни, носками вперёд */}
-          <ellipse cx="-7" cy="-2.6" rx="7.5" ry="3.6" fill={BODY_SHADE} />
-          <ellipse cx="7" cy="-2.6" rx="7.5" ry="3.6" fill={BODY_SHADE} />
+          {/* Ноги — цельный силуэт от бёдер: сходятся у паха и сужаются к лодыжкам */}
+          <path
+            d="M-11 -35C-11 -26 -8.5 -15 -8 -6L-3 -6C-2.8 -15 -1.8 -26 -1 -31.5Q0 -33 1 -31.5C1.8 -26 2.8 -15 3 -6L8 -6C8.5 -15 11 -26 11 -35Z"
+            fill={body}
+          />
+          {/* Крупные округлые ступни, носками чуть врозь */}
+          <ellipse cx="-7" cy="-3.2" rx="7.2" ry="3.8" fill={BODY_SHADE} transform="rotate(-8 -7 -3.2)" />
+          <ellipse cx="7" cy="-3.2" rx="7.2" ry="3.8" fill={BODY_SHADE} transform="rotate(8 7 -3.2)" />
         </g>
       )}
       <g transform={`translate(0 ${lift}) rotate(${posture.body} 0 -36)`}>
-        <path d="M-9 -60L-12.5 -39" stroke={body} strokeWidth="5.5" strokeLinecap="round" />
-        <circle cx="-12.8" cy="-37.5" r="3.1" fill={BODY} />
+        <path d="M-11 -58Q-14.5 -47 -14 -36" stroke={body} strokeWidth="6.5" strokeLinecap="round" fill="none" />
+        <ellipse cx="-14" cy="-34" rx="3.2" ry="4" fill={BODY} />
+        {/* Корпус: широкие плечи, грудь, мягкая талия и бёдра одним силуэтом с шеей */}
         <path
-          d="M-8 -34C-8.5 -39 -7.2 -43 -7 -46C-8.5 -50 -10.5 -55 -10.5 -58.5Q-10 -63 -3 -63.3H3Q10 -63 10.5 -58.5C10.5 -55 8.5 -50 7 -46C7.2 -43 8.5 -39 8 -34Q0 -31 -8 -34Z"
+          d="M-3.2 -67L-3.2 -63C-8 -63 -12.5 -61.5 -13 -57C-13.2 -53 -11 -49 -10.2 -45C-9.8 -41 -11 -38 -11 -34L11 -34C11 -38 9.8 -41 10.2 -45C11 -49 13.2 -53 13 -57C12.5 -61.5 8 -63 3.2 -63L3.2 -67Z"
           fill={body}
         />
-        <rect x="-2.6" y="-68" width="5.2" height="7" rx="2.6" fill={BODY} />
         {uniform && (
           <g>
             <path d="M-1.1 -62.5H1.1L2 -52.5L0 -50L-2 -52.5Z" fill="#D23A3A" />
@@ -489,19 +493,19 @@ export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood
           )}
         </g>
         <path
-          d={`M9 -60Q${(9 + hx) / 2 + 4} ${(-60 + hy) / 2} ${hx} ${hy}`}
+          d={`M11 -58Q${(11 + hx) / 2 + 4} ${(-58 + hy) / 2} ${hx} ${hy}`}
           stroke={body}
-          strokeWidth="5.5"
+          strokeWidth="6.5"
           strokeLinecap="round"
           fill="none"
         />
         {item && <HeldItem kind={item} x={hx} y={hy} />}
-        <circle cx={hx} cy={hy} r="3.1" fill={BODY} />
+        <ellipse cx={hx} cy={hy + 1} rx="3.2" ry="4" fill={BODY} />
       </g>
       {pose === "sit" && (
         <g>
-          <path d="M-4 -3H19L21 17" stroke={body} strokeWidth="7.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <ellipse cx="25" cy="20" rx="7.5" ry="3.6" fill={BODY_SHADE} />
+          <path d="M-4 -3H18L20 16" stroke={body} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <ellipse cx="24" cy="19.5" rx="7.2" ry="3.8" fill={BODY_SHADE} />
         </g>
       )}
     </g>
