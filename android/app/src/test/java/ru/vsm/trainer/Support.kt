@@ -73,6 +73,10 @@ class FakeTrainerRepository : TrainerRepository {
     override suspend fun markRead(id: Int) {}
     override suspend fun markAllRead() {}
     override suspend fun analytics() = Loaded(Fixture.decode<Analytics>("analytics"))
+    override suspend fun employeeAnalytics(employeeId: Int) = analytics()
+    override suspend fun team() = Loaded(emptyList<ru.vsm.trainer.data.remote.dto.TeamMember>())
+    override suspend fun storyMap(scenarioId: String): Loaded<ru.vsm.trainer.data.remote.dto.StoryMap> = throw ru.vsm.trainer.core.ApiError.Offline
+    override suspend fun handbook(): Loaded<ru.vsm.trainer.data.remote.dto.Handbook> = throw ru.vsm.trainer.core.ApiError.Offline
     override suspend fun recordEvent(type: String, runId: String?, notificationId: Int?) {
         events += type
     }

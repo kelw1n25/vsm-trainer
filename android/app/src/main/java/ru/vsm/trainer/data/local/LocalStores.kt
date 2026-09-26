@@ -3,7 +3,6 @@ package ru.vsm.trainer.data.local
 import android.content.SharedPreferences
 import java.io.File
 import java.time.Instant
-import kotlinx.serialization.Serializable
 
 /**
  * Последний успешный ответ каждого экрана — чтобы без сети показать сохранённые данные, а не пустоту.
@@ -41,10 +40,6 @@ class InMemoryResponseCache(private val now: () -> Instant = Instant::now) : Res
     @Synchronized override fun write(key: String, json: String) { entries[key] = json to now() }
     @Synchronized override fun clear() = entries.clear()
 }
-
-/** Незавершённое прохождение на этом устройстве — для кнопки «Продолжить» после перезапуска. */
-@Serializable
-data class ActiveRun(val runId: String, val scenarioId: String, val title: String)
 
 /** Небольшие настройки устройства. Секреты здесь не хранятся — для них TokenStore. */
 interface KeyValueStore {

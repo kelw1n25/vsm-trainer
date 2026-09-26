@@ -6,7 +6,6 @@ import kotlinx.serialization.json.Json
 import ru.vsm.trainer.core.ApiError
 import ru.vsm.trainer.core.Loaded
 import ru.vsm.trainer.core.apiCall
-import ru.vsm.trainer.data.local.ActiveRun
 import ru.vsm.trainer.data.local.KeyValueStore
 import ru.vsm.trainer.data.local.ResponseCache
 import ru.vsm.trainer.data.remote.TrainerApi
@@ -27,6 +26,9 @@ import ru.vsm.trainer.data.remote.dto.RunState
 import ru.vsm.trainer.data.remote.dto.ScenarioSummary
 import ru.vsm.trainer.data.remote.dto.SessionTokens
 import ru.vsm.trainer.data.remote.dto.StartRunRequest
+import ru.vsm.trainer.data.remote.dto.StoryMap
+import ru.vsm.trainer.data.remote.dto.TeamMember
+import ru.vsm.trainer.data.remote.dto.Handbook
 import ru.vsm.trainer.security.TokenStore
 
 /**
@@ -42,6 +44,10 @@ interface TrainerRepository {
     suspend fun markRead(id: Int)
     suspend fun markAllRead()
     suspend fun analytics(): Loaded<Analytics>
+    suspend fun employeeAnalytics(employeeId: Int): Loaded<Analytics>
+    suspend fun team(): Loaded<List<TeamMember>>
+    suspend fun storyMap(scenarioId: String): Loaded<StoryMap>
+    suspend fun handbook(): Loaded<Handbook>
     suspend fun recordEvent(type: String, runId: String? = null, notificationId: Int? = null)
     fun clearCache()
 }
@@ -73,6 +79,11 @@ class RemoteTrainerRepository(
     override suspend fun markRead(id: Int) { apiCall { api.markRead(id) } }
     override suspend fun markAllRead() { apiCall { api.markAllRead() } }
     override suspend fun analytics() = cached("analytics", Analytics.serializer()) { api.analytics() }
+    override suspend fun employeeAnalytics(employeeId: Int) =
+        cached("analytics-$employeeId", Analytics.serializer()) { api.employeeAnalytics(employeeId) }
+    override suspend fun team() = cached("team", ListSerializer(TeamMember.serializer())) { api.team() }
+    override suspend fun storyMap(scenarioId: String) = cached("story-map-$scenarioId", StoryMap.serializer()) { api.storyMap(scenarioId) }
+    override suspend fun handbook() = cached("handbook", Handbook.serializer()) { api.handbook() }
 
     /** Аналитическое событие не должно мешать пользователю: ошибку отправки не показываем. */
     override suspend fun recordEvent(type: String, runId: String?, notificationId: Int?) {
@@ -117,19 +128,5 @@ class AuthRepository(private val api: TrainerApi, private val tokens: TokenStore
     suspend fun logout() {
         tokens.load()?.let { runCatching { apiCall { api.logout(RefreshRequest(it.refreshToken)) } } }
         tokens.clear()
-    }
-}
-
-/** Ссылка на незавершённое прохождение. Само состояние — на сервере. */
-class ActiveRunStore(private val store: KeyValueStore, private val json: Json) {
-    val current: ActiveRun?
-        get() = store.getString(KEY)?.let { runCatching { json.decodeFromString(ActiveRun.serializer(), it) }.getOrNull() }
-
-    fun save(run: ActiveRun) = store.putString(KEY, json.encodeToString(ActiveRun.serializer(), run))
-
-    fun clear() = store.putString(KEY, null)
-
-    private companion object {
-        const val KEY = "active_run"
     }
 }

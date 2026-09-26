@@ -17,7 +17,6 @@ import ru.vsm.trainer.data.local.PreferencesStore
 import ru.vsm.trainer.data.remote.NetworkFactory
 import ru.vsm.trainer.data.remote.SessionEvents
 import ru.vsm.trainer.data.remote.TrainerApi
-import ru.vsm.trainer.data.repository.ActiveRunStore
 import ru.vsm.trainer.data.repository.AuthRepository
 import ru.vsm.trainer.data.repository.RemoteRunRepository
 import ru.vsm.trainer.data.repository.RemoteTrainerRepository
@@ -26,6 +25,11 @@ import ru.vsm.trainer.data.repository.TrainerRepository
 import ru.vsm.trainer.domain.NotificationSync
 import ru.vsm.trainer.security.KeystoreTokenStore
 import ru.vsm.trainer.security.TokenStore
+
+/** Область корутин приложения: для запросов, которые должны пережить закрытие экрана. */
+@javax.inject.Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class ApplicationScope
 
 /** Сборка зависимостей: адрес API, где токены и кэш, какие репозитории. ViewModel получают их через конструктор. */
 @Module
@@ -39,6 +43,20 @@ object AppModule {
 
     @Provides @Singleton
     fun clock(): Clock = Clock.systemUTC()
+
+    @Provides @Singleton @ApplicationScope
+    fun applicationScope(): kotlinx.coroutines.CoroutineScope =
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
+
+    @Provides @Singleton
+    fun preferences(@ApplicationContext context: Context, store: KeyValueStore) = ru.vsm.trainer.data.local.AppPreferences(
+        store,
+        systemDark = (context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+            android.content.res.Configuration.UI_MODE_NIGHT_YES,
+    )
+
+    @Provides @Singleton
+    fun storyMemory(store: KeyValueStore, json: Json) = ru.vsm.trainer.data.local.StoryMemory(store, json)
 
     @Provides @Singleton
     fun tokenStore(@ApplicationContext context: Context, json: Json): TokenStore = KeystoreTokenStore(context, json)
@@ -63,9 +81,6 @@ object AppModule {
 
     @Provides @Singleton
     fun authRepository(api: TrainerApi, tokens: TokenStore) = AuthRepository(api, tokens)
-
-    @Provides @Singleton
-    fun activeRunStore(store: KeyValueStore, json: Json) = ActiveRunStore(store, json)
 
     @Provides @Singleton
     fun notificationSync(repository: TrainerRepository, store: KeyValueStore) = NotificationSync(repository, store)

@@ -21,6 +21,9 @@ import ru.vsm.trainer.data.remote.dto.ScenarioSummary
 import ru.vsm.trainer.data.remote.dto.SessionTokens
 import ru.vsm.trainer.data.remote.dto.StartRunRequest
 import ru.vsm.trainer.data.remote.dto.Status
+import ru.vsm.trainer.data.remote.dto.StoryMap
+import ru.vsm.trainer.data.remote.dto.TeamMember
+import ru.vsm.trainer.data.remote.dto.Handbook
 
 /** REST API тренажёра (docs/openapi.yaml). Тот же API, что у веб-клиента, — второго API нет. */
 interface TrainerApi {
@@ -68,6 +71,18 @@ interface TrainerApi {
 
     @GET("api/analytics/me")
     suspend fun analytics(): Analytics
+
+    @GET("api/analytics/team")
+    suspend fun team(): List<TeamMember>
+
+    @GET("api/analytics/employees/{id}")
+    suspend fun employeeAnalytics(@Path("id") employeeId: Int): Analytics
+
+    @GET("api/scenarios/{id}/story-map")
+    suspend fun storyMap(@Path("id") scenarioId: String): StoryMap
+
+    @GET("api/handbook")
+    suspend fun handbook(): Handbook
 
     @POST("api/analytics/events")
     suspend fun recordEvent(@Body body: ClientEvent): Status
