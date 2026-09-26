@@ -13,15 +13,15 @@ export function Avatar({ size = 64 }: { size?: number }) {
           <stop offset="0" stopColor="#EAF2FF" />
           <stop offset="1" stopColor="#C9DDFB" />
         </linearGradient>
-        <radialGradient id={`${id}-head`} cx="0.36" cy="0.3" r="0.75">
-          <stop offset="0" stopColor="#FAE6D6" />
-          <stop offset="0.45" stopColor="#E9BE9C" />
-          <stop offset="1" stopColor="#B98463" />
+        <radialGradient id={`${id}-head`} cx="0.45" cy="0.4" r="0.7">
+          <stop offset="0" stopColor="#E9BE9C" />
+          <stop offset="0.6" stopColor="#E9BE9C" />
+          <stop offset="1" stopColor="#C89C7F" />
         </radialGradient>
         <linearGradient id={`${id}-body`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#6A7694" />
-          <stop offset="0.45" stopColor="#2A3B66" />
-          <stop offset="1" stopColor="#1C2845" />
+          <stop offset="0" stopColor="#2A3B66" />
+          <stop offset="0.55" stopColor="#2A3B66" />
+          <stop offset="1" stopColor="#222F52" />
         </linearGradient>
       </defs>
       <g clipPath={`url(#${id}-clip)`}>

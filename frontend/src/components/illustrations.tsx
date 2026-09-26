@@ -400,7 +400,7 @@ function WindowView({ x, y, width, height }: { x: number; y: number; width: numb
 }
 
 // ───────── Персонажи ─────────
-// Все люди — объёмные фигурки-манекены из одного компонента: круглая голова с бликом, гладкое тело,
+// Все люди — фигурки-манекены из одного компонента: круглая голова, гладкое тело,
 // одинаковые пропорции, телесный цвет кожи. Сотрудники поезда — в одинаковой форме, пассажиры — в своей одежде.
 
 export type Outfit = "uniform" | { top: string; bottom: string };
@@ -498,21 +498,22 @@ export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood
   return (
     <g transform={`translate(${x} ${y}) scale(${flip ? -s : s} ${s})`}>
       <defs>
-        <radialGradient id={`${id}-head`} cx="0.36" cy="0.3" r="0.75">
-          <stop offset="0" stopColor={mix(base, "#FFFFFF", 0.75)} />
-          <stop offset="0.45" stopColor={base} />
-          <stop offset="1" stopColor={mix(base, "#000000", 0.32)} />
+        {/* Без бликов: ровный цвет с мягкой тенью к краю */}
+        <radialGradient id={`${id}-head`} cx="0.45" cy="0.4" r="0.7">
+          <stop offset="0" stopColor={base} />
+          <stop offset="0.6" stopColor={base} />
+          <stop offset="1" stopColor={mix(base, "#000000", 0.18)} />
         </radialGradient>
-        {/* Свет слева: одна горизонтальная растяжка для всех частей тела в координатах фигуры */}
+        {/* Мягкая тень справа: одна горизонтальная растяжка для всех частей тела в координатах фигуры */}
         <linearGradient id={`${id}-body`} gradientUnits="userSpaceOnUse" x1="-16" y1="0" x2="16" y2="0">
-          <stop offset="0" stopColor={mix(cloth, "#FFFFFF", 0.3)} />
-          <stop offset="0.45" stopColor={cloth} />
-          <stop offset="1" stopColor={mix(cloth, "#000000", 0.32)} />
+          <stop offset="0" stopColor={cloth} />
+          <stop offset="0.55" stopColor={cloth} />
+          <stop offset="1" stopColor={mix(cloth, "#000000", 0.2)} />
         </linearGradient>
         <linearGradient id={`${id}-legs`} gradientUnits="userSpaceOnUse" x1="-16" y1="0" x2="16" y2="0">
-          <stop offset="0" stopColor={mix(trousers, "#FFFFFF", 0.25)} />
-          <stop offset="0.45" stopColor={trousers} />
-          <stop offset="1" stopColor={mix(trousers, "#000000", 0.3)} />
+          <stop offset="0" stopColor={trousers} />
+          <stop offset="0.55" stopColor={trousers} />
+          <stop offset="1" stopColor={mix(trousers, "#000000", 0.2)} />
         </linearGradient>
       </defs>
       {pose === "stand" ? (
