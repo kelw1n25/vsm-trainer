@@ -309,66 +309,6 @@ export type Mood =
   | "thinking"
   | "serious";
 
-/** Лицо персонажа: глаза, брови и рот передают эмоцию — единый стиль для всех иллюстраций. */
-function Face({ cx, cy, r, mood = "calm", ink = "#2B2320" }: { cx: number; cy: number; r: number; mood?: Mood; ink?: string }) {
-  const ex = r * 0.36;
-  const ey = cy + r * 0.08;
-  const er = Math.max(0.9, r * 0.11);
-  const by = cy - r * 0.16;
-  const my = cy + r * 0.46;
-  const mw = r * 0.28;
-  const line = { stroke: ink, strokeWidth: Math.max(1, r * 0.1), strokeLinecap: "round", fill: "none" } as const;
-  const eyes = [cx - ex, cx + ex];
-  return (
-    <g>
-      {mood === "happy" || mood === "pained" || mood === "tipsy"
-        ? eyes.map((x) => (
-            <path
-              key={x}
-              {...line}
-              d={
-                mood === "happy"
-                  ? `M${x - er * 1.4} ${ey}q${er * 1.4} ${-er * 1.8} ${er * 2.8} 0`
-                  : mood === "pained"
-                    ? `M${x - er * 1.4} ${ey}q${er * 1.4} ${er * 1.2} ${er * 2.8} 0`
-                    : `M${x - er * 1.4} ${ey}h${er * 2.8}`
-              }
-            />
-          ))
-        : eyes.map((x) => <circle key={x} cx={x} cy={ey} r={mood === "surprised" ? er * 1.3 : er} fill={ink} />)}
-      {mood === "angry" && <path {...line} d={`M${cx - ex - er * 2} ${by - er}l${er * 3} ${er * 1.6}M${cx + ex + er * 2} ${by - er}l${-er * 3} ${er * 1.6}`} />}
-      {mood === "surprised" && (
-        <path {...line} d={`M${cx - ex - er * 1.6} ${by - er * 1.2}q${er * 1.6} ${-er * 1.4} ${er * 3.2} 0M${cx + ex - er * 1.6} ${by - er * 1.2}q${er * 1.6} ${-er * 1.4} ${er * 3.2} 0`} />
-      )}
-      {mood === "thinking" && (
-        <path {...line} d={`M${cx - ex - er * 1.8} ${by}h${er * 3}M${cx + ex - er * 1.4} ${by - er * 1.4}q${er * 1.6} ${-er} ${er * 3} ${er * 0.4}`} />
-      )}
-      {mood === "serious" && <path {...line} d={`M${cx - ex - er * 1.8} ${by + er * 0.4}h${er * 3.2}M${cx + ex + er * 1.8} ${by + er * 0.4}h${-er * 3.2}`} />}
-      {(mood === "worried" || mood === "pained" || mood === "sad") && (
-        <path {...line} d={`M${cx - ex - er * 2} ${by + er * 0.6}l${er * 3} ${-er * 1.4}M${cx + ex + er * 2} ${by + er * 0.6}l${-er * 3} ${-er * 1.4}`} />
-      )}
-      {mood === "annoyed" && <path {...line} d={`M${cx - ex - er * 1.8} ${by}h${er * 3}M${cx + ex + er * 1.8} ${by}h${-er * 3}`} />}
-      {mood === "tipsy" && (
-        <g fill="#F28B7D" opacity="0.7">
-          <circle cx={cx - ex * 1.3} cy={ey + er * 2.6} r={er * 1.8} />
-          <circle cx={cx + ex * 1.3} cy={ey + er * 2.6} r={er * 1.8} />
-        </g>
-      )}
-      {mood === "calm" && <path {...line} d={`M${cx - mw} ${my}q${mw} ${mw * 0.7} ${mw * 2} 0`} />}
-      {mood === "happy" && <path d={`M${cx - mw * 1.2} ${my - mw * 0.2}q${mw * 1.2} ${mw * 1.8} ${mw * 2.4} 0z`} fill={ink} />}
-      {mood === "tipsy" && <path {...line} d={`M${cx - mw * 1.3} ${my - mw * 0.2}q${mw * 1.4} ${mw * 1.2} ${mw * 2.6} ${-mw * 0.5}`} />}
-      {mood === "angry" && <ellipse cx={cx} cy={my} rx={mw * 0.8} ry={mw * 0.6} fill={ink} />}
-      {mood === "worried" && <ellipse cx={cx} cy={my} rx={mw * 0.45} ry={mw * 0.4} fill={ink} />}
-      {mood === "surprised" && <ellipse cx={cx} cy={my} rx={mw * 0.5} ry={mw * 0.65} fill={ink} />}
-      {mood === "thinking" && <path {...line} d={`M${cx - mw * 0.6} ${my}h${mw * 1.4}`} />}
-      {mood === "serious" && <path {...line} d={`M${cx - mw} ${my}h${mw * 2}`} />}
-      {(mood === "annoyed" || mood === "pained" || mood === "sad") && (
-        <path {...line} d={`M${cx - mw} ${my + mw * 0.3}q${mw} ${-mw * 0.6} ${mw * 2} 0`} />
-      )}
-    </g>
-  );
-}
-
 /** Окно вагона с пейзажем, пролетающим на скорости. */
 function WindowView({ x, y, width, height }: { x: number; y: number; width: number; height: number }) {
   const id = useSvgId();
@@ -400,16 +340,32 @@ function WindowView({ x, y, width, height }: { x: number; y: number; width: numb
 }
 
 // ───────── Персонажи ─────────
-// Все люди — фигурки-манекены из одного компонента: круглая голова, гладкое тело,
-// одинаковые пропорции, телесный цвет кожи. Сотрудники поезда — в одинаковой форме, пассажиры — в своей одежде.
+// Все люди — одинаковые светло-серые фигурки-манекены без лиц и бликов: большая круглая голова,
+// тонкая шея, стройное тело, крупные ступни. Сотрудников поезда выделяют акценты формы —
+// фуражка, красный галстук и значок. Эмоцию передаёт поза: наклон головы и тела.
 
 export type Outfit = "uniform" | { top: string; bottom: string };
 export type Hand = "down" | "point" | "hold" | "radio" | "hush" | "chest" | "throat";
 type Item = "ticket" | "bottle" | "cup" | "extinguisher" | "radio";
 
-const SKIN = "#E9BE9C";
-// Форма сотрудника: тёмно-синий китель и брюки
+const BODY = "#C9C9C9";
+const BODY_SHADE = "#A4A4A4";
 const UNIFORM_COLOR = "#2A3B66";
+
+// Наклон головы и корпуса для каждой эмоции (градусы; плюс — голова вниз и вперёд)
+const POSTURE: Record<Mood, { head: number; body: number }> = {
+  calm: { head: 0, body: 0 },
+  happy: { head: -8, body: -2 },
+  angry: { head: 6, body: 5 },
+  annoyed: { head: -5, body: 0 },
+  worried: { head: 8, body: 1 },
+  pained: { head: 12, body: 4 },
+  tipsy: { head: 16, body: -4 },
+  surprised: { head: -12, body: -4 },
+  sad: { head: 16, body: 3 },
+  thinking: { head: 10, body: 0 },
+  serious: { head: 3, body: 0 },
+};
 
 // Куда тянется правая рука (координаты фигуры ростом ~92 с опорой в точке 0,0)
 const HAND_POSITION: Record<Hand, [number, number]> = {
@@ -421,12 +377,6 @@ const HAND_POSITION: Record<Hand, [number, number]> = {
   chest: [5, -52],
   throat: [3, -65],
 };
-
-function mix(from: string, to: string, share: number): string {
-  const channel = (hex: string, i: number) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
-  const parts = [0, 1, 2].map((i) => Math.round(channel(from, i) * (1 - share) + channel(to, i) * share));
-  return `#${parts.map((value) => value.toString(16).padStart(2, "0")).join("")}`;
-}
 
 export interface PersonProps {
   x: number;
@@ -487,82 +437,71 @@ function HeldItem({ kind, x, y }: { kind: Item; x: number; y: number }) {
 export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood = "calm", hand = "down", item }: PersonProps) {
   const id = useSvgId();
   const uniform = outfit === "uniform";
-  const base = SKIN;
-  const cloth = uniform ? UNIFORM_COLOR : outfit.top;
-  const trousers = uniform ? UNIFORM_COLOR : outfit.bottom;
-  const dark = mix(trousers, "#000000", 0.35);
   const body = `url(#${id}-body)`;
-  const legs = `url(#${id}-legs)`;
   const lift = pose === "sit" ? 32 : 0;
   const [hx, hy] = HAND_POSITION[hand];
+  const posture = POSTURE[mood];
   return (
     <g transform={`translate(${x} ${y}) scale(${flip ? -s : s} ${s})`}>
       <defs>
-        {/* Без бликов: ровный цвет с мягкой тенью к краю */}
-        <radialGradient id={`${id}-head`} cx="0.45" cy="0.4" r="0.7">
-          <stop offset="0" stopColor={base} />
-          <stop offset="0.6" stopColor={base} />
-          <stop offset="1" stopColor={mix(base, "#000000", 0.18)} />
+        {/* Без бликов: ровный серый с мягкой тенью к краю */}
+        <radialGradient id={`${id}-head`} cx="0.42" cy="0.4" r="0.72">
+          <stop offset="0" stopColor={BODY} />
+          <stop offset="0.62" stopColor={BODY} />
+          <stop offset="1" stopColor={BODY_SHADE} />
         </radialGradient>
-        {/* Мягкая тень справа: одна горизонтальная растяжка для всех частей тела в координатах фигуры */}
-        <linearGradient id={`${id}-body`} gradientUnits="userSpaceOnUse" x1="-16" y1="0" x2="16" y2="0">
-          <stop offset="0" stopColor={cloth} />
-          <stop offset="0.55" stopColor={cloth} />
-          <stop offset="1" stopColor={mix(cloth, "#000000", 0.2)} />
-        </linearGradient>
-        <linearGradient id={`${id}-legs`} gradientUnits="userSpaceOnUse" x1="-16" y1="0" x2="16" y2="0">
-          <stop offset="0" stopColor={trousers} />
-          <stop offset="0.55" stopColor={trousers} />
-          <stop offset="1" stopColor={mix(trousers, "#000000", 0.2)} />
+        <linearGradient id={`${id}-body`} gradientUnits="userSpaceOnUse" x1="-14" y1="0" x2="14" y2="0">
+          <stop offset="0" stopColor={BODY} />
+          <stop offset="0.55" stopColor={BODY} />
+          <stop offset="1" stopColor={BODY_SHADE} />
         </linearGradient>
       </defs>
-      {pose === "stand" ? (
-        <g stroke={legs} strokeLinecap="round" fill="none">
-          <path d="M-4.6 -32L-6 -4" strokeWidth="8.5" />
-          <path d="M4.6 -32L6 -4" strokeWidth="8.5" />
-          <ellipse cx="-7.5" cy="-1.8" rx="6.5" ry="3" fill={dark} stroke="none" />
-          <ellipse cx="7.5" cy="-1.8" rx="6.5" ry="3" fill={dark} stroke="none" />
+      {pose === "stand" && (
+        <g>
+          <path d="M-4.2 -36L-5.2 -5M4.2 -36L5.2 -5" stroke={body} strokeWidth="7" strokeLinecap="round" fill="none" />
+          {/* Крупные округлые ступни, носками вперёд */}
+          <ellipse cx="-7" cy="-2.6" rx="7.5" ry="3.6" fill={BODY_SHADE} />
+          <ellipse cx="7" cy="-2.6" rx="7.5" ry="3.6" fill={BODY_SHADE} />
         </g>
-      ) : null}
-      <g transform={`translate(0 ${lift})`}>
-        <path d="M-9.5 -58L-13.5 -37" stroke={body} strokeWidth="6.5" strokeLinecap="round" />
-        <circle cx="-13.8" cy="-35.5" r="3.6" fill={base} />
-        {/* Корпус манекена: плечи, грудь, талия, бёдра — без складок и деталей одежды */}
+      )}
+      <g transform={`translate(0 ${lift}) rotate(${posture.body} 0 -36)`}>
+        <path d="M-9 -60L-12.5 -39" stroke={body} strokeWidth="5.5" strokeLinecap="round" />
+        <circle cx="-12.8" cy="-37.5" r="3.1" fill={BODY} />
         <path
-          d="M-9 -31C-10 -36 -8.5 -40 -8 -43C-9.5 -48 -11.5 -53 -11.5 -57Q-11 -63 -3 -63.5H3Q11 -63 11.5 -57C11.5 -53 9.5 -48 8 -43C8.5 -40 10 -36 9 -31Q0 -27.5 -9 -31Z"
+          d="M-8 -34C-8.5 -39 -7.2 -43 -7 -46C-8.5 -50 -10.5 -55 -10.5 -58.5Q-10 -63 -3 -63.3H3Q10 -63 10.5 -58.5C10.5 -55 8.5 -50 7 -46C7.2 -43 8.5 -39 8 -34Q0 -31 -8 -34Z"
           fill={body}
         />
-        <rect x="-3.2" y="-69" width="6.4" height="8" rx="3" fill={base} />
+        <rect x="-2.6" y="-68" width="5.2" height="7" rx="2.6" fill={BODY} />
         {uniform && (
           <g>
-            <path d="M-4.5 -63.3L0 -55L4.5 -63.3Z" fill="#F4F6FA" />
-            <path d="M-1.1 -60.5H1.1L2 -50.5L0 -48L-2 -50.5Z" fill="#D23A3A" />
-            <rect x="4.5" y="-55.5" width="4.5" height="3.2" rx="1" fill="#E7C15A" />
+            <path d="M-1.1 -62.5H1.1L2 -52.5L0 -50L-2 -52.5Z" fill="#D23A3A" />
+            <rect x="3.8" y="-57" width="4.2" height="3" rx="0.8" fill="#E7C15A" />
           </g>
         )}
-        <circle cx="0" cy="-79" r="12.5" fill={`url(#${id}-head)`} />
-        <Face cx={0} cy={-78} r={12} mood={mood} ink="#3A2A22" />
-        {uniform && (
-          <g>
-            <path d="M-12.5 -85Q0 -99 12.5 -85Z" fill={UNIFORM_COLOR} />
-            <rect x="-12" y="-87.5" width="24" height="2.6" rx="1" fill="#E7C15A" />
-            <path d="M-12.5 -84.5H16" stroke="#18233F" strokeWidth="2.6" strokeLinecap="round" />
-          </g>
-        )}
+        <g transform={`rotate(${posture.head} 0 -67)`}>
+          <circle cx="0" cy="-80" r="13.2" fill={`url(#${id}-head)`} />
+          {uniform && (
+            <g>
+              <path d="M-12.8 -86.5Q0 -101 12.8 -86.5Z" fill={UNIFORM_COLOR} />
+              <rect x="-12.4" y="-89" width="24.8" height="2.6" rx="1" fill="#E7C15A" />
+              <path d="M-12.8 -86H16.5" stroke="#18233F" strokeWidth="2.6" strokeLinecap="round" />
+            </g>
+          )}
+        </g>
         <path
-          d={`M9.5 -58Q${(9.5 + hx) / 2 + 4} ${(-58 + hy) / 2} ${hx} ${hy}`}
+          d={`M9 -60Q${(9 + hx) / 2 + 4} ${(-60 + hy) / 2} ${hx} ${hy}`}
           stroke={body}
-          strokeWidth="6.5"
+          strokeWidth="5.5"
           strokeLinecap="round"
           fill="none"
         />
         {item && <HeldItem kind={item} x={hx} y={hy} />}
-        <circle cx={hx} cy={hy} r="3.6" fill={base} />
+        <circle cx={hx} cy={hy} r="3.1" fill={BODY} />
       </g>
       {pose === "sit" && (
-        <g stroke={legs} strokeLinecap="round" strokeLinejoin="round" fill="none">
-          <path d="M-4 -3H20L22 18" strokeWidth="9" />
-          <ellipse cx="25" cy="21" rx="6.5" ry="3" fill={dark} stroke="none" />
+        <g>
+          <path d="M-4 -3H19L21 17" stroke={body} strokeWidth="7.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <ellipse cx="25" cy="20" rx="7.5" ry="3.6" fill={BODY_SHADE} />
         </g>
       )}
     </g>
