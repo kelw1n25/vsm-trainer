@@ -614,23 +614,6 @@ struct VsmSwitch: View {
 
 // MARK: - Аватары
 
-/// Аватар проводника — та же картинка, что на сайте (`Avatar`), с белым кольцом и тенью.
-struct UserAvatar: View {
-    let size: CGFloat
-    var ring: CGFloat = 3
-    @Environment(\.vsm) private var colors
-
-    var body: some View {
-        AssetImage(name: "avatar", contentMode: .fill)
-            .frame(width: size, height: size)
-            .background(colors.surface)
-            .clipShape(Circle())
-            .overlay(Circle().strokeBorder(colors.surface, lineWidth: ring))
-            .vsmShadow(radius: 6, y: 3)
-            .accessibilityHidden(true)
-    }
-}
-
 /// `InitialsAvatar`: инициалы «ИФ» на градиенте soft-strong → brand-border.
 struct InitialsAvatar: View {
     let fullName: String

@@ -3,9 +3,11 @@ package ru.vsm.trainer.data.remote
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 import ru.vsm.trainer.data.remote.dto.Analytics
+import ru.vsm.trainer.data.remote.dto.Avatar
 import ru.vsm.trainer.data.remote.dto.ChoiceRequest
 import ru.vsm.trainer.data.remote.dto.ClientEvent
 import ru.vsm.trainer.data.remote.dto.Debrief
@@ -35,6 +37,9 @@ interface TrainerApi {
 
     @GET("api/profile")
     suspend fun profile(): Profile
+
+    @PUT("api/profile/avatar")
+    suspend fun updateAvatar(@Body avatar: Avatar): Avatar
 
     @GET("api/scenarios")
     suspend fun scenarios(): List<ScenarioSummary>

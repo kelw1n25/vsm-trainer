@@ -273,6 +273,7 @@ struct ProfileScreen: View {
             ScreenContent(state: model.state, retry: model.load) { profile in
                 Card(spacing: 16, background: AnyShapeStyle(LinearGradient(colors: [colors.surface, colors.soft], startPoint: .topLeading, endPoint: .bottomTrailing))) {
                     UserAvatar(size: 112, ring: 4)
+                    LinkAction(title: "Изменить аватар") { navigator.open(.settings) }
                     VStack(alignment: .leading, spacing: 4) {
                         PageTitle(profile.fullName)
                         Muted("\(Labels.role(profile.role)) · \(profile.brigade) · \(profile.depot)")

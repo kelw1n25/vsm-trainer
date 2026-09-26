@@ -71,3 +71,24 @@ final class SessionViewModelTests: XCTestCase {
         XCTAssertEqual(vm.state, .signedOut)
     }
 }
+
+@MainActor
+final class MyAvatarStoreTests: XCTestCase {
+    func testChoiceIsSavedAndShown() async {
+        let store = MyAvatarStore(repository: FakeTrainerRepository())
+        await store.refresh()
+        XCTAssertEqual(store.current, Avatar())
+        await store.choose(Avatar(background: .night, headwear: .none, tie: .green))
+        XCTAssertEqual(store.current, Avatar(background: .night, headwear: .none, tie: .green))
+        XCTAssertEqual(store.status, "Сохранено")
+    }
+
+    func testRejectedChoiceRollsBack() async {
+        let repository = FakeTrainerRepository()
+        repository.avatarError = APIError.server(status: 422, code: "validation_error", message: "Проверьте введённые данные")
+        let store = MyAvatarStore(repository: repository)
+        await store.choose(Avatar(background: .mint))
+        XCTAssertEqual(store.current, Avatar())
+        XCTAssertEqual(store.status, "Проверьте введённые данные")
+    }
+}

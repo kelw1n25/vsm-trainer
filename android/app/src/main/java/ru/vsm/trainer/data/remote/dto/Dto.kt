@@ -258,6 +258,10 @@ data class HistoryItem(
     @Serializable(InstantSerializer::class) @SerialName("finished_at") val finishedAt: Instant,
 )
 
+/** Аватар-конструктор: фон, головной убор и галстук из вариантов, которые принимает сервер (без фото — 152-ФЗ). */
+@Serializable
+data class Avatar(val background: String = "blue", val headwear: String = "cap", val tie: String = "red")
+
 @Serializable
 data class Profile(
     val id: Int,
@@ -269,6 +273,7 @@ data class Profile(
     val level: Level,
     @SerialName("runs_completed") val runsCompleted: Int,
     @SerialName("competence_points") val competencePoints: Map<String, Int>,
+    val avatar: Avatar = Avatar(),
     val achievements: List<ProfileAchievement>,
     val history: List<HistoryItem>,
 )

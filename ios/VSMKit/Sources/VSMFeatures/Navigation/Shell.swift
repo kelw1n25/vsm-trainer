@@ -90,6 +90,7 @@ struct AppShell: View {
     let role: Role
     @State private var navigator = Navigator()
     @State private var shell: ShellViewModel
+    @State private var avatar: MyAvatarStore
     @Environment(\.vsm) private var colors
 
     init(container: AppContainer, fullName: String, role: Role) {
@@ -97,6 +98,7 @@ struct AppShell: View {
         self.fullName = fullName
         self.role = role
         _shell = State(initialValue: ShellViewModel(repository: container.trainer))
+        _avatar = State(initialValue: MyAvatarStore(repository: container.trainer))
     }
 
     var body: some View {
@@ -121,6 +123,9 @@ struct AppShell: View {
         }
         .background(SiteBackground())
         .environment(navigator)
+        .environment(avatar)
+        .environment(\.myAvatar, avatar.current)
+        .task { await avatar.refresh() }
         .task { await shell.poll() }
         .fullScreenCoverCompat(item: $navigator.story) { story in
             StoryPlayerScreen(container: container, scenarioId: story.scenarioId)

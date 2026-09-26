@@ -22,6 +22,7 @@ import ru.vsm.trainer.design.components.AnimatedNumber
 import ru.vsm.trainer.design.components.CardTitle
 import ru.vsm.trainer.design.components.CompetenceRadar
 import ru.vsm.trainer.design.components.LevelProgress
+import ru.vsm.trainer.design.components.LinkAction
 import ru.vsm.trainer.design.components.Muted
 import ru.vsm.trainer.design.components.OutlinedBlock
 import ru.vsm.trainer.design.components.Page
@@ -36,7 +37,7 @@ import ru.vsm.trainer.feature.scenarios.HistoryList
 /** Профиль — `ProfilePage`: шапка с аватаром и уровнем, 4 KPI, радар компетенций, ачивки, история. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ProfileScreen(onDebrief: (String) -> Unit, onScenarios: () -> Unit, model: ProfileViewModel = hiltViewModel()) {
+fun ProfileScreen(onDebrief: (String) -> Unit, onScenarios: () -> Unit, onSettings: () -> Unit, model: ProfileViewModel = hiltViewModel()) {
     val state by model.state.collectAsStateWithLifecycle()
     val titles by model.titles.collectAsStateWithLifecycle()
     val colors = Vsm.colors
@@ -47,6 +48,7 @@ fun ProfileScreen(onDebrief: (String) -> Unit, onScenarios: () -> Unit, model: P
                 Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
                     VsmCard(background = Brush.linearGradient(listOf(colors.surface, colors.soft)), spacing = 16.dp) {
                         UserAvatar(112.dp, ring = 4.dp)
+                        LinkAction("Изменить аватар", onSettings)
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             PageTitle(profile.fullName)
                             Muted("${Labels.role(profile.role)} · ${profile.brigade} · ${profile.depot}")

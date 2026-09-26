@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -29,6 +30,7 @@ import ru.vsm.trainer.core.Labels
 import ru.vsm.trainer.data.local.ThemeMode
 import ru.vsm.trainer.data.remote.dto.Role
 import ru.vsm.trainer.design.Vsm
+import ru.vsm.trainer.design.components.LocalMyAvatar
 import ru.vsm.trainer.design.components.SiteBackground
 import ru.vsm.trainer.feature.analytics.AnalyticsScreen
 import ru.vsm.trainer.feature.debrief.DebriefScreen
@@ -59,10 +61,15 @@ fun AppNavigation(onLogout: () -> Unit, shell: ShellViewModel = hiltViewModel())
     val shift = with(LocalDensity.current) { 6.dp.roundToPx() }
     val reduce = Vsm.reduceMotion
     // Новый вход — счётчик непрочитанных нового сотрудника, не дожидаясь очередного опроса
-    LaunchedEffect(Unit) { shell.refreshUnread() }
+    LaunchedEffect(Unit) {
+        shell.refreshUnread()
+        shell.refreshProfile()
+    }
+    val avatar by shell.avatar.collectAsStateWithLifecycle()
     val go = { destination: String -> nav.navigate(destination) }
     val play = { scenarioId: String -> nav.navigate("play/$scenarioId") }
 
+    CompositionLocalProvider(LocalMyAvatar provides avatar) {
     SiteBackground(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize()) {
         if (!story) {
@@ -99,7 +106,7 @@ fun AppNavigation(onLogout: () -> Unit, shell: ShellViewModel = hiltViewModel())
                 "${Tab.HANDBOOK.route}?situation={situation}",
                 arguments = listOf(navArgument("situation") { type = NavType.StringType; nullable = true; defaultValue = null }),
             ) { HandbookScreen(onScenario = { go("scenario/$it") }) }
-            composable("profile") { ProfileScreen(onDebrief = { go("debrief/$it") }, onScenarios = { nav.openTab(Tab.SCENARIOS.route) }) }
+            composable("profile") { ProfileScreen(onDebrief = { go("debrief/$it") }, onScenarios = { nav.openTab(Tab.SCENARIOS.route) }, onSettings = { go("settings") }) }
             composable("notifications") { NotificationsScreen(onChanged = shell::refreshUnread) }
             composable("settings") { SettingsScreen(onLogout = onLogout) }
             composable("team") { TeamScreen(onMember = { go("team/$it") }) }
@@ -141,6 +148,7 @@ fun AppNavigation(onLogout: () -> Unit, shell: ShellViewModel = hiltViewModel())
         }
     }
     }
+}
 }
 
 private fun NavHostController.openTab(route: String) = navigate(route) {

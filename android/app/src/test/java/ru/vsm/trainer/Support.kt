@@ -65,7 +65,9 @@ class FakeTrainerRepository : TrainerRepository {
     val events = mutableListOf<String>()
     var cacheCleared = false
 
+    override val myAvatar = kotlinx.coroutines.flow.MutableStateFlow(ru.vsm.trainer.data.remote.dto.Avatar())
     override suspend fun profile() = Loaded(Fixture.decode<Profile>("profile"))
+    override suspend fun updateAvatar(avatar: ru.vsm.trainer.data.remote.dto.Avatar) = avatar.also { myAvatar.value = it }
     override suspend fun scenarios() = Loaded(Fixture.decode<List<ScenarioSummary>>("scenarios"))
     override suspend fun meta() = Loaded(Fixture.decode<Meta>("meta"))
     override suspend fun leaderboard(scope: LeaderboardScope, period: LeaderboardPeriod) = Loaded(Fixture.decode<Leaderboard>("leaderboard"))

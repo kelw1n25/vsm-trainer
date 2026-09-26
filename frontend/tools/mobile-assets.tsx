@@ -9,7 +9,6 @@
 import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "../src/styles.css";
-import { Avatar } from "../src/components/Avatar";
 import { StarIcon } from "../src/components/icons";
 import { HeroTrain, ScenarioImage } from "../src/components/illustrations";
 import { Sprite } from "../src/story/StoryStage";
@@ -85,9 +84,6 @@ function Assets() {
           <HeroTrain />
         </div>
       ))}
-      <div className="asset" data-asset="avatar" data-kind="avatar">
-        <Avatar size={112} />
-      </div>
       <div className="asset" data-asset="star" data-kind="icon">
         <StarIcon size={56} />
       </div>

@@ -55,6 +55,10 @@ public final class APIClient: Sendable {
         try await send("POST", path, body: body)
     }
 
+    func put<Body: Encodable, Response: Decodable>(_ path: String, body: Body) async throws -> Response {
+        try await send("PUT", path, body: body)
+    }
+
     private func send<Body: Encodable, Response: Decodable>(
         _ method: String, _ path: String, query: [URLQueryItem] = [], body: Body?, authorized: Bool = true
     ) async throws -> Response {

@@ -28,6 +28,8 @@ class ShellViewModel @Inject constructor(
     val instructor: Boolean get() = auth.current?.role == Role.INSTRUCTOR
     private val _unread = MutableStateFlow(0)
     val unread = _unread.asStateFlow()
+    /** Аватар вошедшего сотрудника для шапки и всех экранов. */
+    val avatar = repository.myAvatar
 
     init {
         viewModelScope.launch {
@@ -36,6 +38,11 @@ class ShellViewModel @Inject constructor(
                 delay(POLL_MS)
             }
         }
+    }
+
+    /** Профиль загружается при входе — аватар в шапке сразу нового сотрудника; без сети остаётся по умолчанию. */
+    fun refreshProfile() {
+        viewModelScope.launch { runCatching { repository.profile() } }
     }
 
     /** Ошибку опроса не показываем: счётчик обновится при следующей попытке. */

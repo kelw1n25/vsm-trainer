@@ -145,7 +145,8 @@ curl -s -G "$API/billing/usage" -H "X-API-Key: $KEY" --data-urlencode "month=202
 | `POST /api/runs/{id}/reveal` | сцена дочитана: `{node_id}` → варианты и дедлайн таймера |
 | `POST /api/runs/{id}/choices` | ответ: `{node_id, choice_id}` → реакция персонажей и следующая сцена |
 | `GET /api/runs/{id}/debrief` | разбор: каждое решение, лучший вариант, стандарты по ситуациям |
-| `GET /api/profile` | уровень, компетенции, ачивки, история |
+| `GET /api/profile` | уровень, компетенции, ачивки, история, аватар |
+| `PUT /api/profile/avatar` | сохранить аватар: `background` (blue, mint, sand, lilac, coral, night), `headwear` (cap, none), `tie` (red, blue, green, graphite); другое значение или лишнее поле — 422 |
 | `GET /api/leaderboard?scope=brigade\|depot\|company&period=week\|month\|all` | рейтинг |
 | `GET /api/notifications`, `POST /api/notifications/read-all` | уведомления |
 | `GET /api/analytics/me` | аналитика: прогресс, компетенции, доля завершённых, среднее время решения, ошибки, рекомендация |

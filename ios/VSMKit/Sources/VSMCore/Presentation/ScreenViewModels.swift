@@ -384,6 +384,39 @@ public final class SettingsViewModel {
     }
 }
 
+/// Аватар вошедшего сотрудника — один на все экраны: загружается с профилем, выбор в настройках виден сразу.
+@MainActor
+@Observable
+public final class MyAvatarStore {
+    public private(set) var current = Avatar()
+    /// Итог последнего сохранения: «Сохранено» или текст ошибки сервера.
+    public private(set) var status: String?
+    private let repository: TrainerRepository
+
+    public init(repository: TrainerRepository) {
+        self.repository = repository
+    }
+
+    /// Без профиля остаётся аватар по умолчанию.
+    public func refresh() async {
+        if let profile = try? await repository.profile() { current = profile.value.avatar }
+    }
+
+    /// Выбор виден сразу; сервер отказал или нет сети — возвращаем прежний.
+    public func choose(_ next: Avatar) async {
+        let previous = current
+        current = next
+        status = nil
+        do {
+            current = try await repository.updateAvatar(next)
+            status = "Сохранено"
+        } catch {
+            current = previous
+            status = error.userMessage
+        }
+    }
+}
+
 /// Шапка: счётчик непрочитанных уведомлений — опрос раз в 30 с, как на сайте.
 @MainActor
 @Observable

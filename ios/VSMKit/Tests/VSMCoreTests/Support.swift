@@ -90,9 +90,14 @@ final class FakeRunRepository: RunRepository, @unchecked Sendable {
 final class FakeTrainerRepository: TrainerRepository, @unchecked Sendable {
     var notificationsResult: Result<Loaded<NotificationList>, Error> = .success(Loaded(value: Fixture.decode(NotificationList.self, "notifications")))
     private(set) var events: [(type: String, runId: String?, notificationId: Int?)] = []
+    var avatarError: Error?
     private(set) var cacheCleared = false
 
     func profile() async throws -> Loaded<Profile> { Loaded(value: Fixture.decode(Profile.self, "profile")) }
+    func updateAvatar(_ avatar: Avatar) async throws -> Avatar {
+        if let avatarError { throw avatarError }
+        return avatar
+    }
     func scenarios() async throws -> Loaded<[ScenarioSummary]> { Loaded(value: Fixture.decode([ScenarioSummary].self, "scenarios")) }
     func meta() async throws -> Loaded<Meta> { Loaded(value: Fixture.decode(Meta.self, "meta")) }
     func leaderboard(scope: LeaderboardScope, period: LeaderboardPeriod) async throws -> Loaded<Leaderboard> {

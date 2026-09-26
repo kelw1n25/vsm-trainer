@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import ru.vsm.trainer.R
 
 /**
  * Картинки, экспортированные из компонентов сайта (`tools/mobile-assets`): персонажи, фоны, иллюстрации.
@@ -59,15 +58,16 @@ private class Placeholder(override val intrinsicSize: Size) : Painter() {
     override fun DrawScope.onDraw() = Unit
 }
 
+/** Картинка из ресурсов по имени; нет такой и нет запасной — пустое место, а не чужая картинка. */
 @Composable
-fun assetPainter(name: String, fallback: Int = R.drawable.avatar): Painter {
+fun assetPainter(name: String, fallback: Int? = null): Painter {
     val context = LocalContext.current
     val id = remember(name) { assetId(context, name).takeIf { it != 0 } ?: fallback }
     // При смене картинки (другая эмоция персонажа) до готовности новой видна прежняя — без мигания пустотой
-    val bitmap by produceState(AssetCache.cached(id), id) {
-        value = AssetCache.cached(id) ?: withContext(Dispatchers.IO) { AssetCache.load(context, id) }
+    val bitmap by produceState(id?.let(AssetCache::cached), id) {
+        value = id?.let { AssetCache.cached(it) ?: withContext(Dispatchers.IO) { AssetCache.load(context, it) } }
     }
-    return remember(id, bitmap) { bitmap?.let(::BitmapPainter) ?: Placeholder(AssetCache.size(context, id)) }
+    return remember(id, bitmap) { bitmap?.let(::BitmapPainter) ?: Placeholder(id?.let { AssetCache.size(context, it) } ?: Size.Zero) }
 }
 
 /** Иллюстрация сценария `ScenarioImage`: своя для каждого сценария, иначе — по типу ситуации, как на сайте. */

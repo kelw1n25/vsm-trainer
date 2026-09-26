@@ -24,7 +24,6 @@ const KINDS = {
   background: { scale: 3, quality: 82, alpha: false },
   illustration: { scale: 3, quality: 90, alpha: false },
   hero: { scale: 2, quality: 90, alpha: true },
-  avatar: { scale: 3, quality: 92, alpha: true },
   icon: { scale: 3, quality: 92, alpha: true },
 };
 

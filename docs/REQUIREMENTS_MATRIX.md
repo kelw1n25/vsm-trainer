@@ -6,6 +6,7 @@
 | Требование ТЗ | Статус до | Где реализовано | Что изменено |
 |---------------|-----------|-----------------|--------------|
 | Профиль сотрудника | ✅ | `backend/app/profiles/router.py` → `GET /api/profile` | экраны профиля в iOS и Android |
+| Кастомизация профиля (аватар) | ✅ | `profiles/avatar.py` → `PUT /api/profile/avatar`; конструктор в «Настройках» сайта, iOS и Android | собирается из деталей формы (фон, фуражка, галстук), фото не загружаются — это были бы ПДН |
 | Прогресс | ✅ | `analytics/service.py: _progress` (XP по неделям), история в профиле | показан в мобильных клиентах |
 | Уровень | ✅ | `achievements/service.py: level_for`, пороги в `config/game.yaml` | — |
 | Очки компетенций | ✅ | `scoring/service.py: award`, `Choice.effects.competences` в сценариях | — |

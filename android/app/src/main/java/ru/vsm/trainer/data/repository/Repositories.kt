@@ -1,5 +1,8 @@
 package ru.vsm.trainer.data.repository
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
@@ -10,6 +13,7 @@ import ru.vsm.trainer.data.local.KeyValueStore
 import ru.vsm.trainer.data.local.ResponseCache
 import ru.vsm.trainer.data.remote.TrainerApi
 import ru.vsm.trainer.data.remote.dto.Analytics
+import ru.vsm.trainer.data.remote.dto.Avatar
 import ru.vsm.trainer.data.remote.dto.ChoiceRequest
 import ru.vsm.trainer.data.remote.dto.ClientEvent
 import ru.vsm.trainer.data.remote.dto.Debrief
@@ -37,6 +41,9 @@ import ru.vsm.trainer.security.TokenStore
  */
 interface TrainerRepository {
     suspend fun profile(): Loaded<Profile>
+    /** Аватар вошедшего сотрудника — один на все экраны: обновляется с профилем и после сохранения. */
+    val myAvatar: StateFlow<Avatar>
+    suspend fun updateAvatar(avatar: Avatar): Avatar
     suspend fun scenarios(): Loaded<List<ScenarioSummary>>
     suspend fun meta(): Loaded<Meta>
     suspend fun leaderboard(scope: LeaderboardScope, period: LeaderboardPeriod): Loaded<Leaderboard>
@@ -68,7 +75,22 @@ class RemoteTrainerRepository(
         Loaded(value, staleSince = savedAt)
     }
 
-    override suspend fun profile() = cached("profile", Profile.serializer()) { api.profile() }
+    private val _myAvatar = MutableStateFlow(Avatar())
+    override val myAvatar: StateFlow<Avatar> = _myAvatar.asStateFlow()
+
+    override suspend fun profile() = cached("profile", Profile.serializer()) { api.profile() }.also { _myAvatar.value = it.value.avatar }
+
+    override suspend fun updateAvatar(avatar: Avatar): Avatar {
+        val previous = _myAvatar.value
+        // Выбор виден сразу; сервер отказал или нет сети — возвращаем прежний
+        _myAvatar.value = avatar
+        return try {
+            apiCall { api.updateAvatar(avatar) }.also { _myAvatar.value = it }
+        } catch (error: ApiError) {
+            _myAvatar.value = previous
+            throw error
+        }
+    }
     override suspend fun scenarios() = cached("scenarios", ListSerializer(ScenarioSummary.serializer())) { api.scenarios() }
     override suspend fun meta() = cached("meta", Meta.serializer()) { api.meta() }
     override suspend fun leaderboard(scope: LeaderboardScope, period: LeaderboardPeriod) =
@@ -90,7 +112,10 @@ class RemoteTrainerRepository(
         runCatching { apiCall { api.recordEvent(ClientEvent(type, runId, notificationId, platform = "android")) } }
     }
 
-    override fun clearCache() = cache.clear()
+    override fun clearCache() {
+        cache.clear()
+        _myAvatar.value = Avatar()
+    }
 }
 
 /**

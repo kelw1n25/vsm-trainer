@@ -250,10 +250,11 @@ struct NotificationsScreen: View {
 
 // MARK: - Настройки
 
-/// Настройки — `SettingsPage`: учётная запись, тёмная тема и «Уменьшить анимацию», выход.
+/// Настройки — `SettingsPage`: учётная запись, конструктор аватара, тёмная тема и «Уменьшить анимацию», выход.
 struct SettingsScreen: View {
     let container: AppContainer
     @State private var model: SettingsViewModel
+    @Environment(MyAvatarStore.self) private var avatar
 
     init(container: AppContainer) {
         self.container = container
@@ -274,6 +275,7 @@ struct SettingsScreen: View {
                 }
                 Muted("Данные учётной записи ведутся в HR-системе и обновляются через интеграцию.")
             }
+            AvatarEditor(store: avatar)
             Card(spacing: 16) {
                 CardTitle("Интерфейс")
                 VsmSwitch(title: "Тёмная тема", hint: "то же, что ползунок в шапке", isOn: preferences.theme == .dark) {

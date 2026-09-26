@@ -20,12 +20,14 @@ import ru.vsm.trainer.design.components.PageTitle
 import ru.vsm.trainer.design.components.VsmCard
 import ru.vsm.trainer.design.components.VsmSwitch
 
-/** Настройки — `SettingsPage`: учётная запись, тёмная тема и «Уменьшить анимацию», выход. */
+/** Настройки — `SettingsPage`: учётная запись, конструктор аватара, тёмная тема и «Уменьшить анимацию», выход. */
 @Composable
 fun SettingsScreen(onLogout: () -> Unit, model: SettingsViewModel = hiltViewModel()) {
     val profile by model.profile.collectAsStateWithLifecycle()
     val theme by model.preferences.theme.collectAsStateWithLifecycle()
     val reduceMotion by model.preferences.reduceMotion.collectAsStateWithLifecycle()
+    val avatar by model.avatar.collectAsStateWithLifecycle()
+    val avatarStatus by model.avatarStatus.collectAsStateWithLifecycle()
     Page {
         item { PageTitle("Настройки") }
         item {
@@ -40,6 +42,7 @@ fun SettingsScreen(onLogout: () -> Unit, model: SettingsViewModel = hiltViewMode
                 Muted("Данные учётной записи ведутся в HR-системе и обновляются через интеграцию.")
             }
         }
+        item { AvatarEditor(avatar, avatarStatus, model::saveAvatar) }
         item {
             VsmCard(spacing = 16.dp) {
                 CardTitle("Интерфейс")

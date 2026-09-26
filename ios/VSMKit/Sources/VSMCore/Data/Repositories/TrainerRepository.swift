@@ -5,6 +5,7 @@ import Foundation
 /// Ошибку сервера (4xx/5xx) кэшем не маскируем: она означает, что данные неверны, а не что их нет.
 public protocol TrainerRepository: Sendable {
     func profile() async throws -> Loaded<Profile>
+    func updateAvatar(_ avatar: Avatar) async throws -> Avatar
     func scenarios() async throws -> Loaded<[ScenarioSummary]>
     func meta() async throws -> Loaded<Meta>
     func leaderboard(scope: LeaderboardScope, period: LeaderboardPeriod) async throws -> Loaded<Leaderboard>
@@ -44,6 +45,10 @@ public final class RemoteTrainerRepository: TrainerRepository {
 
     public func profile() async throws -> Loaded<Profile> {
         try await cached("profile") { try await api.get("/api/profile") }
+    }
+
+    public func updateAvatar(_ avatar: Avatar) async throws -> Avatar {
+        try await api.put("/api/profile/avatar", body: avatar)
     }
 
     public func scenarios() async throws -> Loaded<[ScenarioSummary]> {
