@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer } from "recharts";
 import { api, ApiError } from "../api";
 import { AnimatedNumber } from "../components/AnimatedNumber";
-import { Avatar } from "../components/Avatar";
+import { MyAvatar } from "../components/Avatar";
 import { LevelProgress } from "../components/LevelProgress";
 import { useCompetenceNames } from "../hooks";
 import { categoryLabels, outcomeLabels, roleLabels } from "../labels";
@@ -33,13 +33,16 @@ export function ProfilePage() {
   return (
     <div className="stack">
       <section className="card profile-head">
-        <Avatar size={112} />
+        <MyAvatar size={112} />
         <div className="profile-head__info">
           <h1 className="page-title">{profile.full_name}</h1>
           <p className="muted">
             {roleLabels[profile.role]} · {profile.brigade} · {profile.depot}
           </p>
           <p className="muted">Табельный № {profile.personnel_number}</p>
+          <Link className="link-action" to="/settings#avatar">
+            Изменить аватар
+          </Link>
         </div>
         <LevelProgress level={profile.level} />
       </section>

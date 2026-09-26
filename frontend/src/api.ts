@@ -1,5 +1,6 @@
 import type {
   Analytics,
+  AvatarConfig,
   Debrief,
   Handbook,
   Leaderboard,
@@ -94,6 +95,7 @@ export const api = {
   storyMap: (scenarioId: string) => request<StoryMap>("GET", `/api/scenarios/${scenarioId}/story-map`),
   handbook: () => request<Handbook>("GET", "/api/handbook"),
   profile: () => request<Profile>("GET", "/api/profile"),
+  updateAvatar: (avatar: AvatarConfig) => request<AvatarConfig>("PUT", "/api/profile/avatar", avatar),
   leaderboard: (scope: LeaderboardScope, period: LeaderboardPeriod) =>
     request<Leaderboard>("GET", `/api/leaderboard?scope=${scope}&period=${period}`),
   notifications: () => request<NotificationList>("GET", "/api/notifications"),

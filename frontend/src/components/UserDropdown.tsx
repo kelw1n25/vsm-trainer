@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import { roleLabels } from "../labels";
-import { Avatar } from "./Avatar";
+import { MyAvatar } from "./Avatar";
 import { ChevronDownIcon } from "./icons";
 
 const POLL_MS = 30_000;
@@ -55,7 +55,7 @@ export function UserDropdown() {
         onClick={() => setOpen(!open)}
       >
         <span className="user__avatar">
-          <Avatar size={64} />
+          <MyAvatar size={64} />
           <span className="user__online" />
           {unread > 0 && <span className="user__badge">{unread}</span>}
         </span>

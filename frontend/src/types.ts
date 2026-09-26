@@ -188,6 +188,17 @@ export interface HistoryItem {
   finished_at: string;
 }
 
+/** Аватар-конструктор: фон, головной убор и галстук из готовых вариантов (фото — ПДН, их нет). */
+export type AvatarBackground = "blue" | "mint" | "sand" | "lilac" | "coral" | "night";
+export type AvatarHeadwear = "cap" | "none";
+export type AvatarTie = "red" | "blue" | "green" | "graphite";
+
+export interface AvatarConfig {
+  background: AvatarBackground;
+  headwear: AvatarHeadwear;
+  tie: AvatarTie;
+}
+
 export interface Profile {
   id: number;
   full_name: string;
@@ -198,6 +209,7 @@ export interface Profile {
   level: Level;
   runs_completed: number;
   competence_points: Record<string, number>;
+  avatar: AvatarConfig;
   achievements: (Achievement & { earned_at: string | null })[];
   history: HistoryItem[];
 }

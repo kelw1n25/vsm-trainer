@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { api, ApiError } from "../api";
 import { AnimatedNumber } from "../components/AnimatedNumber";
-import { Avatar, InitialsAvatar } from "../components/Avatar";
+import { MyAvatar, InitialsAvatar } from "../components/Avatar";
 import { LevelProgress } from "../components/LevelProgress";
 import type { Leaderboard, LeaderboardPeriod, LeaderboardScope, Profile } from "../types";
 
@@ -43,7 +43,7 @@ export function RatingPage() {
 
       {me && (
         <section className="card my-place">
-          <Avatar size={88} />
+          <MyAvatar size={88} />
           <div className="my-place__info">
             <span className="muted">Ваше место · {board?.title}</span>
             <strong className="my-place__rank">
@@ -81,7 +81,7 @@ export function RatingPage() {
                 style={{ "--i": index } as CSSProperties}
               >
                 <span className={`rank ${row.rank <= 3 ? `rank--top${row.rank}` : ""}`}>{row.rank}</span>
-                {row.is_me ? <Avatar size={44} /> : <InitialsAvatar name={row.full_name} size={44} />}
+                {row.is_me ? <MyAvatar size={44} /> : <InitialsAvatar name={row.full_name} size={44} />}
                 <span className="rating__name">
                   <strong>
                     {row.full_name}

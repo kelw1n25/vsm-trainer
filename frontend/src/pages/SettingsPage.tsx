@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router";
 import { api } from "../api";
+import { AvatarEditor } from "../components/AvatarEditor";
 import { useAuth } from "../auth";
 import { roleLabels } from "../labels";
 import { applyReduceMotion, loadReduceMotion, saveTheme, useTheme } from "../preferences";
@@ -11,9 +13,16 @@ export function SettingsPage() {
   const [reduceMotion, setReduceMotion] = useState(loadReduceMotion);
   const theme = useTheme();
 
+  const { hash } = useLocation();
+
   useEffect(() => {
     api.profile().then(setProfile).catch(() => {});
   }, []);
+
+  // «Изменить аватар» из профиля ведёт на /settings#avatar — сразу к конструктору
+  useEffect(() => {
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView({ block: "start" });
+  }, [hash]);
 
   function toggleMotion(enabled: boolean) {
     setReduceMotion(enabled);
@@ -38,6 +47,8 @@ export function SettingsPage() {
         </dl>
         <p className="muted">Данные учётной записи ведутся в HR-системе и обновляются через интеграцию.</p>
       </section>
+
+      <AvatarEditor />
 
       <section className="card">
         <h2>Интерфейс</h2>

@@ -702,6 +702,60 @@ h2 {
   color: #fff;
 }
 
+/* ───────── Аватар-конструктор ───────── */
+
+.avatar-editor__body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.avatar-editor__options {
+  display: grid;
+  gap: 16px;
+  flex: 1;
+  min-width: 240px;
+}
+
+.avatar-editor fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.avatar-editor legend {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.avatar-editor .chips {
+  margin: 0;
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--control-border);
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.swatch:hover {
+  transform: scale(1.06);
+}
+
+.swatch[aria-pressed="true"] {
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--brand);
+}
+
 /* ───────── Hero ───────── */
 
 .hero {
