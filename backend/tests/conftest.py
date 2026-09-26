@@ -20,6 +20,14 @@ def no_weekly_challenge(monkeypatch):
     monkeypatch.setattr(game_config, "weekly_challenge", None)
 
 
+@pytest.fixture(autouse=True)
+def fresh_login_limiter():
+    """Счётчик неудачных входов живёт в памяти процесса — каждый тест начинает с чистого."""
+    from app.auth.rate_limit import login_limiter
+
+    login_limiter.reset()
+
+
 @pytest.fixture(scope="session")
 def database():
     if not os.environ.get("POSTGRES_DB", "").endswith("_test"):

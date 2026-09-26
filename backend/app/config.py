@@ -11,6 +11,12 @@ class Settings(BaseSettings):
     # Для HS256 рекомендуется ключ не короче 32 байт (RFC 7518, 3.2)
     jwt_secret: str = Field(min_length=32)
     jwt_ttl_minutes: int = 720
+    # Refresh-токен мобильного клиента: сколько дней можно не вводить пароль
+    refresh_ttl_days: int = 30
+    # Лимит неудачных попыток входа за окно: по табельному номеру и по IP
+    login_max_failures: int = 5
+    login_max_failures_per_ip: int = 20
+    login_window_seconds: int = 900
     # Ключ для внешних систем (HR, LMS): заголовок X-API-Key
     integration_api_key: str = Field(min_length=32)
     # Создать синтетических сотрудников и историю при старте на пустой БД

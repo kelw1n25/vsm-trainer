@@ -3,12 +3,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 
-def api_error(status: int, code: str, message: str) -> HTTPException:
+def api_error(status: int, code: str, message: str, headers: dict[str, str] | None = None) -> HTTPException:
     """Единый формат ошибок API: {"detail": {"code": ..., "message": ...}}.
 
-    code — для программ (фронтенд, HR/LMS), message — для человека.
+    code — для программ (веб- и мобильные клиенты, HR/LMS), message — для человека.
     """
-    return HTTPException(status_code=status, detail={"code": code, "message": message})
+    return HTTPException(status_code=status, detail={"code": code, "message": message}, headers=headers)
 
 
 async def validation_error_handler(_: Request, error: RequestValidationError) -> JSONResponse:
