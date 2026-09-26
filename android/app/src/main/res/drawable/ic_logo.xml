@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Логотип сайта (LogoMark): синяя «стрела» с градиентом -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt" android:width="52dp" android:height="34dp" android:viewportWidth="52" android:viewportHeight="34">
+    <path android:pathData="M3,32 L17,3h31l-5.5,10H24L15,32z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="3" android:startY="3" android:endX="48" android:endY="32">
+                <item android:offset="0" android:color="#FF3B8BFF" />
+                <item android:offset="1" android:color="#FF1452D9" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:fillColor="#FF1452D9" android:pathData="M22,32 L30,17h20l-8,15z" />
+</vector>

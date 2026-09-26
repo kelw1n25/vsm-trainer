@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Окно до отрисовки Compose — цвет фона сайта (bg), чтобы при запуске не мигал чужой цвет -->
+    <!-- Android 12+: системный сплэш того же цвета, что фон сайта -->
     <style name="Theme.VsmTrainer" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/site_bg</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowSplashScreenBackground">@color/site_bg</item>
     </style>
 </resources>
