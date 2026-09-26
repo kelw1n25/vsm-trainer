@@ -49,9 +49,10 @@ class NotificationWorker @AssistedInject constructor(
     }
 
     private fun show(item: ru.vsm.trainer.data.remote.dto.AppNotification) {
-        val granted = ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) ==
-            PackageManager.PERMISSION_GRANTED
-        if (android.os.Build.VERSION.SDK_INT >= 33 && !granted) return
+        // С Android 13 уведомления показываются только после разрешения пользователя
+        if (android.os.Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) return
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(item.title)
