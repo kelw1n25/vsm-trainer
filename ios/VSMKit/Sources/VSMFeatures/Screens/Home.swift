@@ -1,7 +1,7 @@
 import SwiftUI
 import VSMCore
 
-/// Главная — `HomePage`: hero-карусель, «Сценарии» со счётчиком, три карточки, «Все сценарии».
+/// Главная: hero-карусель (приветствие, челлендж недели, рекомендация) и «Про ВСМ» — общая картина магистрали.
 struct HomeScreen: View {
     @State private var model: HomeViewModel
     @Environment(Navigator.self) private var navigator
@@ -14,17 +14,53 @@ struct HomeScreen: View {
         Page {
             ScreenContent(state: model.state, retry: model.load) { content in
                 HeroCarousel(slides: content.slides)
-                VStack(alignment: .leading, spacing: 16) {
-                    SectionTitle(text: "Сценарии", count: content.scenarios.count)
-                    LinkAction(title: "Все сценарии", leading: .grid, trailing: .chevronRight) { navigator.openTab(.scenarios) }
-                }
-                ForEach(Array(content.scenarios.prefix(3).enumerated()), id: \.element.id) { index, scenario in
-                    ScenarioCard(scenario: scenario, index: index)
-                }
+                AboutVsm(serviceClasses: content.serviceClasses) { navigator.openTab(.handbook) }
             }
         }
         .task { await model.load() }
         .refreshable { await model.load() }
+    }
+}
+
+/// «Про ВСМ» на главной — общая картина за полминуты чтения: цифры магистрали, классы обслуживания
+/// и три правила, на которых держатся сценарии. Классы и нормы — из справочника кейсодержателя на сервере.
+private struct AboutVsm: View {
+    let serviceClasses: [ServiceClass]
+    let handbook: () -> Void
+    @Environment(\.vsm) private var colors
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            SectionTitle(text: "Про ВСМ")
+            Muted("Высокоскоростная магистраль Москва — Санкт-Петербург: премиальный сервис, где решения принимаются за секунды.")
+            KpiGrid(items: [
+                KpiItem(label: "Скорость", text: "до 400 км/ч"),
+                KpiItem(label: "Москва — СПб", text: "≈ 2 ч 15 мин"),
+                KpiItem(label: "Классы сервиса", text: serviceClasses.isEmpty ? "—" : "\(serviceClasses.count)"),
+                KpiItem(label: "Стоянка на станции", text: "≈ 1 мин"),
+            ])
+            if !serviceClasses.isEmpty {
+                Card(spacing: 10) {
+                    CardTitle("Классы и ожидание сервиса")
+                    ForEach(Array(serviceClasses.enumerated()), id: \.element.id) { index, item in
+                        if index > 0 { Rectangle().fill(colors.border).frame(height: 1) }
+                        HStack(spacing: 12) {
+                            Text(item.title).textStyle(VsmType.bodyBold).foregroundStyle(colors.text).frame(maxWidth: .infinity, alignment: .leading)
+                            Tag(text: item.layout)
+                            Text("до \(item.maxWaitMinutes) мин").textStyle(VsmType.small).foregroundStyle(colors.muted)
+                        }
+                        .accessibilityElement(children: .combine)
+                    }
+                }
+            }
+            Card(spacing: 8) {
+                CardTitle("Что важно проводнику")
+                Bullet(text: "О прибытии объявлять за 10–15 минут")
+                Bullet(text: "Неотложные просьбы, например первая помощь, — вне очереди")
+                Bullet(text: "Говорить по ролевой модели: признать → правило → решение → заверить")
+            }
+            LinkAction(title: "Подробнее — в справочнике", trailing: .chevronRight, action: handbook)
+        }
     }
 }
 

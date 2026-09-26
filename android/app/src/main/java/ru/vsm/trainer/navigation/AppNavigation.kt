@@ -91,7 +91,7 @@ fun AppNavigation(onLogout: () -> Unit, shell: ShellViewModel = hiltViewModel())
             popEnterTransition = { fadeIn(tween(if (reduce) 0 else 280)) },
             popExitTransition = { fadeOut(tween(if (reduce) 0 else 150)) },
         ) {
-            composable(Tab.HOME.route) { HomeScreen(onScenario = { go("scenario/$it") }, onPlay = play, onAllScenarios = { nav.openTab(Tab.SCENARIOS.route) }) }
+            composable(Tab.HOME.route) { HomeScreen(onHandbook = { nav.openTab(Tab.HANDBOOK.route) }) }
             composable(Tab.SCENARIOS.route) { ScenarioListScreen(onScenario = { go("scenario/$it") }, onPlay = play) }
             composable(Tab.RATING.route) { RatingScreen() }
             composable(Tab.ANALYTICS.route) { AnalyticsScreen(onPlay = play, onDebrief = { go("debrief/$it") }) }

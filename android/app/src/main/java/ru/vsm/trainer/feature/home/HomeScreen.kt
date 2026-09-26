@@ -54,26 +54,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
-import ru.vsm.trainer.R
 import ru.vsm.trainer.design.Palette
 import ru.vsm.trainer.design.Shapes
 import ru.vsm.trainer.design.Vsm
 import ru.vsm.trainer.design.VsmType
-import ru.vsm.trainer.design.components.LinkAction
 import ru.vsm.trainer.design.components.Page
 import ru.vsm.trainer.design.components.ScreenContent
-import ru.vsm.trainer.design.components.SectionTitle
 import ru.vsm.trainer.design.components.assetPainter
-import ru.vsm.trainer.feature.scenarios.ScenarioCard
 
-/** Главная — `HomePage`: hero-карусель, «Сценарии» со счётчиком, три карточки, «Все сценарии». */
+/** Главная: hero-карусель (приветствие, челлендж недели, рекомендация) и «Про ВСМ» — общая картина магистрали. */
 @Composable
-fun HomeScreen(
-    onScenario: (String) -> Unit,
-    onPlay: (String) -> Unit,
-    onAllScenarios: () -> Unit,
-    model: HomeViewModel = hiltViewModel(),
-) {
+fun HomeScreen(onHandbook: () -> Unit, model: HomeViewModel = hiltViewModel()) {
     val state by model.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { model.load() }
     Page {
@@ -81,20 +72,12 @@ fun HomeScreen(
             ScreenContent(state, model::load) { content ->
                 Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
                     HeroCarousel(content.slides)
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        SectionTitle("Сценарии", content.scenarios.size)
-                        LinkAction("Все сценарии", onAllScenarios, leading = R.drawable.ic_grid, trailing = R.drawable.ic_chevron_right)
-                    }
-                    content.scenarios.take(PREVIEW_COUNT).forEachIndexed { index, scenario ->
-                        ScenarioCard(scenario, index, onOpen = { onScenario(scenario.id) }, onStart = { onPlay(scenario.id) })
-                    }
+                    AboutVsm(content.serviceClasses, onHandbook)
                 }
             }
         }
     }
 }
-
-private const val PREVIEW_COUNT = 3
 // Сколько поезд проезжает за весь ход ползунка (единицы viewBox иллюстрации 1000 × 300)
 private const val TRAIN_DISTANCE = 220f
 private const val RAIL_SLOPE = 0.0198f

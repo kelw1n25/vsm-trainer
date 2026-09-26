@@ -14,14 +14,14 @@ import ru.vsm.trainer.core.Loaded
 import ru.vsm.trainer.core.ScreenState
 import ru.vsm.trainer.core.firstName
 import ru.vsm.trainer.core.loadFrom
-import ru.vsm.trainer.data.remote.dto.ScenarioSummary
+import ru.vsm.trainer.data.remote.dto.ServiceClass
 import ru.vsm.trainer.data.repository.AuthRepository
 import ru.vsm.trainer.data.repository.TrainerRepository
 
 /** Слайд hero: приветствие, челлендж недели или рекомендация — как `HeroCarousel` сайта. */
 data class HeroSlide(val eyebrow: String, val titleTop: String, val titleBottom: String, val text: String, val note: String)
 
-data class HomeContent(val slides: List<HeroSlide>, val scenarios: List<ScenarioSummary>)
+data class HomeContent(val slides: List<HeroSlide>, val serviceClasses: List<ServiceClass>)
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -38,6 +38,8 @@ class HomeViewModel @Inject constructor(
                     val scenarios = async { repository.scenarios() }
                     val meta = async { runCatching { repository.meta().value }.getOrNull() }
                     val analytics = async { runCatching { repository.analytics().value }.getOrNull() }
+                    // Классы обслуживания для «Про ВСМ» — из справочника; без него главная всё равно открывается
+                    val handbook = async { runCatching { repository.handbook().value }.getOrNull() }
                     val loaded = scenarios.await()
                     val name = auth.current?.fullName?.let(::firstName) ?: "коллега"
                     val slides = mutableListOf(
@@ -59,7 +61,7 @@ class HomeViewModel @Inject constructor(
                     analytics.await()?.recommendation?.let {
                         slides += HeroSlide("Рекомендация для тебя", "Следующий шаг:", it.title, it.reason, "Закрой пробел — и навык вырастет быстрее!")
                     }
-                    Loaded(HomeContent(slides, loaded.value), loaded.staleSince)
+                    Loaded(HomeContent(slides, handbook.await()?.serviceClasses.orEmpty()), loaded.staleSince)
                 }
             }
         }

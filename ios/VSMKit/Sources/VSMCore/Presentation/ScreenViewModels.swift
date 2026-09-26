@@ -21,13 +21,14 @@ public struct HeroSlide: Hashable, Sendable {
     public let note: String
 }
 
-/// Главная: hero-карусель и первые сценарии каталога.
+/// Главная: hero-карусель и «Про ВСМ» — общая картина магистрали.
 @MainActor
 @Observable
 public final class HomeViewModel {
     public struct Content {
         public let slides: [HeroSlide]
-        public let scenarios: [ScenarioSummary]
+        /// Классы обслуживания из справочника кейсодержателя для «Про ВСМ».
+        public let serviceClasses: [ServiceClass]
     }
 
     public private(set) var state: ScreenState<Content> = .loading
@@ -46,6 +47,8 @@ public final class HomeViewModel {
             async let scenarios = repository.scenarios()
             async let meta = try? repository.meta()
             async let analytics = try? repository.analytics()
+            // Без справочника главная всё равно открывается — просто без таблицы классов
+            async let handbook = try? repository.handbook()
             let loaded = try await scenarios
             var slides = [HeroSlide(
                 eyebrow: "Привет, \(name)!", titleTop: "Развивай навыки —", titleBottom: "строй будущее ВСМ!",
@@ -66,7 +69,7 @@ public final class HomeViewModel {
                     text: recommendation.reason, note: "Закрой пробел — и навык вырастет быстрее!"
                 ))
             }
-            return Loaded(value: Content(slides: slides, scenarios: loaded.value), staleSince: loaded.staleSince)
+            return Loaded(value: Content(slides: slides, serviceClasses: await handbook?.value.serviceClasses ?? []), staleSince: loaded.staleSince)
         }
     }
 }
