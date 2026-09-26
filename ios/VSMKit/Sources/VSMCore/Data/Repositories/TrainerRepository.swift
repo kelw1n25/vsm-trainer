@@ -1,6 +1,6 @@
 import Foundation
 
-/// Данные экранов: профиль, каталог, рейтинг, уведомления, аналитика.
+/// Данные экранов: профиль, каталог, рейтинг, уведомления, аналитика, справочник, архив веток, команда.
 /// Сначала сеть; без сети — последний сохранённый ответ (Remote API → Repository → Local Cache → UI).
 /// Ошибку сервера (4xx/5xx) кэшем не маскируем: она означает, что данные неверны, а не что их нет.
 public protocol TrainerRepository: Sendable {
@@ -12,6 +12,10 @@ public protocol TrainerRepository: Sendable {
     func markRead(_ id: Int) async throws
     func markAllRead() async throws
     func analytics() async throws -> Loaded<Analytics>
+    func employeeAnalytics(_ employeeId: Int) async throws -> Loaded<Analytics>
+    func team() async throws -> Loaded<[TeamMember]>
+    func storyMap(scenarioId: String) async throws -> Loaded<StoryMap>
+    func handbook() async throws -> Loaded<Handbook>
     func recordEvent(_ type: String, runId: String?, notificationId: Int?) async
     func clearCache()
 }
@@ -72,6 +76,22 @@ public final class RemoteTrainerRepository: TrainerRepository {
 
     public func analytics() async throws -> Loaded<Analytics> {
         try await cached("analytics") { try await api.get("/api/analytics/me") }
+    }
+
+    public func employeeAnalytics(_ employeeId: Int) async throws -> Loaded<Analytics> {
+        try await cached("analytics-\(employeeId)") { try await api.get("/api/analytics/employees/\(employeeId)") }
+    }
+
+    public func team() async throws -> Loaded<[TeamMember]> {
+        try await cached("team") { try await api.get("/api/analytics/team") }
+    }
+
+    public func storyMap(scenarioId: String) async throws -> Loaded<StoryMap> {
+        try await cached("story-map-\(scenarioId)") { try await api.get("/api/scenarios/\(scenarioId)/story-map") }
+    }
+
+    public func handbook() async throws -> Loaded<Handbook> {
+        try await cached("handbook") { try await api.get("/api/handbook") }
     }
 
     /// Аналитическое событие не должно мешать пользователю: ошибку отправки не показываем.

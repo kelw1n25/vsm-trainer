@@ -29,6 +29,7 @@ public struct LeaderboardRow: Codable, Hashable, Identifiable, Sendable {
     public let employeeId: Int
     public let fullName: String
     public let brigade: String
+    public let depot: String
     public let levelTitle: String
     public let points: Int
     public let isMe: Bool
@@ -36,7 +37,7 @@ public struct LeaderboardRow: Codable, Hashable, Identifiable, Sendable {
     public var id: Int { employeeId }
 
     enum CodingKeys: String, CodingKey {
-        case rank, brigade, points
+        case rank, brigade, depot, points
         case employeeId = "employee_id"
         case fullName = "full_name"
         case levelTitle = "level_title"

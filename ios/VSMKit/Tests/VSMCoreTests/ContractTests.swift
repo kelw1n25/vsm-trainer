@@ -42,6 +42,24 @@ final class ContractTests: XCTestCase {
         XCTAssertEqual(Fixture.decode(SessionTokens.self, "login").role, .conductor)
     }
 
+    func testReferenceScreensDecode() {
+        let map = Fixture.decode(StoryMap.self, "story_map")
+        XCTAssertEqual(map.startNode, "start")
+        XCTAssertTrue(map.nodes.contains { $0.id == map.startNode })
+        XCTAssertTrue(map.endings.filter { !$0.reached }.allSatisfy { $0.ending == nil }, "закрытые финалы приходят без текста")
+        let handbook = Fixture.decode(Handbook.self, "handbook")
+        XCTAssertEqual(handbook.situations.count, 51)
+        XCTAssertFalse(handbook.roleModel.steps.isEmpty)
+        XCTAssertFalse(handbook.serviceClasses.isEmpty)
+    }
+
+    func testSceneCharactersDecode() {
+        let reading = Fixture.decode(RunState.self, "run_reading")
+        XCTAssertEqual(reading.node?.scene.characters.map(\.id), ["player", "sergey", "lyudmila"])
+        XCTAssertEqual(reading.node?.dialogue[3].expression, "annoyed")
+        XCTAssertFalse(reading.characters.isEmpty)
+    }
+
     func testDebriefExplainsConsequences() {
         let debrief = Fixture.decode(Debrief.self, "debrief")
         XCTAssertEqual(debrief.outcome, .success)

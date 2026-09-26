@@ -7,7 +7,7 @@ import Observation
 public final class SessionViewModel {
     public enum State: Equatable {
         case signedOut
-        case signedIn(fullName: String, role: Role)
+        case signedIn(employeeId: Int, fullName: String, role: Role)
     }
 
     public private(set) var state: State
@@ -18,13 +18,11 @@ public final class SessionViewModel {
 
     private let api: APIClient
     private let repository: TrainerRepository
-    private let activeRuns: ActiveRunStore
 
-    public init(api: APIClient, tokens: TokenStore, repository: TrainerRepository, activeRuns: ActiveRunStore) {
+    public init(api: APIClient, tokens: TokenStore, repository: TrainerRepository) {
         self.api = api
         self.repository = repository
-        self.activeRuns = activeRuns
-        state = tokens.load().map { .signedIn(fullName: $0.fullName, role: $0.role) } ?? .signedOut
+        state = tokens.load().map { .signedIn(employeeId: $0.employeeId, fullName: $0.fullName, role: $0.role) } ?? .signedOut
     }
 
     public var canSubmit: Bool {
@@ -39,7 +37,7 @@ public final class SessionViewModel {
         do {
             let session = try await api.login(personnelNumber: personnelNumber.trimmingCharacters(in: .whitespaces), password: password)
             password = ""
-            state = .signedIn(fullName: session.fullName, role: session.role)
+            state = .signedIn(employeeId: session.employeeId, fullName: session.fullName, role: session.role)
         } catch {
             errorMessage = error.userMessage
         }
@@ -59,7 +57,6 @@ public final class SessionViewModel {
 
     private func forget() {
         repository.clearCache()
-        activeRuns.clear()
         state = .signedOut
     }
 }

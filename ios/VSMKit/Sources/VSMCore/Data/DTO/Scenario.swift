@@ -19,7 +19,23 @@ public struct ScenarioSummary: Codable, Identifiable, Hashable, Sendable {
     }
 }
 
-/// Справочники для интерфейса `GET /api/meta`: названия компетенций по коду.
+public struct WeeklyChallenge: Codable, Hashable, Sendable {
+    public let scenarioId: String
+    public let bonusXp: Int
+
+    enum CodingKeys: String, CodingKey {
+        case scenarioId = "scenario_id"
+        case bonusXp = "bonus_xp"
+    }
+}
+
+/// Справочники для интерфейса `GET /api/meta`: названия компетенций по коду и челлендж недели.
 public struct Meta: Codable, Sendable {
     public let competences: [String: String]
+    public let weeklyChallenge: WeeklyChallenge?
+
+    enum CodingKeys: String, CodingKey {
+        case competences
+        case weeklyChallenge = "weekly_challenge"
+    }
 }

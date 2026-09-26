@@ -38,6 +38,7 @@ public struct HistoryItem: Codable, Hashable, Identifiable, Sendable {
 public struct Profile: Codable, Hashable, Sendable {
     public let id: Int
     public let fullName: String
+    public let personnelNumber: String
     public let role: Role
     public let brigade: String
     public let depot: String
@@ -50,6 +51,7 @@ public struct Profile: Codable, Hashable, Sendable {
     enum CodingKeys: String, CodingKey {
         case id, role, brigade, depot, level, achievements, history
         case fullName = "full_name"
+        case personnelNumber = "personnel_number"
         case runsCompleted = "runs_completed"
         case competencePoints = "competence_points"
     }

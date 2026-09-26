@@ -17,23 +17,23 @@ final class LiveBackendTests: XCTestCase {
         let api = APIClient(baseURL: url, tokens: tokens)
         _ = try await api.login(personnelNumber: "100003", password: "demo2026")
         let runs = RemoteRunRepository(api: api)
-        let events = RemoteTrainerRepository(api: api, cache: InMemoryResponseCache())
-        let player = ScenarioPlayerViewModel(
-            scenarioId: "business-seat-conflict", runs: runs, activeRuns: ActiveRunStore(store: InMemoryKeyValueStore()), events: events
+        let engine = StoryEngine(
+            scenarioId: "business-seat-conflict", employeeId: 3, playerName: "Проводник", runs: runs,
+            memory: StoryMemory(store: InMemoryKeyValueStore()), reduceMotion: { true }
         )
 
-        await player.load()
+        await engine.start()
         // Лучший путь: проверить оба билета → вызвать начальника поезда → законное повышение класса
         for choiceId in ["check_both", "call_chief", "proper_upgrade"] {
-            if player.phase == .reading { await player.revealChoices() }
-            XCTAssertEqual(player.phase, .choosing)
-            let choice = try XCTUnwrap(player.node?.choices.first { $0.id == choiceId }, "нет варианта \(choiceId)")
-            await player.choose(choice)
+            try await readUntilChoices(engine)
+            XCTAssertEqual(engine.phase, .choices)
+            await engine.choose(choiceId)
         }
-        XCTAssertEqual(player.phase, .finished)
-        XCTAssertEqual(player.run?.final?.outcome, .success)
+        try await readUntilChoices(engine)
+        XCTAssertEqual(engine.phase, .ending)
+        XCTAssertEqual(engine.run?.final?.outcome, .success)
 
-        let debrief = try await runs.debrief(runId: player.run!.id)
+        let debrief = try await runs.debrief(runId: engine.run!.id)
         XCTAssertEqual(debrief.steps.count, 3)
 
         // Обмен refresh-токена: новый работает, старый повторно не принимается
@@ -46,5 +46,15 @@ final class LiveBackendTests: XCTestCase {
         let (_, reused) = try await URLSessionTransport().send(request)
         XCTAssertEqual(first.statusCode, 200)
         XCTAssertEqual(reused.statusCode, 401)
+    }
+
+    /// Дочитать сцену: касания «Далее», пока сервер не покажет варианты или не наступит финал.
+    private func readUntilChoices(_ engine: StoryEngine) async throws {
+        for _ in 0..<200 {
+            if engine.phase == .ending || (engine.phase == .choices && !engine.busy) { return }
+            engine.advance()
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        XCTFail("сцена не дошла до выбора")
     }
 }

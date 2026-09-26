@@ -45,28 +45,25 @@ final class SessionViewModelTests: XCTestCase {
         let store = InMemoryTokenStore()
         let transport = StubTransport { _ in (200, tokensJSON(access: "a", refresh: "r")) }
         let repository = FakeTrainerRepository()
-        let activeRuns = ActiveRunStore(store: InMemoryKeyValueStore())
-        activeRuns.save(ActiveRun(runId: "1", scenarioId: "s", title: "t"))
-        let vm = SessionViewModel(api: APIClient(baseURL: baseURL, transport: transport, tokens: store), tokens: store, repository: repository, activeRuns: activeRuns)
+        let vm = SessionViewModel(api: APIClient(baseURL: baseURL, transport: transport, tokens: store), tokens: store, repository: repository)
 
         XCTAssertEqual(vm.state, .signedOut)
         XCTAssertFalse(vm.canSubmit)
         vm.personnelNumber = " 100002 "
         vm.password = "demo2026"
         await vm.submit()
-        XCTAssertEqual(vm.state, .signedIn(fullName: "Синтетический Проводник", role: .conductor))
+        XCTAssertEqual(vm.state, .signedIn(employeeId: 2, fullName: "Синтетический Проводник", role: .conductor))
         XCTAssertEqual(vm.password, "", "пароль не остаётся в памяти экрана")
 
         vm.sessionExpired()
         XCTAssertEqual(vm.state, .signedOut)
         XCTAssertTrue(repository.cacheCleared, "данные прежнего сотрудника удалены")
-        XCTAssertNil(activeRuns.current)
     }
 
     func testWrongPasswordMessage() async {
         let store = InMemoryTokenStore()
         let transport = StubTransport { _ in (401, errorBody("invalid_credentials", "Неверный табельный номер или пароль")) }
-        let vm = SessionViewModel(api: APIClient(baseURL: baseURL, transport: transport, tokens: store), tokens: store, repository: FakeTrainerRepository(), activeRuns: ActiveRunStore(store: InMemoryKeyValueStore()))
+        let vm = SessionViewModel(api: APIClient(baseURL: baseURL, transport: transport, tokens: store), tokens: store, repository: FakeTrainerRepository())
         vm.personnelNumber = "100002"
         vm.password = "wrong"
         await vm.submit()

@@ -14,18 +14,72 @@ public struct Line: Codable, Hashable, Sendable {
     public let role: String?
     public let kind: String
     public let text: String
+    /** Эмоция говорящего с этой реплики. */
+    public let expression: String?
+    /** Звук реплики: вздох и т. п. */
+    public let sound: String?
 
-    public init(speaker: String, name: String?, role: String?, kind: String, text: String) {
+    public init(speaker: String, name: String?, role: String?, kind: String, text: String, expression: String? = nil, sound: String? = nil) {
         self.speaker = speaker
         self.name = name
         self.role = role
         self.kind = kind
         self.text = text
+        self.expression = expression
+        self.sound = sound
     }
+}
+
+/// Внешность персонажа: для экрана важны форма (сотрудник или пассажир), возраст и тембр голоса.
+public struct Look: Codable, Hashable, Sendable {
+    public let outfit: String
+    public let child: Bool
+    public let hairStyle: String
+
+    enum CodingKeys: String, CodingKey {
+        case outfit, child
+        case hairStyle = "hair_style"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        outfit = (try? container.decode(String.self, forKey: .outfit)) ?? "casual"
+        child = (try? container.decode(Bool.self, forKey: .child)) ?? false
+        hairStyle = (try? container.decode(String.self, forKey: .hairStyle)) ?? "short"
+    }
+
+    public init(outfit: String = "casual", child: Bool = false, hairStyle: String = "short") {
+        self.outfit = outfit
+        self.child = child
+        self.hairStyle = hairStyle
+    }
+}
+
+public struct Character: Codable, Hashable, Sendable, Identifiable {
+    public let id: String
+    public let name: String
+    public let role: String
+    public let look: Look
+}
+
+/// Персонаж в сцене: место, эмоция, поза, жест и предмет в руке.
+public struct SceneCharacter: Codable, Hashable, Sendable, Identifiable {
+    public let id: String
+    public let position: String
+    public let expression: String
+    public let pose: String
+    public let hand: String?
+    public let item: String?
 }
 
 public struct Scene: Codable, Hashable, Sendable {
     public let background: String
+    public let characters: [SceneCharacter]
+
+    public init(background: String, characters: [SceneCharacter] = []) {
+        self.background = background
+        self.characters = characters
+    }
 }
 
 public struct Choice: Codable, Identifiable, Hashable, Sendable {
@@ -76,12 +130,13 @@ public struct Final: Codable, Hashable, Sendable {
     public let reason: String
     public let ending: String
     public let text: String
+    public let scene: Scene
     public let dialogue: [Line]
     public let xpEarned: Int
     public let competencePoints: [String: Int]
 
     enum CodingKeys: String, CodingKey {
-        case outcome, reason, ending, text, dialogue
+        case outcome, reason, ending, text, scene, dialogue
         case xpEarned = "xp_earned"
         case competencePoints = "competence_points"
     }
@@ -119,6 +174,10 @@ public struct RunState: Codable, Hashable, Sendable {
     public let scenarioId: String
     public let scenarioTitle: String
     public let category: String
+    public let difficulty: Int
+    public let route: String
+    public let serviceClass: String
+    public let characters: [Character]
     public let status: RunStatus
     public let loyalty: Int
     public let safety: Int
@@ -132,7 +191,8 @@ public struct RunState: Codable, Hashable, Sendable {
     public let serverTime: Date
 
     enum CodingKeys: String, CodingKey {
-        case id, category, status, loyalty, safety, node, final
+        case id, category, difficulty, route, characters, status, loyalty, safety, node, final
+        case serviceClass = "service_class"
         case scenarioId = "scenario_id"
         case scenarioTitle = "scenario_title"
         case stepsTaken = "steps_taken"

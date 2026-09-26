@@ -33,11 +33,16 @@ public struct DebriefStep: Codable, Hashable, Sendable {
 }
 
 /// Ситуация из справочника, на которую опирается сценарий, — со стандартом реакции.
-public struct Situation: Codable, Hashable, Sendable {
+public struct Situation: Codable, Hashable, Sendable, Identifiable {
     public let number: Int
     public let title: String
+    public let stage: String
+    public let category: String
     public let reaction: String
     public let phrases: [String]
+    public let comment: [String]
+
+    public var id: Int { number }
 }
 
 public struct Debrief: Codable, Hashable, Sendable {

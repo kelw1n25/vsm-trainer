@@ -58,6 +58,7 @@ final class FakeRunRepository: RunRepository, @unchecked Sendable {
     var stateResult: Result<RunState, Error>?
     private(set) var chooseCalls = 0
     private(set) var stateCalls = 0
+    private(set) var revealCalls = 0
 
     init(start: RunState) {
         startResult = .success(start)
@@ -70,7 +71,10 @@ final class FakeRunRepository: RunRepository, @unchecked Sendable {
         return try stateResult!.get()
     }
 
-    func reveal(runId: String, nodeId: String) async throws -> RunState { try revealResult!.get() }
+    func reveal(runId: String, nodeId: String) async throws -> RunState {
+        revealCalls += 1
+        return try revealResult!.get()
+    }
 
     func choose(runId: String, nodeId: String, choiceId: String) async throws -> RunState {
         chooseCalls += 1
@@ -98,6 +102,10 @@ final class FakeTrainerRepository: TrainerRepository, @unchecked Sendable {
     func markRead(_ id: Int) async throws {}
     func markAllRead() async throws {}
     func analytics() async throws -> Loaded<Analytics> { Loaded(value: Fixture.decode(Analytics.self, "analytics")) }
+    func employeeAnalytics(_ employeeId: Int) async throws -> Loaded<Analytics> { try await analytics() }
+    func team() async throws -> Loaded<[TeamMember]> { Loaded(value: []) }
+    func storyMap(scenarioId: String) async throws -> Loaded<StoryMap> { Loaded(value: Fixture.decode(StoryMap.self, "story_map")) }
+    func handbook() async throws -> Loaded<Handbook> { Loaded(value: Fixture.decode(Handbook.self, "handbook")) }
     func recordEvent(_ type: String, runId: String?, notificationId: Int?) async { events.append((type, runId, notificationId)) }
     func clearCache() { cacheCleared = true }
 }
