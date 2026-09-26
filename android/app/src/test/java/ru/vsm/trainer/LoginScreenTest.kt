@@ -15,8 +15,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import ru.vsm.trainer.presentation.login.LoginScreen
-import ru.vsm.trainer.presentation.login.LoginUiState
+import ru.vsm.trainer.feature.auth.LoginScreen
+import ru.vsm.trainer.feature.auth.LoginUiState
 
 /** Compose UI-тест экрана входа на Robolectric — без эмулятора. */
 @RunWith(AndroidJUnit4::class)
@@ -29,12 +29,14 @@ class LoginScreenTest {
         var state by mutableStateOf(LoginUiState())
         var submitted = 0
         compose.setContent {
+            ru.vsm.trainer.design.VsmTheme(dark = false, reduceMotion = true) {
             LoginScreen(
                 state = state,
                 onNumberChange = { state = state.copy(personnelNumber = it) },
                 onPasswordChange = { state = state.copy(password = it) },
                 onSubmit = { submitted++ },
             )
+            }
         }
         compose.onNodeWithTag("login.submit").assertIsNotEnabled()
         compose.onNodeWithTag("login.number").performTextInput("100001")
@@ -47,7 +49,9 @@ class LoginScreenTest {
     @Test
     fun serverErrorIsShown() {
         compose.setContent {
-            LoginScreen(LoginUiState(error = "Неверный табельный номер или пароль"), {}, {}, {})
+            ru.vsm.trainer.design.VsmTheme(dark = false, reduceMotion = true) {
+                LoginScreen(LoginUiState(error = "Неверный табельный номер или пароль"), {}, {}, {})
+            }
         }
         compose.onNodeWithTag("login.error").assertIsDisplayed()
     }

@@ -1,4 +1,4 @@
-package ru.vsm.trainer.presentation.login
+package ru.vsm.trainer.feature.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,7 +12,6 @@ import kotlinx.coroutines.launch
 import ru.vsm.trainer.core.ApiError
 import ru.vsm.trainer.core.userMessage
 import ru.vsm.trainer.data.remote.SessionEvents
-import ru.vsm.trainer.data.repository.ActiveRunStore
 import ru.vsm.trainer.data.repository.AuthRepository
 import ru.vsm.trainer.data.repository.TrainerRepository
 
@@ -32,7 +31,6 @@ data class LoginUiState(
 class SessionViewModel @Inject constructor(
     private val auth: AuthRepository,
     private val trainer: TrainerRepository,
-    private val activeRuns: ActiveRunStore,
     events: SessionEvents,
 ) : ViewModel() {
     private val _state = MutableStateFlow(auth.current.let { LoginUiState(signedIn = it != null, fullName = it?.fullName) })
@@ -76,7 +74,6 @@ class SessionViewModel @Inject constructor(
     /** Данные прежнего сотрудника на устройстве не оставляем. */
     private fun forget() {
         trainer.clearCache()
-        activeRuns.clear()
         _state.update { LoginUiState(personnelNumber = it.personnelNumber) }
     }
 }
