@@ -17,3 +17,6 @@ build/
 local.properties
 *.iml
 .idea/
+
+# Генерируется tools/mobile-assets/combos.py
+frontend/tools/sprites.json

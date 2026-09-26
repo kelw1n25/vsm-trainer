@@ -205,7 +205,7 @@ function lookOf(id: string, cast: Record<string, Character>): Look {
   return id === "player" ? PLAYER_LOOK : (cast[id]?.look ?? PLAYER_LOOK);
 }
 
-interface SpriteProps {
+export interface SpriteProps {
   character: SceneCharacter;
   look: Look;
   expression: Expression;
@@ -240,7 +240,7 @@ function Wheelchair() {
   );
 }
 
-function Sprite({ character, look, expression, state, talking = false }: SpriteProps) {
+export function Sprite({ character, look, expression, state, talking = false }: SpriteProps) {
   const outfit = look.outfit === "uniform" ? "uniform" : { top: look.top, bottom: look.bottom };
   const classes = [
     "story-sprite",
