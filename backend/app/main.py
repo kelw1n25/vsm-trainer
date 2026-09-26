@@ -1,4 +1,3 @@
-import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -17,13 +16,14 @@ from app.game_config import game_config
 from app.handbook.router import router as handbook_router
 from app.integration.router import router as integration_router
 from app.leaderboard.router import router as leaderboard_router
+from app.observability import RequestContextMiddleware, configure_logging, unhandled_error_handler
 from app.notifications.router import router as notifications_router
 from app.profiles.router import router as profile_router
 from app.scenarios.loader import load_scenarios
 from app.scenarios.router import router as scenarios_router
 from app.seed import seed_if_empty
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)s [%(name)s] %(message)s")
+configure_logging()
 
 
 @asynccontextmanager
@@ -44,6 +44,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.add_exception_handler(RequestValidationError, validation_error_handler)
+app.add_exception_handler(Exception, unhandled_error_handler)
+app.add_middleware(RequestContextMiddleware)
 app.include_router(auth_router)
 app.include_router(scenarios_router)
 app.include_router(handbook_router)
