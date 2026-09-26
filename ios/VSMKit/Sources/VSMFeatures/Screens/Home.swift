@@ -46,20 +46,19 @@ struct HeroCarousel: View {
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
         let slide = slides[index]
-        ZStack(alignment: .bottomLeading) {
+        ZStack(alignment: .topTrailing) {
             VStack(alignment: .leading, spacing: 0) {
-                SlideText(slide: slide)
+                SlideText(slide: slide, trailing: slides.count > 1 ? 44 : 22)
                     .id(index)
                     .transition(.asymmetric(insertion: .opacity.combined(with: .offset(x: -12)), removal: .opacity))
-                HeroTrain(progress: progress)
-                    .padding(.top, 24)
-                    .padding(.bottom, slides.count > 1 ? 84 : 0)
+                    // Высота блока — по самому длинному слайду: при листании поезд и страница не прыгают
+                    .frame(minHeight: 196, alignment: .top)
+                HeroTrain(progress: progress).padding(.top, 12)
             }
             .animation(reduce ? nil : .easeOut(duration: 0.4), value: index)
             if slides.count > 1 {
                 HeroScroller(value: progress, steps: slides.count, label: slide.eyebrow, change: { progress = $0 }, release: snap)
-                    .padding(.leading, 18)
-                    .padding(.bottom, 14)
+                    .padding(.top, 18)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -103,6 +102,8 @@ struct HeroCarousel: View {
 
 private struct SlideText: View {
     let slide: HeroSlide
+    /// Справа — место под вертикальный ползунок.
+    let trailing: CGFloat
     @Environment(\.vsm) private var colors
 
     var body: some View {
@@ -119,11 +120,15 @@ private struct SlideText: View {
                 .lineLimit(long ? 1 : 2)
                 .padding(.top, long ? 2 : 10)
         }
-        .padding(.horizontal, 22)
+        .padding(.leading, 22)
+        .padding(.trailing, trailing)
         .padding(.top, 28)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
+
+/// Во сколько раз поезд крупнее ширины карточки: нос в кадре, хвост уходит за край — без пустоты под поездом.
+private let trainScale: CGFloat = 1.35
 
 /// Поезд hero из трёх слоёв сайта: город смещается медленнее (параллакс), поезд — вместе с ползунком.
 private struct HeroTrain: View {
@@ -138,13 +143,17 @@ private struct HeroTrain: View {
                 AssetImage(name: "hero_static")
                 AssetImage(name: "hero_drive").offset(x: -offset * unit, y: offset * railSlope * unit)
             }
+            .frame(width: proxy.size.width, height: proxy.size.width * 0.3)
+            .scaleEffect(trainScale, anchor: .bottomLeading)
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottomLeading)
         }
-        .aspectRatio(1000 / 300, contentMode: .fit)
+        .aspectRatio(1000 / (300 * trainScale), contentMode: .fit)
         .accessibilityHidden(true)
     }
 }
 
-/// Ползунок hero (`HeroScroller`): стеклянная плашка, дорожка с делениями, бегунок с синей обводкой.
+/// Ползунок hero: тонкая вертикальная линия справа с точками слайдов и бегунком. Сверху — первый слайд,
+/// снизу — последний; ведётся пальцем вверх-вниз, касание по линии — сразу к слайду.
 private struct HeroScroller: View {
     let value: CGFloat
     let steps: Int
@@ -152,38 +161,36 @@ private struct HeroScroller: View {
     let change: (CGFloat) -> Void
     let release: () -> Void
     @Environment(\.vsm) private var colors
-    private let width: CGFloat = 220
+    private let track: CGFloat = 132
+    private let margin: CGFloat = 12
 
     var body: some View {
-        VStack(spacing: 8) {
-            ZStack(alignment: .leading) {
-                Capsule().fill(colors.trackStrong).frame(height: 6)
-                Capsule()
-                    .fill(LinearGradient(colors: [Palette.progressStart, colors.brand], startPoint: .leading, endPoint: .trailing))
-                    .frame(width: width * value, height: 6)
-                ForEach(0..<steps, id: \.self) { step in
-                    Circle().fill(.white).frame(width: 4, height: 4).offset(x: width * CGFloat(step) / CGFloat(steps - 1) - 2)
-                }
-                Circle()
-                    .fill(.white)
-                    .overlay(Circle().strokeBorder(colors.brand, lineWidth: 3))
-                    .frame(width: 22, height: 22)
-                    .shadow(color: colors.brand.opacity(0.35), radius: 4, y: 2)
-                    .offset(x: width * value - 11)
+        ZStack(alignment: .top) {
+            Capsule().fill(colors.trackStrong).frame(width: 3, height: track)
+            Capsule()
+                .fill(LinearGradient(colors: [Palette.progressStart, colors.brand], startPoint: .top, endPoint: .bottom))
+                .frame(width: 3, height: track * value)
+            ForEach(0..<steps, id: \.self) { step in
+                let at = CGFloat(step) / CGFloat(steps - 1)
+                Circle().fill(at <= value + 0.001 ? colors.brand : colors.trackStrong).frame(width: 6, height: 6).offset(y: track * at - 3)
             }
-            .frame(width: width, height: 22)
-            .contentShape(Rectangle())
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { change(min(max($0.location.x / width, 0), 1)) }
-                    .onEnded { _ in release() }
-            )
-            Text("⇆ ведите пальцем по ползунку").textStyle(VsmType.caption.sized(12)).foregroundStyle(colors.muted)
+            Circle()
+                .fill(.white)
+                .overlay(Circle().strokeBorder(colors.brand, lineWidth: 2.5))
+                .frame(width: 14, height: 14)
+                .shadow(color: colors.brand.opacity(0.35), radius: 3, y: 1)
+                .offset(y: track * value - 7)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(colors.glassSoft, in: RoundedRectangle(cornerRadius: Radius.storyBar, style: .continuous))
-        .shadow(color: colors.shadow.opacity(0.1), radius: 6, y: 3)
+        .padding(.vertical, margin)
+        // Зона касания — полоса 52 pt с запасом сверху и снизу: палец не промахивается,
+        // а жест забирает ползунок, не прокрутка страницы
+        .frame(width: 52, height: track + margin * 2, alignment: .top)
+        .contentShape(Rectangle())
+        .highPriorityGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { change(min(max(($0.location.y - margin) / track, 0), 1)) }
+                .onEnded { _ in release() }
+        )
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Слайд: \(label)")
     }
