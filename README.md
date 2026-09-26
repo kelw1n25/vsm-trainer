@@ -85,6 +85,21 @@ docker run --rm --platform linux/amd64 -v "$PWD/android:/project" -v vsm-gradle:
 # APK: android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
+**Плавность на эмуляторе.** Debug-сборка Compose заметно медленнее release, а эмулятор без видеокарты рисует
+кадры процессором (кадр — секунда вместо 16 мс). Для показа:
+
+```bash
+# 1. Эмулятор с видеокартой: в ~/.android/avd/<имя>.avd/config.ini — hw.gpu.enabled=yes, hw.gpu.mode=host,
+#    hw.ramSize=3072M; запуск: emulator -avd <имя> -gpu host
+# 2. Сборка demo — оптимизации release (R8, профили Compose) и локальный backend 10.0.2.2
+./gradlew assembleDemo      # или в Docker, как выше, с задачей assembleDemo
+adb install -r app/build/outputs/apk/demo/app-demo.apk
+adb shell cmd package compile -m speed-profile -f ru.vsm.trainer   # сразу применить профили Compose
+```
+
+Замеры до и после — в [docs/FINAL_UI_AUDIT.md](docs/FINAL_UI_AUDIT.md#быстродействие-android-эмулятор-pixel-7-apple-m3). Если эмулятор
+проработал много часов, его стоит перезапустить: система внутри него со временем замедляется.
+
 ## Тестовые учётные записи
 
 Все данные синтетические, реальных персональных данных нет.

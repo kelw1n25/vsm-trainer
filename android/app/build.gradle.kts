@@ -31,9 +31,21 @@ android {
             val apiBaseUrl = (project.findProperty("apiBaseUrl") as String?) ?: "https://vsm-trainer.example.ru/"
             buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+        // Демо на эмуляторе: оптимизации release (R8, без отладки, профили Compose) и локальный backend.
+        // В debug Compose заметно медленнее — плавность анимаций и новеллы показываем на этой сборке.
+        create("demo") {
+            initWith(getByName("release"))
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8000/\"")
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+        }
     }
+
+    // HTTP к эмулятору разрешён так же, как в debug
+    sourceSets.getByName("demo").res.srcDirs("src/debug/res")
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
