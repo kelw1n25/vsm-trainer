@@ -1,0 +1,13 @@
+{
+ "competences": {
+  "communication": "Коммуникация и деэскалация конфликтов",
+  "first_aid": "Первая помощь и медицинские ситуации",
+  "safety_rules": "Безопасность и регламенты",
+  "service": "Сервис и стандарты обслуживания",
+  "stress_resistance": "Стрессоустойчивость и скорость решений"
+ },
+ "weekly_challenge": {
+  "scenario_id": "business-seat-conflict",
+  "bonus_xp": 50
+ }
+}

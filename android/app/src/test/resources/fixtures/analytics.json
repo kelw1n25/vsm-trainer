@@ -1,0 +1,89 @@
+{
+ "employee_id": 2,
+ "full_name": "Попова Юлия Николаевна",
+ "total_runs": 2,
+ "unfinished_runs": 0,
+ "completion_rate": 1.0,
+ "avg_decision_seconds": 10.1,
+ "progress": [
+  {
+   "week_start": "2026-09-13T21:00:00Z",
+   "xp": 245,
+   "runs": 1,
+   "successes": 1
+  },
+  {
+   "week_start": "2026-09-20T21:00:00Z",
+   "xp": 258,
+   "runs": 1,
+   "successes": 1
+  }
+ ],
+ "categories": [
+  {
+   "category": "conflict",
+   "title": "Конфликт",
+   "runs": 1,
+   "decisions": 3,
+   "timed_steps": 0,
+   "success_rate": 1.0,
+   "best_choice_rate": 1.0,
+   "timeout_rate": null,
+   "average_reaction_share": null
+  },
+  {
+   "category": "safety",
+   "title": "Безопасность",
+   "runs": 1,
+   "decisions": 4,
+   "timed_steps": 2,
+   "success_rate": 1.0,
+   "best_choice_rate": 0.75,
+   "timeout_rate": 0.5,
+   "average_reaction_share": 0.85
+  }
+ ],
+ "competences": [
+  {
+   "code": "communication",
+   "title": "Коммуникация и деэскалация конфликтов",
+   "points": 30
+  },
+  {
+   "code": "first_aid",
+   "title": "Первая помощь и медицинские ситуации",
+   "points": 0
+  },
+  {
+   "code": "safety_rules",
+   "title": "Безопасность и регламенты",
+   "points": 20
+  },
+  {
+   "code": "service",
+   "title": "Сервис и стандарты обслуживания",
+   "points": 20
+  },
+  {
+   "code": "stress_resistance",
+   "title": "Стрессоустойчивость и скорость решений",
+   "points": 15
+  }
+ ],
+ "strengths": [
+  "Коммуникация и деэскалация конфликтов",
+  "Сервис и стандарты обслуживания"
+ ],
+ "weaknesses": [
+  "Первая помощь и медицинские ситуации",
+  "Стрессоустойчивость и скорость решений"
+ ],
+ "mistakes": [
+  "Решения в сценариях безопасности принимаются медленно: в среднем 85% таймера"
+ ],
+ "recommendation": {
+  "scenario_id": "passenger-unwell",
+  "title": "Пассажиру стало плохо",
+  "reason": "Компетенция «Первая помощь и медицинские ситуации» у вас проседает, а в этом сценарии её тренируют больше всего."
+ }
+}
