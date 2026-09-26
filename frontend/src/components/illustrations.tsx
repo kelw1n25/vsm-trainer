@@ -348,8 +348,9 @@ export type Outfit = "uniform" | { top: string; bottom: string };
 export type Hand = "down" | "point" | "hold" | "radio" | "hush" | "chest" | "throat";
 type Item = "ticket" | "bottle" | "cup" | "extinguisher" | "radio";
 
-const BODY = "#C9C9C9";
-const BODY_SHADE = "#A4A4A4";
+const BODY = "#C6C6C6";
+const BODY_LIGHT = "#D3D3D3";
+const BODY_SHADE = "#9F9F9F";
 const UNIFORM_COLOR = "#2A3B66";
 
 // Наклон головы и корпуса для каждой эмоции (градусы; плюс — голова вниз и вперёд)
@@ -434,6 +435,27 @@ function HeldItem({ kind, x, y }: { kind: Item; x: number; y: number }) {
   }
 }
 
+/** Ботинок с округлым носком; mirror — правая нога. */
+function Shoe({ mirror = false, x = 0, y = 0 }: { mirror?: boolean; x?: number; y?: number }) {
+  return (
+    <path
+      transform={`translate(${x} ${y}) scale(${mirror ? -1 : 1} 1)`}
+      d="M-13 -1.6C-13.4 -5 -10 -7.2 -6.5 -7.2C-3.4 -7.2 -1.6 -5.4 -1.9 -2.9C-2.1 -0.8 -4 0 -7 0C-10.6 0 -12.8 -0.3 -13 -1.6Z"
+      fill={BODY_SHADE}
+    />
+  );
+}
+
+/** Кисть-варежка с большим пальцем. */
+function Mitten({ x, y }: { x: number; y: number }) {
+  return (
+    <g fill={BODY}>
+      <ellipse cx={x} cy={y + 1} rx="3.3" ry="4.2" />
+      <ellipse cx={x + 2.4} cy={y - 0.8} rx="1.4" ry="2.3" transform={`rotate(32 ${x + 2.4} ${y - 0.8})`} />
+    </g>
+  );
+}
+
 export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood = "calm", hand = "down", item }: PersonProps) {
   const id = useSvgId();
   const uniform = outfit === "uniform";
@@ -444,70 +466,89 @@ export function Person({ x, y, s = 1, pose = "stand", flip = false, outfit, mood
   return (
     <g transform={`translate(${x} ${y}) scale(${flip ? -s : s} ${s})`}>
       <defs>
-        {/* Без бликов: ровный серый с мягкой тенью к краю */}
-        <radialGradient id={`${id}-head`} cx="0.42" cy="0.4" r="0.72">
-          <stop offset="0" stopColor={BODY} />
-          <stop offset="0.62" stopColor={BODY} />
+        {/* Без бликов: мягкий объём от светлой стороны к тени */}
+        <radialGradient id={`${id}-head`} cx="0.4" cy="0.38" r="0.72">
+          <stop offset="0" stopColor={BODY_LIGHT} />
+          <stop offset="0.55" stopColor={BODY} />
           <stop offset="1" stopColor={BODY_SHADE} />
         </radialGradient>
         <linearGradient id={`${id}-body`} gradientUnits="userSpaceOnUse" x1="-14" y1="0" x2="14" y2="0">
-          <stop offset="0" stopColor={BODY} />
-          <stop offset="0.55" stopColor={BODY} />
+          <stop offset="0" stopColor={BODY_LIGHT} />
+          <stop offset="0.5" stopColor={BODY} />
           <stop offset="1" stopColor={BODY_SHADE} />
         </linearGradient>
+        <linearGradient id={`${id}-cap`} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#3A4E80" />
+          <stop offset="1" stopColor="#1E2B4C" />
+        </linearGradient>
+        {/* Лёгкая тень по контуру отделяет фигуру от фона */}
+        <filter id={`${id}-soft`} x="-30%" y="-15%" width="160%" height="130%">
+          <feDropShadow dx="0.5" dy="0.8" stdDeviation="0.8" floodColor="#000000" floodOpacity="0.2" />
+        </filter>
       </defs>
-      {pose === "stand" && (
-        <g>
-          {/* Ноги — цельный силуэт от бёдер: сходятся у паха и сужаются к лодыжкам */}
-          <path
-            d="M-11 -35C-11 -26 -8.5 -15 -8 -6L-3 -6C-2.8 -15 -1.8 -26 -1 -31.5Q0 -33 1 -31.5C1.8 -26 2.8 -15 3 -6L8 -6C8.5 -15 11 -26 11 -35Z"
-            fill={body}
-          />
-          {/* Крупные округлые ступни, носками чуть врозь */}
-          <ellipse cx="-7" cy="-3.2" rx="7.2" ry="3.8" fill={BODY_SHADE} transform="rotate(-8 -7 -3.2)" />
-          <ellipse cx="7" cy="-3.2" rx="7.2" ry="3.8" fill={BODY_SHADE} transform="rotate(8 7 -3.2)" />
-        </g>
-      )}
-      <g transform={`translate(0 ${lift}) rotate(${posture.body} 0 -36)`}>
-        <path d="M-11 -58Q-14.5 -47 -14 -36" stroke={body} strokeWidth="6.5" strokeLinecap="round" fill="none" />
-        <ellipse cx="-14" cy="-34" rx="3.2" ry="4" fill={BODY} />
-        {/* Корпус: широкие плечи, грудь, мягкая талия и бёдра одним силуэтом с шеей */}
-        <path
-          d="M-3.2 -67L-3.2 -63C-8 -63 -12.5 -61.5 -13 -57C-13.2 -53 -11 -49 -10.2 -45C-9.8 -41 -11 -38 -11 -34L11 -34C11 -38 9.8 -41 10.2 -45C11 -49 13.2 -53 13 -57C12.5 -61.5 8 -63 3.2 -63L3.2 -67Z"
-          fill={body}
-        />
-        {uniform && (
+      {pose === "stand" && <ellipse cx="0" cy="-0.5" rx="17" ry="2.8" fill="#000000" opacity="0.1" />}
+      <g filter={`url(#${id}-soft)`}>
+        {pose === "stand" && (
           <g>
-            <path d="M-1.1 -62.5H1.1L2 -52.5L0 -50L-2 -52.5Z" fill="#D23A3A" />
-            <rect x="3.8" y="-57" width="4.2" height="3" rx="0.8" fill="#E7C15A" />
+            {/* Ноги — цельный силуэт от бёдер: сходятся у паха, у колен чуть полнее, к лодыжкам сужаются */}
+            <path
+              d="M-10.8 -35C-11.2 -28 -9.8 -22 -9.2 -18C-8.6 -14 -8.4 -9 -7.6 -5.5L-3.4 -5.5C-3 -9 -2.8 -14 -2.5 -18C-2.2 -22 -1.6 -27 -1 -31.5Q0 -33 1 -31.5C1.6 -27 2.2 -22 2.5 -18C2.8 -14 3 -9 3.4 -5.5L7.6 -5.5C8.4 -9 8.6 -14 9.2 -18C9.8 -22 11.2 -28 10.8 -35Z"
+              fill={body}
+            />
+            <Shoe />
+            <Shoe mirror />
           </g>
         )}
-        <g transform={`rotate(${posture.head} 0 -67)`}>
-          <circle cx="0" cy="-80" r="13.2" fill={`url(#${id}-head)`} />
+        <g transform={`translate(0 ${lift}) rotate(${posture.body} 0 -36)`}>
+          <path d="M-11 -58Q-14.5 -47 -14 -36" stroke={body} strokeWidth="6.2" strokeLinecap="round" fill="none" />
+          <Mitten x={-14} y={-35} />
+          {/* Корпус: широкие плечи, грудь, мягкая талия и бёдра одним силуэтом с шеей */}
+          <path
+            d="M-3.2 -67L-3.2 -63C-8 -63 -12.5 -61.5 -13 -57C-13.2 -53 -11 -49 -10.2 -45C-9.8 -41 -11 -38 -11 -34L11 -34C11 -38 9.8 -41 10.2 -45C11 -49 13.2 -53 13 -57C12.5 -61.5 8 -63 3.2 -63L3.2 -67Z"
+            fill={body}
+          />
+          <circle cx="-10.8" cy="-58.2" r="3.4" fill={body} />
+          <circle cx="10.8" cy="-58.2" r="3.4" fill={body} />
+          <ellipse cx="0" cy="-66" rx="5" ry="1.8" fill="#000000" opacity="0.14" />
           {uniform && (
             <g>
-              <path d="M-12.8 -86.5Q0 -101 12.8 -86.5Z" fill={UNIFORM_COLOR} />
-              <rect x="-12.4" y="-89" width="24.8" height="2.6" rx="1" fill="#E7C15A" />
-              <path d="M-12.8 -86H16.5" stroke="#18233F" strokeWidth="2.6" strokeLinecap="round" />
+              <path d="M-3.4 -63.3L0 -58.6L3.4 -63.3Z" fill="#F4F6FA" />
+              <path d="M-1.4 -62.6H1.4L1 -60.4H-1Z" fill="#B82F31" />
+              <path d="M-1 -60.4H1L2 -51.8L0 -49.2L-2 -51.8Z" fill="#D23A3A" />
+              <rect x="4" y="-57.2" width="4.6" height="3" rx="0.8" fill="#E7C15A" />
+              <path d="M4.8 -55.7H7.8" stroke="#FFF3C4" strokeWidth="0.5" />
             </g>
           )}
+          <g transform={`rotate(${posture.head} 0 -67)`}>
+            <circle cx="0" cy="-79.5" r="13.2" fill={`url(#${id}-head)`} />
+            {uniform && (
+              <g>
+                {/* Фуражка: тулья, околыш, кокарда и козырёк */}
+                <path d="M-12.6 -87C-13 -95.5 -6 -99.5 0 -99.5C6 -99.5 13 -95.5 12.6 -87Z" fill={`url(#${id}-cap)`} />
+                <rect x="-12.4" y="-89.4" width="24.8" height="2.8" rx="1" fill="#1A2440" />
+                <path d="M-12 -88.4H12" stroke="#E7C15A" strokeWidth="0.8" />
+                <circle cx="0" cy="-92.6" r="1.7" fill="#E7C15A" />
+                <path d="M-12.2 -86.6C-2 -84.8 10 -84.8 17.4 -87.2C14.4 -83.4 4 -82.6 -12.2 -84.8Z" fill="#141D33" />
+              </g>
+            )}
+          </g>
+          <path
+            d={`M11 -58Q${(11 + hx) / 2 + 4} ${(-58 + hy) / 2} ${hx} ${hy}`}
+            stroke={body}
+            strokeWidth="6.2"
+            strokeLinecap="round"
+            fill="none"
+          />
+          {item && <HeldItem kind={item} x={hx} y={hy} />}
+          <Mitten x={hx} y={hy} />
         </g>
-        <path
-          d={`M11 -58Q${(11 + hx) / 2 + 4} ${(-58 + hy) / 2} ${hx} ${hy}`}
-          stroke={body}
-          strokeWidth="6.5"
-          strokeLinecap="round"
-          fill="none"
-        />
-        {item && <HeldItem kind={item} x={hx} y={hy} />}
-        <ellipse cx={hx} cy={hy + 1} rx="3.2" ry="4" fill={BODY} />
+        {pose === "sit" && (
+          <g>
+            <path d="M-4 -3H18L20 15" stroke={body} strokeWidth="9.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <Shoe mirror x={20} y={21} />
+          </g>
+        )}
       </g>
-      {pose === "sit" && (
-        <g>
-          <path d="M-4 -3H18L20 16" stroke={body} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <ellipse cx="24" cy="19.5" rx="7.2" ry="3.8" fill={BODY_SHADE} />
-        </g>
-      )}
     </g>
   );
 }
