@@ -37,8 +37,8 @@ nodes:
       background: business
       characters:
         - {id: player, position: left}
-        - {id: sergey, position: center, expression: annoyed}
-        - {id: lyudmila, position: right, expression: annoyed}
+        - {id: sergey, position: center, expression: annoyed, hand: point, item: ticket}
+        - {id: lyudmila, position: right, expression: annoyed, pose: sit}
     situation: "Пассажир с билетом на место 5А обнаружил, что в его кресле сидит пассажирка."
     dialogue:
       - {speaker: narrator, text: "Бизнес-класс, третий вагон. До отправления пять минут."}
@@ -86,7 +86,7 @@ nodes:
       characters:
         - {id: player, position: left}
         - {id: sergey, position: center, expression: angry}
-        - {id: lyudmila, position: right, expression: angry}
+        - {id: lyudmila, position: right, expression: angry, pose: sit}
     situation: "Пассажиры спорят между собой всё громче, соседи начинают оборачиваться."
     dialogue:
       - {speaker: sergey, text: "Встаньте, пожалуйста, вы сидите на чужом месте!"}
@@ -125,7 +125,7 @@ nodes:
       characters:
         - {id: player, position: left}
         - {id: sergey, position: center, expression: surprised}
-        - {id: lyudmila, position: right, expression: surprised}
+        - {id: lyudmila, position: right, expression: surprised, pose: sit}
     situation: "Оба билета действительны и выданы на одно и то же место — сбой продажи."
     dialogue:
       - {speaker: narrator, text: "Терминал подтверждает: оба билета настоящие. Вагон 3, место 5А — оба."}
@@ -172,7 +172,7 @@ nodes:
       characters:
         - {id: player, position: left}
         - {id: chief, position: center, expression: neutral}
-        - {id: lyudmila, position: right, expression: thinking}
+        - {id: lyudmila, position: right, expression: thinking, pose: sit}
     situation: "Начальник поезда предлагает повышение класса без доплаты; вторая пассажирка тоже хочет пересесть в первый класс."
     dialogue:
       - {speaker: chief, text: "Это сбой при продаже, приношу извинения. В первом классе есть свободное место — пересадим без доплаты."}
@@ -215,7 +215,7 @@ nodes:
       background: business
       characters:
         - {id: player, position: left, expression: happy}
-        - {id: lyudmila, position: right, expression: happy}
+        - {id: lyudmila, position: right, expression: happy, pose: sit}
     outcome: success
     ending: "Оба пассажира довольны"
     final_text: >
@@ -246,7 +246,7 @@ nodes:
       characters:
         - {id: player, position: left, expression: sad}
         - {id: sergey, position: center, expression: angry}
-        - {id: lyudmila, position: right, expression: angry}
+        - {id: lyudmila, position: right, expression: angry, pose: sit}
     outcome: failure
     ending: "Скандал в бизнес-классе"
     final_text: >

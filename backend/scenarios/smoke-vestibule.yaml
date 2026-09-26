@@ -174,7 +174,7 @@ nodes:
     scene:
       background: salon
       characters:
-        - {id: player, position: left}
+        - {id: player, position: left, hand: hold, item: extinguisher}
         - {id: galina, position: right, expression: pained}
     situation: "Пар проник в салон, одна из пассажирок в панике кричит о пожаре."
     dialogue:
@@ -249,7 +249,7 @@ nodes:
     scene:
       background: vestibule
       characters:
-        - {id: player, position: left}
+        - {id: player, position: left, hand: hold, item: extinguisher}
         - {id: chief, position: center, expression: serious}
         - {id: roman, position: right, expression: serious}
     situation: "Начальник поезда и сотрудник ПТБ на месте и просят доложить."

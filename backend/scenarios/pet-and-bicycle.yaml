@@ -133,7 +133,7 @@ nodes:
     scene:
       background: platform
       characters:
-        - {id: player, position: left}
+        - {id: player, position: left, hand: point}
         - {id: denis, position: right, expression: neutral}
     situation: "Пассажир хочет завезти велосипед в салон, не сложив его."
     dialogue:
@@ -217,7 +217,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left}
-        - {id: elena, position: right, expression: pained}
+        - {id: elena, position: right, expression: pained, pose: sit}
     situation: "Пассажирке с аллергией на животных становится хуже — собака сидит через ряд."
     dialogue:
       - {speaker: narrator, text: "Через двадцать минут пути вас вызывает пассажирка из середины вагона."}
@@ -271,7 +271,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left}
-        - {id: elena, position: right, expression: pained}
+        - {id: elena, position: right, expression: pained, pose: sit}
     situation: "Аллергическая реакция усиливается, пассажирка кашляет."
     dialogue:
       - {speaker: narrator, text: "Елена Сергеевна закрывает лицо ладонями и кашляет всё сильнее."}
@@ -299,7 +299,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left}
-        - {id: elena, position: right, expression: neutral}
+        - {id: elena, position: right, expression: neutral, pose: sit}
     situation: "Пассажирку пересадили; нужно проверить, как она себя чувствует."
     dialogue:
       - {speaker: narrator, text: "Елена Сергеевна сидит у окна в другом конце вагона. Поезд проходит Клин."}
@@ -329,7 +329,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left, expression: happy}
-        - {id: elena, position: right, expression: happy}
+        - {id: elena, position: right, expression: happy, pose: sit}
     outcome: success
     ending: "Все доехали с комфортом"
     final_text: >
@@ -350,7 +350,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left, expression: worried}
-        - {id: elena, position: right, expression: sad}
+        - {id: elena, position: right, expression: sad, pose: sit}
     outcome: partial
     ending: "Потребовалась первая помощь"
     final_text: >

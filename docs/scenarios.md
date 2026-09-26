@@ -52,7 +52,9 @@ nodes:
       background: business           # salon | salon_evening | salon_night | business | platform | vestibule | bistro | staff_room
       characters:
         - {id: player, position: left}
-        - {id: sergey, position: right, expression: annoyed}
+        - {id: sergey, position: right, expression: annoyed, hand: point, item: ticket}
+        # pose: stand | sit | wheelchair — сидит в кресле поезда или в коляске, как на картинке сценария
+        # hand: down | point | hold | radio | hush | chest | throat; item: ticket | bottle | cup | extinguisher | radio
     situation: Кратко для разбора и аналитики
     dialogue:
       - {speaker: narrator, text: "Бизнес-класс, третий вагон."}

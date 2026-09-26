@@ -32,7 +32,7 @@ nodes:
       background: business
       characters:
         - {id: player, position: left}
-        - {id: arkady, position: right, expression: neutral}
+        - {id: arkady, position: right, expression: neutral, pose: sit}
     situation: "Пассажир хочет блюдо из меню, которого не осталось в наличии."
     dialogue:
       - {speaker: narrator, text: "Сервисная тележка движется по проходу бизнес-класса."}
@@ -80,7 +80,7 @@ nodes:
       background: business
       characters:
         - {id: player, position: left}
-        - {id: arkady, position: right, expression: neutral}
+        - {id: arkady, position: right, expression: neutral, pose: sit}
     situation: "Пассажир согласился на альтернативу, но разочарован."
     dialogue:
       - {speaker: arkady, text: "Индейка неплохая. Но я всё равно рассчитывал на курицу.", sound: sigh_male}
@@ -109,7 +109,7 @@ nodes:
       background: business
       characters:
         - {id: player, position: left}
-        - {id: arkady, position: right, expression: angry}
+        - {id: arkady, position: right, expression: angry, pose: sit}
     situation: "Пассажир возмущён упрёком и повышает голос."
     dialogue:
       - {speaker: arkady, text: "Я плачу за бизнес-класс не для того, чтобы меня отчитывали!"}
@@ -141,8 +141,8 @@ nodes:
     scene:
       background: business
       characters:
-        - {id: player, position: left}
-        - {id: marta, position: right, expression: annoyed}
+        - {id: player, position: left, hand: hold, item: cup}
+        - {id: marta, position: right, expression: annoyed, pose: sit}
     situation: "Пассажирка недовольна размером порции."
     dialogue:
       - {speaker: marta, text: "Это что, вся порция? Тут на один укус."}
@@ -170,8 +170,8 @@ nodes:
     scene:
       background: business
       characters:
-        - {id: player, position: left}
-        - {id: marta, position: right, expression: surprised}
+        - {id: player, position: left, hand: hold, item: cup}
+        - {id: marta, position: right, expression: surprised, pose: sit}
     situation: "Пассажирка удивлена счётом — не знала, что дополнительная позиция платная."
     dialogue:
       - {speaker: narrator, text: "Коллега приносит сырную тарелку, кофе и чек."}
@@ -204,7 +204,7 @@ nodes:
       background: business
       characters:
         - {id: player, position: left}
-        - {id: marta, position: right, expression: neutral}
+        - {id: marta, position: right, expression: neutral, pose: sit}
     situation: "Пассажирка хочет товар из каталога, которого нет в наличии."
     dialogue:
       - {speaker: marta, text: "Раз уж так — можно мне шоколад из вашего каталога, фирменный, с поездом на обёртке?"}
@@ -233,7 +233,7 @@ nodes:
       background: business
       characters:
         - {id: player, position: left}
-        - {id: marta, position: right, expression: serious}
+        - {id: marta, position: right, expression: serious, pose: sit}
     situation: "Пассажирка хочет оставить жалобу на обслуживание."
     dialogue:
       - {speaker: marta, text: "Знаете, я всё-таки хочу оставить отзыв. Где у вас книга жалоб?"}
@@ -269,7 +269,7 @@ nodes:
       background: business
       characters:
         - {id: player, position: left, expression: happy}
-        - {id: marta, position: right, expression: happy}
+        - {id: marta, position: right, expression: happy, pose: sit}
     outcome: success
     ending: "Сервис на уровне бизнес-класса"
     final_text: >

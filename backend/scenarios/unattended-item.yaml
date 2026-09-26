@@ -122,7 +122,7 @@ nodes:
     scene:
       background: business
       characters:
-        - {id: player, position: left}
+        - {id: player, position: left, hand: radio, item: radio}
         - {id: igor, position: right, expression: worried}
     situation: "Никто в вагоне не признаёт сумку своей."
     dialogue:
@@ -154,7 +154,7 @@ nodes:
       background: business
       characters:
         - {id: player, position: left}
-        - {id: roman, position: center, expression: serious}
+        - {id: roman, position: center, expression: serious, hand: radio, item: radio}
         - {id: tamara, position: right, expression: surprised}
     situation: "Сотрудник ПТБ проверяет вещь, и в этот момент появляется её хозяйка — она потеряла ещё и кошелёк."
     dialogue:

@@ -33,7 +33,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left}
-        - {id: darya, position: right, expression: pained}
+        - {id: darya, position: right, expression: pained, pose: sit}
     situation: "У пассажирки паническая атака — она часто дышит и просит открыть окно."
     dialogue:
       - {speaker: narrator, text: "Кнопка вызова мигает у места 14В."}
@@ -85,7 +85,7 @@ nodes:
     scene:
       background: salon
       characters:
-        - {id: darya, position: right, expression: pained}
+        - {id: darya, position: right, expression: pained, pose: sit}
     situation: "Пассажирка осталась одна, её паника нарастает."
     dialogue:
       - {speaker: narrator, text: "Дарья одна. Она пытается встать, но ноги не слушаются."}
@@ -117,8 +117,8 @@ nodes:
     scene:
       background: salon
       characters:
-        - {id: player, position: left}
-        - {id: darya, position: right, expression: worried}
+        - {id: player, position: left, hand: hold, item: cup}
+        - {id: darya, position: right, expression: worried, pose: sit}
     situation: "Пассажирка чуть успокоилась; нужно помочь ей восстановить дыхание."
     dialogue:
       - {speaker: darya, text: "Со мной такое бывало… но давно. Сейчас так жарко, и я испугалась.", sound: sigh}
@@ -163,8 +163,8 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left}
-        - {id: darya, position: center, expression: worried}
-        - {id: maxim, position: right, expression: annoyed}
+        - {id: darya, position: center, expression: worried, pose: sit}
+        - {id: maxim, position: right, expression: annoyed, pose: sit}
     situation: "Одной пассажирке в салоне жарко, её соседу — холодно."
     dialogue:
       - {speaker: darya, text: "А можно как-то сделать прохладнее? Тут правда душно."}
@@ -201,7 +201,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left}
-        - {id: maxim, position: right, expression: pained}
+        - {id: maxim, position: right, expression: pained, pose: sit}
     situation: "Соседа по ряду укачивает — он едет против хода движения."
     dialogue:
       - {speaker: narrator, text: "Через полчаса Максим бледнеет и закрывает глаза."}
@@ -260,8 +260,8 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left, expression: happy}
-        - {id: darya, position: center, expression: happy}
-        - {id: maxim, position: right, expression: happy}
+        - {id: darya, position: center, expression: happy, pose: sit}
+        - {id: maxim, position: right, expression: happy, pose: sit}
     outcome: success
     ending: "Пассажирам стало легче"
     final_text: >
@@ -280,7 +280,7 @@ nodes:
     scene:
       background: salon
       characters:
-        - {id: darya, position: right, expression: pained}
+        - {id: darya, position: right, expression: pained, pose: sit}
     outcome: failure
     ending: "Паника охватила вагон"
     final_text: >

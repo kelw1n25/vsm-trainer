@@ -41,8 +41,8 @@ nodes:
       background: salon_evening
       characters:
         - {id: player, position: left}
-        - {id: gennady, position: center, expression: tipsy}
-        - {id: irina, position: right, expression: worried}
+        - {id: gennady, position: center, expression: tipsy, pose: sit, hand: hold, item: bottle}
+        - {id: irina, position: right, expression: worried, pose: sit}
     situation: "Пассажир с признаками опьянения распивает принесённый алкоголь в салоне, соседке некомфортно."
     dialogue:
       - {speaker: narrator, text: "Вечерний рейс. В салоне приглушённый свет, большинство пассажиров отдыхает."}
@@ -92,7 +92,7 @@ nodes:
       background: salon_evening
       characters:
         - {id: player, position: left}
-        - {id: gennady, position: right, expression: tipsy}
+        - {id: gennady, position: right, expression: tipsy, pose: sit}
     situation: "Нетрезвый пассажир просит принести ему алкоголь из вагона-бистро."
     dialogue:
       - {speaker: gennady, text: "Слушай, раз тут нельзя — принеси мне коньячку из бистро. Я заплачу, не вопрос."}
@@ -138,8 +138,8 @@ nodes:
       background: salon_evening
       characters:
         - {id: player, position: left}
-        - {id: gennady, position: center, expression: angry}
-        - {id: irina, position: right, expression: worried}
+        - {id: gennady, position: center, expression: angry, pose: sit, hand: hold, item: bottle}
+        - {id: irina, position: right, expression: worried, pose: sit}
     situation: "Пассажир грубит проводнику и повышает голос на весь вагон."
     dialogue:
       - {speaker: gennady, text: "Ты кто такой вообще, а? Обслуга! Иди куда шёл!"}
@@ -189,8 +189,8 @@ nodes:
       background: salon_evening
       characters:
         - {id: player, position: left}
-        - {id: gennady, position: center, expression: angry}
-        - {id: irina, position: right, expression: pained}
+        - {id: gennady, position: center, expression: angry, pose: sit, hand: hold, item: bottle}
+        - {id: irina, position: right, expression: pained, pose: sit}
     situation: "Нетрезвый пассажир кричит на соседку; нужна помощь начальника поезда и ПТБ."
     dialogue:
       - {speaker: narrator, text: "Геннадий уже кричит. Ирина пытается встать, но он загораживает ей проход."}
@@ -298,7 +298,7 @@ nodes:
       background: salon_evening
       characters:
         - {id: player, position: left, expression: happy}
-        - {id: irina, position: right, expression: happy}
+        - {id: irina, position: right, expression: happy, pose: sit}
     outcome: success
     ending: "Порядок сохранён без конфликта"
     final_text: >
@@ -340,7 +340,7 @@ nodes:
       background: salon_evening
       characters:
         - {id: player, position: left, expression: sad}
-        - {id: gennady, position: right, expression: angry}
+        - {id: gennady, position: right, expression: angry, pose: sit}
     outcome: failure
     ending: "Конфликт с пассажиром"
     final_text: >
@@ -350,7 +350,7 @@ nodes:
       background: salon_evening
       characters:
         - {id: player, position: left, expression: sad}
-        - {id: irina, position: right, expression: pained}
+        - {id: irina, position: right, expression: pained, pose: sit}
     outcome: failure
     ending: "Ситуация переросла в серьёзный инцидент"
     final_text: >

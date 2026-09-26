@@ -341,15 +341,15 @@ function WindowView({ x, y, width, height }: { x: number; y: number; width: numb
 
 // ───────── Персонажи ─────────
 // Все люди — одинаковые светло-серые фигурки-манекены без лиц и бликов. Фигура рисуется одним цветом
-// как единая отливка, а объём даёт фильтр освещения по общему силуэту — поэтому на стыках рук, шеи
-// и ног нет швов. Сотрудников выделяют фуражка, воротник, галстук и значок. Эмоцию передаёт поза.
+// как единая отливка, а объём даёт затенение по краю общего силуэта — поэтому на стыках рук, шеи
+// и ног нет швов, а маленькая иконка и крупная фигура в новелле выглядят одинаково. Сотрудников выделяют фуражка, воротник, галстук и значок. Эмоцию передаёт поза.
 
 export type Outfit = "uniform" | { top: string; bottom: string };
 export type Hand = "down" | "point" | "hold" | "radio" | "hush" | "chest" | "throat";
-type Item = "ticket" | "bottle" | "cup" | "extinguisher" | "radio";
+export type Item = "ticket" | "bottle" | "cup" | "extinguisher" | "radio";
 
-// Цвет «глины» до освещения: фильтр затемняет его по объёму, итоговый серый — около #BDBDBD
-const BODY = "#E4E4E4";
+// Цвет «глины»: фильтр затемняет его к краям силуэта — так получается объём
+const BODY = "#D2D2D2";
 const UNIFORM_COLOR = "#34487A";
 
 // Наклон головы и корпуса для каждой эмоции (градусы; плюс — голова вниз и вперёд)
@@ -434,18 +434,23 @@ function HeldItem({ kind, x, y }: { kind: Item; x: number; y: number }) {
   }
 }
 
-/** Освещение «глиняной» фигуры: мягкий объём по общему силуэту без бликов и тень по контуру. */
+/**
+ * Объём «глиняной» фигуры без бликов: затенение по краю общего силуэта, сдвинутое в сторону тени,
+ * и тень по контуру. Всё задано в единицах фигуры (размытие и сдвиг), поэтому результат не зависит
+ * от размера на экране — в отличие от фильтров освещения, которые браузер считает в пикселях.
+ */
 function ClayFilter({ id }: { id: string }) {
   return (
     <filter id={id} x="-40%" y="-20%" width="180%" height="140%" colorInterpolationFilters="sRGB">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="3.2" result="relief" />
-      <feDiffuseLighting in="relief" surfaceScale="3" diffuseConstant="1.05" lightingColor="#FFFFFF" result="light">
-        <feDistantLight azimuth="235" elevation="58" />
-      </feDiffuseLighting>
-      {/* Сглаживание света: у крупной фигуры иначе видны ступеньки освещения */}
-      <feGaussianBlur in="light" stdDeviation="0.9" result="softLight" />
-      <feComposite in="softLight" in2="SourceAlpha" operator="in" result="lit" />
-      <feBlend in="SourceGraphic" in2="lit" mode="multiply" result="shaded" />
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2.6" result="blur" />
+      <feOffset in="blur" dx="-1.4" dy="-1.6" result="lightSide" />
+      <feFlood floodColor="#5A5A5A" floodOpacity="0.55" result="tone" />
+      <feComposite in="tone" in2="lightSide" operator="out" result="shade" />
+      <feComposite in="shade" in2="SourceAlpha" operator="in" result="rim" />
+      <feMerge result="shaded">
+        <feMergeNode in="SourceGraphic" />
+        <feMergeNode in="rim" />
+      </feMerge>
       <feGaussianBlur in="SourceAlpha" stdDeviation="0.9" result="edge" />
       <feOffset in="edge" dx="0.6" dy="1" result="edgeOffset" />
       <feFlood floodColor="#000000" floodOpacity="0.2" />

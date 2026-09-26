@@ -59,6 +59,11 @@ class SceneCharacter(StrictModel):
     id: Name
     position: Literal["left", "center", "right"]
     expression: Expression = "neutral"
+    # Поза как на картинке сценария: стоит, сидит в кресле поезда или в кресле-коляске
+    pose: Literal["stand", "sit", "wheelchair"] = "stand"
+    # Жест правой руки и предмет в ней; без жеста рука следует эмоции (например, на груди при боли)
+    hand: Literal["down", "point", "hold", "radio", "hush", "chest", "throat"] | None = None
+    item: Literal["ticket", "bottle", "cup", "extinguisher", "radio"] | None = None
 
 
 class Scene(StrictModel):

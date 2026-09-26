@@ -32,7 +32,7 @@ nodes:
       background: business
       characters:
         - {id: player, position: left}
-        - {id: veniamin, position: right, expression: annoyed}
+        - {id: veniamin, position: right, expression: annoyed, pose: sit}
     situation: "В первом классе у пассажира не работают розетка и мультимедиа, столик грязный."
     dialogue:
       - {speaker: narrator, text: "Первый класс. Кнопка вызова загорается у кресла 2А."}
@@ -78,7 +78,7 @@ nodes:
       background: business
       characters:
         - {id: player, position: left}
-        - {id: veniamin, position: right, expression: angry}
+        - {id: veniamin, position: right, expression: angry, pose: sit}
     situation: "Пассажир первого класса возмущён отказом помочь."
     dialogue:
       - {speaker: veniamin, text: "Позовите старшего. Я буду жаловаться.", sound: sigh_male}
@@ -108,7 +108,7 @@ nodes:
       background: business
       characters:
         - {id: player, position: left}
-        - {id: veniamin, position: right, expression: neutral}
+        - {id: veniamin, position: right, expression: neutral, pose: sit}
     situation: "Бортинженер сообщил, что розетку можно починить только в депо."
     dialogue:
       - {speaker: narrator, text: "Бортинженер по рации: «Розетка и экран на 2А — только в депо. В пути не починим»."}
@@ -152,7 +152,7 @@ nodes:
       background: business
       characters:
         - {id: player, position: left}
-        - {id: lidiya, position: right, expression: annoyed}
+        - {id: lidiya, position: right, expression: annoyed, pose: sit}
     situation: "Пассажирка просит выключить общее освещение, чтобы поспать."
     dialogue:
       - {speaker: lidiya, text: "Можно выключить свет во всём вагоне? Хочу поспать, а тут как в операционной."}
@@ -190,7 +190,7 @@ nodes:
       background: business
       characters:
         - {id: player, position: left}
-        - {id: lidiya, position: right, expression: pained}
+        - {id: lidiya, position: right, expression: pained, pose: sit}
     situation: "Пассажирка жалуется на резкий запах духов от соседа."
     dialogue:
       - {speaker: lidiya, text: "И ещё… только тихо. От соседа очень резкий парфюм. У меня разболелась голова.", sound: sigh}
@@ -229,7 +229,7 @@ nodes:
       background: business
       characters:
         - {id: player, position: left}
-        - {id: veniamin, position: right, expression: neutral}
+        - {id: veniamin, position: right, expression: neutral, pose: sit}
     situation: "Прошло полчаса — пора узнать, всё ли в порядке у пассажиров."
     dialogue:
       - {speaker: narrator, text: "Поезд проходит Бологое. Салон первого класса затих."}
@@ -257,7 +257,7 @@ nodes:
       background: business
       characters:
         - {id: player, position: left, expression: happy}
-        - {id: veniamin, position: right, expression: happy}
+        - {id: veniamin, position: right, expression: happy, pose: sit}
     outcome: success
     ending: "Персональный сервис без упрёков"
     final_text: >
@@ -277,7 +277,7 @@ nodes:
       background: business
       characters:
         - {id: player, position: left, expression: sad}
-        - {id: veniamin, position: right, expression: angry}
+        - {id: veniamin, position: right, expression: angry, pose: sit}
     outcome: failure
     ending: "Жалоба пассажира первого класса"
     final_text: >

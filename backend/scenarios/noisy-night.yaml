@@ -85,8 +85,8 @@ nodes:
     scene:
       background: salon_night
       characters:
-        - {id: player, position: left}
-        - {id: kirill, position: right, expression: neutral}
+        - {id: player, position: left, hand: hush}
+        - {id: kirill, position: right, expression: neutral, pose: sit}
     situation: "Пассажир громко разговаривает по телефону в ночном салоне."
     dialogue:
       - {speaker: kirill, text: "Да! Нет! Я тебе говорю, отгрузка в понедельник! Ты меня слышишь вообще?!"}
@@ -128,7 +128,7 @@ nodes:
       background: salon_night
       characters:
         - {id: player, position: left}
-        - {id: kirill, position: right, expression: angry}
+        - {id: kirill, position: right, expression: angry, pose: sit}
     situation: "Пассажир с телефоном обиделся на замечание и спорит."
     dialogue:
       - {speaker: kirill, text: "Вы мне ещё указывать будете, когда разговаривать?"}
@@ -164,8 +164,8 @@ nodes:
     scene:
       background: salon_night
       characters:
-        - {id: player, position: left}
-        - {id: artyom, position: right, expression: happy}
+        - {id: player, position: left, hand: hush}
+        - {id: artyom, position: right, expression: happy, pose: sit}
     situation: "Подросток смотрит видео без наушников на полной громкости."
     dialogue:
       - {speaker: narrator, text: "Через проход подросток смотрит ролики. Динамик телефона — на полную."}
@@ -209,7 +209,7 @@ nodes:
       background: salon_night
       characters:
         - {id: player, position: left}
-        - {id: vera, position: center, expression: worried}
+        - {id: vera, position: center, expression: worried, pose: sit}
         - {id: petr, position: right, expression: angry}
     situation: "Плачет маленький ребёнок; уставший пассажир жалуется."
     dialogue:
@@ -258,7 +258,7 @@ nodes:
       background: salon_night
       characters:
         - {id: player, position: left}
-        - {id: vera, position: right, expression: sad}
+        - {id: vera, position: right, expression: sad, pose: sit}
     situation: "Мама малыша расстроена замечанием проводника."
     dialogue:
       - {speaker: narrator, text: "Вера отворачивается к окну, прижимая малыша. У неё дрожат плечи."}
@@ -343,7 +343,7 @@ nodes:
       background: salon_night
       characters:
         - {id: player, position: left, expression: sad}
-        - {id: kirill, position: right, expression: angry}
+        - {id: kirill, position: right, expression: angry, pose: sit}
     outcome: failure
     ending: "Ночная ссора в салоне"
     final_text: >

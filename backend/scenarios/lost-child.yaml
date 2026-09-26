@@ -91,7 +91,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left}
-        - {id: yulia, position: right, expression: worried}
+        - {id: yulia, position: right, expression: worried, pose: sit}
     situation: "Мама с младенцем спрашивает, где можно спокойно покормить и переодеть ребёнка."
     dialogue:
       - {speaker: yulia, text: "Подскажите, где можно покормить малыша? Тут люди, мне неловко…"}
@@ -210,7 +210,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left}
-        - {id: boris, position: right, expression: surprised}
+        - {id: boris, position: right, expression: surprised, pose: sit}
     situation: "Пассажир проснулся и понял, что проспал свою станцию."
     dialogue:
       - {speaker: boris, text: "Это что, уже Бологое? Я же в Твери выходил! Почему меня никто не разбудил?!"}

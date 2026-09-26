@@ -41,7 +41,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left}
-        - {id: nikolai, position: right, expression: pained}
+        - {id: nikolai, position: right, expression: pained, pose: sit}
     situation: "Пожилой пассажир побледнел, держится за грудь и просит таблетку от сердца."
     dialogue:
       - {speaker: narrator, text: "Поезд идёт 380 км/ч. До Твери — сорок минут."}
@@ -93,7 +93,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left}
-        - {id: nikolai, position: right, expression: pained}
+        - {id: nikolai, position: right, expression: pained, pose: sit}
     situation: "После чужой таблетки пассажиру стало хуже — кружится голова."
     dialogue:
       - {speaker: narrator, text: "Через пять минут Николай Петрович бледнеет ещё сильнее."}
@@ -122,7 +122,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left}
-        - {id: nikolai, position: right, expression: pained}
+        - {id: nikolai, position: right, expression: pained, pose: sit}
     situation: "Пассажиру становится хуже, он оседает в кресле."
     dialogue:
       - {speaker: narrator, text: "Николай Петрович оседает в кресле. Пассажиры вокруг замирают."}
@@ -151,7 +151,7 @@ nodes:
       characters:
         - {id: player, position: left}
         - {id: svetlana, position: center, expression: pained}
-        - {id: nikolai, position: right, expression: pained}
+        - {id: nikolai, position: right, expression: pained, pose: sit}
     situation: "Соседка пассажира начинает паниковать, её крик пугает других."
     dialogue:
       - {speaker: svetlana, text: "Он умирает! Господи, сделайте же что-нибудь! Помогите!"}
@@ -195,7 +195,7 @@ nodes:
     scene:
       background: salon
       characters:
-        - {id: player, position: left}
+        - {id: player, position: left, hand: radio, item: radio}
         - {id: chief, position: right, expression: serious}
     situation: "Начальник поезда на месте и спрашивает, нужен ли поиск медика по громкой связи."
     dialogue:
@@ -232,7 +232,7 @@ nodes:
       characters:
         - {id: player, position: left}
         - {id: doctor, position: center, expression: serious}
-        - {id: nikolai, position: right, expression: worried}
+        - {id: nikolai, position: right, expression: worried, pose: sit}
     situation: "Врач из числа пассажиров просит рассказать, что происходило."
     dialogue:
       - {speaker: doctor, text: "Я кардиолог. Что он принимал, когда всё началось?"}
@@ -263,7 +263,7 @@ nodes:
       characters:
         - {id: player, position: left, expression: neutral}
         - {id: doctor, position: center, expression: neutral}
-        - {id: nikolai, position: right, expression: neutral}
+        - {id: nikolai, position: right, expression: neutral, pose: sit}
     outcome: success
     ending: "Помощь организована вовремя"
     final_text: >

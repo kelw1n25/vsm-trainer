@@ -380,7 +380,8 @@ def _scene(scene: Scene) -> SceneOut:
     return SceneOut(
         background=scene.background,
         characters=[
-            SceneCharacterOut(id=c.id, position=c.position, expression=c.expression) for c in scene.characters
+            SceneCharacterOut(id=c.id, position=c.position, expression=c.expression, pose=c.pose, hand=c.hand, item=c.item)
+            for c in scene.characters
         ],
     )
 

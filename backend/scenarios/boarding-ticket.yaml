@@ -37,7 +37,7 @@ nodes:
       background: platform
       characters:
         - {id: player, position: left}
-        - {id: viktor, position: right, expression: neutral}
+        - {id: viktor, position: right, expression: neutral, hand: hold, item: ticket}
     situation: "Пассажир показывает скриншот билета, купленного на стороннем сайте; дата на нём отличается от сегодняшней."
     dialogue:
       - {speaker: narrator, text: "Москва, платформа ВСМ. До отправления семь минут, у дверей вагона выстраивается очередь."}
@@ -99,7 +99,7 @@ nodes:
       background: platform
       characters:
         - {id: player, position: left}
-        - {id: viktor, position: right, expression: angry}
+        - {id: viktor, position: right, expression: angry, hand: hold, item: ticket}
     situation: "Пассажир раздражён и повышает голос, очередь на посадку ждёт."
     dialogue:
       - {speaker: viktor, text: "Вы понимаете, что я опаздываю? Я сейчас напишу жалобу!"}

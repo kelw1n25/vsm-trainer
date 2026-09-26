@@ -213,6 +213,33 @@ interface SpriteProps {
   talking?: boolean;
 }
 
+/** Синее кресло поезда, как на картинках сценариев: спинка с подголовником и сиденье. */
+function TrainSeat() {
+  return (
+    <g>
+      <rect x="-17" y="-84" width="32" height="60" rx="8" fill="#2E5CC4" />
+      <rect x="-13" y="-88" width="24" height="9" rx="4" fill="#F4F7FB" />
+      <rect x="-20" y="-34" width="46" height="13" rx="6" fill="#244DA8" />
+    </g>
+  );
+}
+
+/** Кресло-коляска: большое колесо со спицами, спинка, подножка и малое колесо. */
+function Wheelchair() {
+  return (
+    <g stroke="#243047" fill="none" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M-15 -72L-12 -34H14" strokeWidth="3.2" />
+      <path d="M-19 -73H-11" strokeWidth="3.2" />
+      <path d="M14 -34L17 -12H24" strokeWidth="2.8" />
+      <circle cx="-2" cy="-17" r="16" strokeWidth="3" />
+      <circle cx="-2" cy="-17" r="12.5" stroke="#8C9DB6" strokeWidth="1.2" />
+      <path d="M-2 -33V-1M-18 -17H14M-13.3 -28.3L9.3 -5.7M9.3 -28.3L-13.3 -5.7" stroke="#8C9DB6" strokeWidth="0.9" />
+      <circle cx="-2" cy="-17" r="2.4" fill="#243047" stroke="none" />
+      <circle cx="22" cy="-4" r="4" strokeWidth="2.4" />
+    </g>
+  );
+}
+
 function Sprite({ character, look, expression, state, talking = false }: SpriteProps) {
   const outfit = look.outfit === "uniform" ? "uniform" : { top: look.top, bottom: look.bottom };
   const classes = [
@@ -220,6 +247,7 @@ function Sprite({ character, look, expression, state, talking = false }: SpriteP
     `story-sprite--${character.position}`,
     `story-sprite--${state}`,
     look.child ? "story-sprite--child" : "",
+    character.pose !== "stand" ? "story-sprite--seated" : "",
     talking ? "story-sprite--talking" : "",
   ];
   return (
@@ -227,14 +255,21 @@ function Sprite({ character, look, expression, state, talking = false }: SpriteP
       {/* key по эмоции: при её смене фигура заново проигрывает короткую реакцию — вздрагивает, подпрыгивает, поникает */}
       <svg key={expression} viewBox="-36 -100 72 104" className={`story-sprite__svg story-sprite__svg--${expression}`}>
         <ellipse cx="0" cy="1" rx="22" ry="3.5" fill="#0B1222" opacity="0.18" />
+        {/* Сидящих персонажей сажаем в кресло поезда или коляску, как на картинках сценариев */}
+        <g transform={character.position === "right" ? "scale(-1 1)" : undefined}>
+          {character.pose === "sit" && <TrainSeat />}
+          {character.pose === "wheelchair" && <Wheelchair />}
+        </g>
         <Person
           x={0}
-          y={0}
+          y={character.pose === "stand" ? 0 : -24}
+          pose={character.pose === "stand" ? "stand" : "sit"}
           // Персонажи справа повёрнуты к центру сцены
           flip={character.position === "right"}
           outfit={outfit}
           mood={MOODS[expression]}
-          hand={HANDS[expression] ?? "down"}
+          hand={character.hand ?? HANDS[expression] ?? "down"}
+          item={character.item ?? undefined}
         />
       </svg>
     </div>

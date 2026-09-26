@@ -142,7 +142,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left}
-        - {id: chief, position: right, expression: serious}
+        - {id: chief, position: right, expression: serious, hand: radio, item: radio}
     situation: "Начальник поезда сообщает причину и срок задержки."
     dialogue:
       - {speaker: chief, text: "Сбой на соседнем пути, задержка около двадцати пяти минут. Я объявлю по громкой связи. Пройдите по вагону."}

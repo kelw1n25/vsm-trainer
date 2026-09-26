@@ -65,6 +65,9 @@ export interface SceneCharacter {
   id: string;
   position: "left" | "center" | "right";
   expression: Expression;
+  pose: "stand" | "sit" | "wheelchair";
+  hand: "down" | "point" | "hold" | "radio" | "hush" | "chest" | "throat" | null;
+  item: "ticket" | "bottle" | "cup" | "extinguisher" | "radio" | null;
 }
 
 export interface Scene {

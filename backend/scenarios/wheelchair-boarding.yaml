@@ -31,8 +31,8 @@ nodes:
     scene:
       background: platform
       characters:
-        - {id: player, position: left}
-        - {id: sofia, position: right, expression: neutral}
+        - {id: player, position: left, hand: point}
+        - {id: sofia, position: right, expression: neutral, pose: wheelchair}
     situation: "К вагону подъезжает пассажирка на кресле-коляске с чемоданом."
     dialogue:
       - {speaker: narrator, text: "До отправления двенадцать минут. К вагону подъезжает пассажирка на кресле-коляске."}
@@ -79,7 +79,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left}
-        - {id: sofia, position: right, expression: worried}
+        - {id: sofia, position: right, expression: worried, pose: wheelchair}
     situation: "Место для кресла-коляски заставлено чужими сумками."
     dialogue:
       - {speaker: narrator, text: "Выделенное место для кресла-коляски занято: там стоят два чужих чемодана и рюкзак."}
@@ -160,7 +160,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left}
-        - {id: sofia, position: right, expression: neutral}
+        - {id: sofia, position: right, expression: neutral, pose: wheelchair}
     situation: "Пассажирка на коляске хочет пообедать, но дойти до вагона-бистро ей сложно."
     dialogue:
       - {speaker: sofia, text: "Я бы пообедала, но до бистро через три вагона на коляске — целое приключение."}
@@ -188,7 +188,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left, expression: happy}
-        - {id: sofia, position: right, expression: happy}
+        - {id: sofia, position: right, expression: happy, pose: wheelchair}
     outcome: success
     ending: "Доступная поездка без барьеров"
     final_text: >
@@ -208,7 +208,7 @@ nodes:
       background: salon
       characters:
         - {id: player, position: left, expression: sad}
-        - {id: sofia, position: right, expression: sad}
+        - {id: sofia, position: right, expression: sad, pose: wheelchair}
     outcome: failure
     ending: "Перекрыт путь эвакуации"
     final_text: >

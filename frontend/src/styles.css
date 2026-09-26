@@ -2362,6 +2362,12 @@ html[data-theme="dark"] .story {
   height: min(48vh, 460px);
 }
 
+/* Сидящих поднимаем над окном диалога, чтобы кресло и коляска были видны целиком */
+.story-sprite--seated {
+  bottom: 150px;
+  height: min(52vh, 500px);
+}
+
 .story-sprite__svg {
   width: 100%;
   height: 100%;
@@ -3062,6 +3068,11 @@ html[data-theme="dark"] .story {
 
   .story-sprite--child {
     height: 24vh;
+  }
+
+  .story-sprite--seated {
+    bottom: 27vh;
+    height: 26vh;
   }
 
   .story-sprite--left {

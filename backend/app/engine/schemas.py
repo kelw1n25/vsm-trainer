@@ -37,6 +37,9 @@ class SceneCharacterOut(BaseModel):
     id: str
     position: str
     expression: str
+    pose: str
+    hand: str | None
+    item: str | None
 
 
 class SceneOut(BaseModel):
