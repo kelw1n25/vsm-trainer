@@ -88,7 +88,8 @@ struct ScaleLineChart: View {
     var body: some View {
         VStack(spacing: 8) {
             Growing { progress in Canvas { context, size in
-                let left: CGFloat = 34, top: CGFloat = 8, right = size.width - 12, bottom = size.height - 22
+                // Справа — место под подпись последнего шага
+                let left: CGFloat = 34, top: CGFloat = 8, right = size.width - 24, bottom = size.height - 22
                 func y(_ value: Int) -> CGFloat { bottom - (bottom - top) * CGFloat(value) / 100 }
                 func x(_ index: Int) -> CGFloat { labels.count < 2 ? left : left + (right - left) * CGFloat(index) / CGFloat(labels.count - 1) }
                 for tick in [0, 25, 50, 75, 100] {

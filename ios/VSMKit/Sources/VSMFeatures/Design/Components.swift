@@ -118,6 +118,8 @@ struct PressStyle: ButtonStyle {
 struct PrimaryButton: View {
     let title: String
     var large = false
+    /// Во всю ширину родителя — как `width: 100%` у кнопок форм и финала.
+    var fill = false
     var arrow = false
     var enabled = true
     var busy = false
@@ -131,7 +133,7 @@ struct PrimaryButton: View {
                 if arrow { Icon(kind: .arrowRight, size: 20, color: .white) }
             }
             .padding(.horizontal, large ? 34 : 30)
-            .frame(minWidth: 120, minHeight: large ? Metrics.buttonLargeHeight : Metrics.buttonHeight)
+            .frame(minWidth: 120, maxWidth: fill ? .infinity : nil, minHeight: large ? Metrics.buttonLargeHeight : Metrics.buttonHeight)
             .background(
                 LinearGradient(colors: [Palette.buttonTop, Palette.buttonBottom], startPoint: .top, endPoint: .bottom),
                 in: RoundedRectangle(cornerRadius: Radius.button, style: .continuous)
@@ -148,6 +150,7 @@ struct PrimaryButton: View {
 struct GhostButton: View {
     let title: String
     var large = false
+    var fill = false
     var enabled = true
     let action: () -> Void
     @Environment(\.vsm) private var colors
@@ -157,7 +160,7 @@ struct GhostButton: View {
         Button(action: action) {
             Text(title).textStyle(VsmType.button).foregroundStyle(colors.brandText)
                 .padding(.horizontal, large ? 34 : 30)
-                .frame(minHeight: large ? Metrics.buttonLargeHeight : Metrics.buttonHeight)
+                .frame(maxWidth: fill ? .infinity : nil, minHeight: large ? Metrics.buttonLargeHeight : Metrics.buttonHeight)
                 .background(colors.surface, in: shape)
                 .overlay(shape.strokeBorder(colors.controlBorder, lineWidth: 1))
                 .opacity(enabled ? 1 : 0.6)

@@ -53,9 +53,9 @@ struct DebriefScreen: View {
                     ForEach(debrief.situations) { StandardBlock(situation: $0) }
                 }
                 VStack(spacing: 12) {
-                    PrimaryButton(title: "Развитие истории") { navigator.open(.map(debrief.scenarioId)) }.frame(maxWidth: .infinity)
-                    GhostButton(title: "Пройти заново") { navigator.open(.scenario(debrief.scenarioId)) }.frame(maxWidth: .infinity)
-                    GhostButton(title: "Вернуться к сценариям") { navigator.openTab(.scenarios) }.frame(maxWidth: .infinity)
+                    PrimaryButton(title: "Развитие истории", fill: true) { navigator.open(.map(debrief.scenarioId)) }
+                    GhostButton(title: "Пройти заново", fill: true) { navigator.open(.scenario(debrief.scenarioId)) }
+                    GhostButton(title: "Вернуться к сценариям", fill: true) { navigator.openTab(.scenarios) }
                 }
             }
         }

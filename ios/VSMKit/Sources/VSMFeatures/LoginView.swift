@@ -42,10 +42,9 @@ struct LoginView: View {
                     if let error = session.errorMessage {
                         Text(error).textStyle(VsmType.body).foregroundStyle(colors.negative).accessibilityIdentifier("login.error")
                     }
-                    PrimaryButton(title: session.isSubmitting ? "Входим…" : "Войти", large: true, enabled: session.canSubmit) {
+                    PrimaryButton(title: session.isSubmitting ? "Входим…" : "Войти", large: true, fill: true, enabled: session.canSubmit) {
                         Task { await session.submit() }
                     }
-                    .frame(maxWidth: .infinity)
                     .accessibilityIdentifier("login.submit")
                     (Text("Демо-доступ (данные синтетические): проводник ")
                         + Text("100001").bold() + Text(", инструктор ") + Text("900001").bold()

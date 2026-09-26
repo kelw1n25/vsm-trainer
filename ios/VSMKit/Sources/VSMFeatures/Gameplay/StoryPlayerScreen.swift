@@ -522,10 +522,10 @@ private struct StoryEnd: View {
                         CompetenceList(points: final.competencePoints, titles: titles)
                         Rewards(achievements: run.newAchievements, levelUp: run.levelUp)
                         VStack(spacing: 10) {
-                            PrimaryButton(title: "Посмотреть путь", action: map).frame(maxWidth: .infinity)
-                            GhostButton(title: "Разбор решений", action: debrief).frame(maxWidth: .infinity).accessibilityIdentifier("final.debrief")
-                            GhostButton(title: "Пройти заново", action: restart).frame(maxWidth: .infinity)
-                            GhostButton(title: "Вернуться к сценариям", action: scenarios).frame(maxWidth: .infinity)
+                            PrimaryButton(title: "Посмотреть путь", fill: true, action: map)
+                            GhostButton(title: "Разбор решений", fill: true, action: debrief).accessibilityIdentifier("final.debrief")
+                            GhostButton(title: "Пройти заново", fill: true, action: restart)
+                            GhostButton(title: "Вернуться к сценариям", fill: true, action: scenarios)
                         }
                         .padding(.top, 12)
                     }

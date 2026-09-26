@@ -283,8 +283,7 @@ struct SettingsScreen: View {
                     preferences.setReduceMotion($0)
                 }
             }
-            GhostButton(title: "Выйти из системы") { Task { await container.session.signOut() } }
-                .frame(maxWidth: .infinity)
+            GhostButton(title: "Выйти из системы", fill: true) { Task { await container.session.signOut() } }
         }
         .task { await model.load() }
     }
@@ -331,7 +330,8 @@ struct TeamScreen: View {
 
     private func cell(_ label: String, _ value: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            Text(label).textStyle(VsmType.small).foregroundStyle(colors.muted).frame(maxWidth: .infinity, alignment: .leading)
+            // Значению — больше места: длинные названия компетенций не рвутся посреди слова
+            Text(label).textStyle(VsmType.small).foregroundStyle(colors.muted).frame(width: 118, alignment: .leading)
             Text(value).textStyle(VsmType.smallStrong).foregroundStyle(colors.text).frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.top, 2)
