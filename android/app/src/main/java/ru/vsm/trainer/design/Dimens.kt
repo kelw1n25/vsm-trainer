@@ -11,7 +11,6 @@ object Dimens {
     val buttonHeight = 51.dp
     val buttonLargeHeight = 56.dp
     val inputHeight = 48.dp
-    val touchMin = 44.dp
 }
 
 /** Радиусы сайта: `--radius-lg` 20, `--radius` 16, кнопки и поля 12, картинки 14. */

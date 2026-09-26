@@ -55,8 +55,4 @@ public struct Profile: Codable, Hashable, Sendable {
         case runsCompleted = "runs_completed"
         case competencePoints = "competence_points"
     }
-
-    public var earnedAchievements: [ProfileAchievement] {
-        achievements.filter { $0.earnedAt != nil }.sorted { ($0.earnedAt ?? .distantPast) > ($1.earnedAt ?? .distantPast) }
-    }
 }

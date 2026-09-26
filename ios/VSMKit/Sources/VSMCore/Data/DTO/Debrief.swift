@@ -78,7 +78,4 @@ public struct Debrief: Codable, Hashable, Sendable {
         case bestDecisions = "best_decisions"
         case averageReactionSeconds = "average_reaction_seconds"
     }
-
-    /// Шаги, где выбор был не лучшим или истёк таймер, — «что можно было сделать иначе».
-    public var missedSteps: [DebriefStep] { steps.filter { !$0.wasBest && $0.bestText != nil } }
 }

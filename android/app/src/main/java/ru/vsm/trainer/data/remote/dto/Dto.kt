@@ -237,7 +237,6 @@ data class Debrief(
     val situations: List<Situation>,
 ) {
     /** Шаги, где выбор был не лучшим или истёк таймер, — «что можно было сделать иначе». */
-    val missedSteps: List<DebriefStep> get() = steps.filter { !it.wasBest && it.bestText != null }
 }
 
 @Serializable
@@ -272,10 +271,7 @@ data class Profile(
     @SerialName("competence_points") val competencePoints: Map<String, Int>,
     val achievements: List<ProfileAchievement>,
     val history: List<HistoryItem>,
-) {
-    val earnedAchievements: List<ProfileAchievement>
-        get() = achievements.filter { it.earnedAt != null }.sortedByDescending { it.earnedAt }
-}
+)
 
 @Serializable
 enum class LeaderboardScope(val title: String) {
