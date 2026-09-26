@@ -67,8 +67,8 @@ xcodegen generate            # проект VSMTrainer.xcodeproj из project.ym
 open VSMTrainer.xcodeproj    # схема VSMTrainer → симулятор iPhone → Run
 ```
 
-Структура: `ios/VSMKit` — Swift-пакет (`VSMCore`: сеть, Keychain, кэш, ViewModel; `VSMFeatures`: экраны SwiftUI),
-`ios/App` — точка входа и фоновая синхронизация уведомлений.
+Структура: `ios/VSMKit` — Swift-пакет (`VSMCore`: сеть, Keychain, кэш, движок новеллы, ViewModel; `VSMFeatures`:
+дизайн-система и экраны сайта на SwiftUI, ассеты, шрифт Manrope), `ios/App` — точка входа и фоновая синхронизация уведомлений.
 
 ## Запуск Android
 
@@ -115,6 +115,8 @@ docker run --rm --platform linux/amd64 -v "$PWD/android:/project" -v vsm-gradle:
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Переменные окружения, мобильные сборки, продакшен, CI |
 | [docs/openapi.yaml](docs/openapi.yaml) | OpenAPI 3 — сверяется с кодом тестом |
 | [docs/PROJECT_AUDIT.md](docs/PROJECT_AUDIT.md), [docs/REQUIREMENTS_MATRIX.md](docs/REQUIREMENTS_MATRIX.md) | Аудит перед мобильной версией и сверка с ТЗ |
+| [docs/MOBILE_UI_AUDIT.md](docs/MOBILE_UI_AUDIT.md), [docs/MOBILE_SCREEN_MAP.md](docs/MOBILE_SCREEN_MAP.md) | Интерфейс сайта как эталон: токены, компоненты, карта экранов и чек-листы |
+| [docs/FINAL_UI_AUDIT.md](docs/FINAL_UI_AUDIT.md) | Итог переноса интерфейса: статус каждого экрана на iOS и Android, отличия и причины |
 | [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | Ограничения решения и план развития |
 | [FINAL_IMPLEMENTATION_REPORT.md](FINAL_IMPLEMENTATION_REPORT.md) | Итоговый отчёт о мобильной версии |
 
@@ -133,13 +135,16 @@ frontend/          React + TypeScript + Vite
   src/story/       режим новеллы: StoryEngine (чистый TypeScript), сцена, диалог, финал
   public/media/    фото и слайды из датасета кейсодержателя
 ios/
-  VSMKit/          Swift-пакет: VSMCore (DTO, APIClient, Keychain, кэш, ViewModel) и VSMFeatures (SwiftUI)
+  VSMKit/          Swift-пакет: VSMCore (DTO, APIClient, Keychain, кэш, StoryEngine, ViewModel)
+                   и VSMFeatures (дизайн-система, экраны SwiftUI, ассеты сайта)
   App/             точка входа, Info.plist; project.yml — проект XcodeGen
   UITests/         UI-тест входа
 android/
-  app/src/main/    Kotlin: data (Retrofit, кэш), security (Keystore), presentation (Compose), work (WorkManager)
+  app/src/main/    Kotlin: data (Retrofit, кэш), domain (StoryEngine), design (дизайн-система), feature (экраны Compose),
+                   navigation, security (Keystore), work (WorkManager); res — ассеты сайта, шрифт Manrope
   app/src/test/    JUnit, MockWebServer, Compose UI-тесты на Robolectric
   ci/Dockerfile    окружение сборки без Android SDK на машине
+tools/mobile-assets/ экспорт картинок из React-компонентов сайта для мобильных приложений
 docs/              документация
 .github/workflows/ CI: backend, frontend, iOS, Android
 ```

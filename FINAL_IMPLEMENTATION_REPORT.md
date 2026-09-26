@@ -33,18 +33,19 @@ HR / LMS / биллинг   ──X-API-Key──►   движок · скор�
 - `VSMKit/Sources/VSMCore` — DTO (Codable, даты с микросекундами), `APIClient` (единый разбор ошибок,
   `X-Request-ID`, повтор после обновления сессии), `TokenRefresher` (actor: один обмен на все параллельные 401),
   `KeychainTokenStore`, `FileResponseCache`, репозитории «сеть → кэш», `ServerClock`, `NotificationSync`,
-  ViewModel всех экранов (`@Observable`), включая `ScenarioPlayerViewModel` — конечный автомат прохождения.
-- `VSMKit/Sources/VSMFeatures` — экраны SwiftUI: вход, вкладки (главная, сценарии, рейтинг, профиль), плеер
-  на весь экран с шкалами и кольцом таймера, финал, разбор, уведомления, аналитика (Swift Charts).
-  Внедрение зависимостей — `AppContainer` через init.
+  `StoryEngine` — порт движка новеллы сайта, `StoryMemory`, `AppPreferences`, ViewModel всех экранов (`@Observable`).
+- `VSMKit/Sources/VSMFeatures` — интерфейс сайта один к одному: дизайн-система (`Design`), все 15 экранов сайта
+  (`Screens`, `Gameplay`), шапка с меню аватара и нижняя навигация (`Navigation`), ассеты, Manrope, звук новеллы.
+  Внедрение зависимостей — `AppContainer` через init. Сверка с сайтом — [docs/FINAL_UI_AUDIT.md](docs/FINAL_UI_AUDIT.md).
 - `App` — `@main`, `.backgroundTask(.appRefresh)` для уведомлений; `project.yml` — проект XcodeGen.
 
 ## 6. Android (`android/`)
 - `data/remote` — Retrofit-интерфейс, `AuthInterceptor`, `TokenAuthenticator` (синхронизированный обмен токена,
   сессию сбрасывает только отказ сервера, не сбой сети), `NetworkFactory`; `data/local` — файловый кэш,
   настройки; `security/KeystoreTokenStore` — AES-256-GCM с ключом в Android Keystore.
-- `presentation` — Compose + Material 3 (динамические цвета), ViewModel на `StateFlow` (Hilt), навигация
-  с нижней панелью, `PlayerViewModel` с той же логикой, что на iOS.
+- `design` — дизайн-система сайта (токены, Manrope, компоненты, графики); `feature` — все 15 экранов сайта
+  на Compose, ViewModel на `StateFlow` (Hilt); `navigation` — шапка с меню аватара и нижняя навигация;
+  `domain/story/StoryEngine` — порт движка новеллы сайта.
 - `work/NotificationWorker` — периодическая синхронизация уведомлений (WorkManager + Hilt).
 - Сборка без SDK на машине — `android/ci/Dockerfile`.
 
@@ -103,15 +104,16 @@ XP, ачивки, защита от повторной награды, восс�
 `docker compose up --build`; переменные окружения, мобильные сборки и продакшен — [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## 16. Known limitations
-- iOS-приложение не собиралось и не запускалось на машине разработки (нет Xcode): ядро проверено тестами,
-  в том числе против живого backend, экраны — компиляцией пакета; сборка под симулятор и UI-тест — задача CI на macOS.
+- iOS-таргет не собирался под симулятор на машине разработки (Xcode без принятой лицензии): ядро проверено
+  тестами, в том числе против живого backend, экраны — сборкой пакета и отрисовкой тех же представлений SwiftUI
+  на macOS с живыми данными; сборка под симулятор и UI-тест — задача CI на macOS.
   Android проверен вручную на эмуляторе (см. раздел 13).
 - APNs и FCM не подключены (нужны ключи): уведомления доставляются фоновым опросом backend.
 - Прохождение сценария требует сети — намеренно, чтобы таймер оставался честным.
 - Лимит входа — в памяти процесса. Остальное — [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
 
 ## 17. Future improvements
-APNs/FCM, вход по биометрии, иллюстрации новеллы в мобильных клиентах, общий счётчик лимита (Redis),
+APNs/FCM, вход по биометрии, общий счётчик лимита (Redis),
 публикация в магазинах, SSO; полный план — [docs/LIMITATIONS.md](docs/LIMITATIONS.md#план-развития-после-хакатона).
 
 ## 18. Как запустить проект

@@ -50,7 +50,7 @@ flowchart TD
 | 16 | Где документирован API? | [API.md](API.md), [openapi.yaml](openapi.yaml), Swagger `/api/docs` |
 | 17 | Как добавить сценарий без правки ядра? | положить `backend/scenarios/<id>.yaml`, проверить `python -m app.scenarios.validator scenarios/<id>.yaml`, перезапустить backend. Клиентам ничего менять не нужно |
 | 18 | Как изменить правило очков? | `backend/config/game.yaml` (веса XP, бонус за скорость, пороги уровней, ачивки, сгорание) → перезапуск backend |
-| 19 | Как восстановить прерванный сценарий? | состояние целиком в строке `scenario_runs`; `POST /api/runs` с тем же `scenario_id` возвращает незавершённое прохождение, `GET /api/runs/{id}` применяет истёкший за это время таймер. Клиенты помнят `run_id` (`ActiveRunStore`) и показывают «Продолжить» |
+| 19 | Как восстановить прерванный сценарий? | состояние целиком в строке `scenario_runs`; `POST /api/runs` с тем же `scenario_id` возвращает незавершённое прохождение, `GET /api/runs/{id}` применяет истёкший за это время таймер. Клиенты, как сайт, по «Начать сценарий» получают то же прохождение и продолжают с места остановки (`StoryMemory`) |
 | 20 | Как не начислить награду дважды? | `SELECT … FOR UPDATE` строки прохождения (`_lock_run`): второй ответ на тот же шаг получает `409 stale_node`; XP начисляется один раз при переходе в финальный статус; ачивка — уникальный ключ `(employee_id, code)` в `employee_achievements`; уведомления — `(employee_id, dedup_key)`; клиенты блокируют повторное нажатие фазой `submitting` |
 
 ## Почему прохождение не работает офлайн
@@ -70,7 +70,7 @@ flowchart TD
    Если отсчёт дошёл до `timeout_at`, клиент делает `GET /api/runs/{id}` — сервер применяет таймаут.
 5. На финале — `final`, `new_achievements`, `level_up`; затем `GET /api/runs/{id}/debrief`.
 
-Реализации: веб — `frontend/src/story/StoryEngine.ts`, iOS — `VSMCore/Presentation/ScenarioPlayerViewModel.swift`,
-Android — `presentation/player/PlayerViewModel.kt`. Сценарии переходов (двойное нажатие, ответ после таймера,
-обрыв связи, таймаут) покрыты тестами во всех трёх: `backend/tests/test_timer.py`, `ScenarioPlayerTests.swift`,
-`PlayerViewModelTest.kt`.
+Реализации: веб — `frontend/src/story/StoryEngine.ts`, iOS — `VSMCore/Domain/StoryEngine.swift`,
+Android — `domain/story/StoryEngine.kt` (порты веб-движка один к одному). Сценарии переходов (двойное нажатие,
+ответ после таймера, обрыв связи, таймаут, продолжение, пропуск виденного) покрыты тестами: `backend/tests/test_timer.py`,
+`StoryEngineTests.swift`, `StoryEngineTest.kt`.

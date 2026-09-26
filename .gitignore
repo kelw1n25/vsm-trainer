@@ -13,6 +13,7 @@ DerivedData/
 xcuserdata/
 # Android / Gradle
 .gradle/
+.kotlin/
 build/
 local.properties
 *.iml

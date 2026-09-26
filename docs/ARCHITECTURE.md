@@ -19,7 +19,7 @@ flowchart LR
     end
 
     subgraph AND["Android — Kotlin, Compose"]
-        AUI["presentation<br/>Compose + ViewModel"]
+        AUI["feature + design<br/>Compose + ViewModel"]
         ACORE["data: Retrofit/OkHttp,<br/>репозитории, WorkManager"]
         AKS[("Android Keystore · файловый кэш")]
         AUI --> ACORE --- AKS
@@ -63,13 +63,17 @@ flowchart LR
 журнал, автопрокрутка, пропуск виденного, сохранение места в localStorage. React-компоненты только
 подписываются на его состояние и рисуют сцену. Что происходит в истории, решает сервер.
 
-**Мобильные приложения** — нативные: iOS на Swift/SwiftUI, Android на Kotlin/Jetpack Compose. Интерфейс у каждого
-свой, по гайдлайнам платформы (вкладки и списки iOS, Material 3 на Android), а устройство слоёв одинаковое:
+**Мобильные приложения** — нативные: iOS на Swift/SwiftUI, Android на Kotlin/Jetpack Compose, без WebView.
+Интерфейс перенесён с сайта один к одному: те же токены, шрифт Manrope, компоненты, ассеты (экспорт из
+React-компонентов, `tools/mobile-assets`) и движок новеллы — порт `StoryEngine.ts`. Итог сверки —
+[FINAL_UI_AUDIT.md](FINAL_UI_AUDIT.md). Устройство слоёв одинаковое:
 
 | Слой | iOS (`ios/VSMKit`) | Android (`android/app`) |
 |------|--------------------|-------------------------|
-| Экраны | `VSMFeatures/*View.swift` (SwiftUI) | `presentation/*/…Screen.kt` (Compose) |
-| Состояние экранов | `VSMCore/Presentation/*ViewModel.swift` (`@Observable`) | `presentation/*ViewModel.kt` (`StateFlow`, Hilt) |
+| Дизайн-система | `VSMFeatures/Design` (токены, Manrope, компоненты, графики) | `design` (токены, Manrope, компоненты, графики) |
+| Экраны и навигация | `VSMFeatures/Screens`, `Gameplay`, `Navigation` (SwiftUI) | `feature/*`, `navigation` (Compose) |
+| Движок новеллы | `VSMCore/Domain/StoryEngine.swift` | `domain/story/StoryEngine.kt` |
+| Состояние экранов | `VSMCore/Presentation/*ViewModel.swift` (`@Observable`) | `feature/*/…ViewModel.kt` (`StateFlow`, Hilt) |
 | Данные | `Data/Repositories`: сеть → кэш | `data/repository`: сеть → кэш |
 | Сеть | `Networking/APIClient`, `TokenRefresher` (actor) | Retrofit + OkHttp, `TokenAuthenticator` |
 | Секреты | `Security/KeychainTokenStore` | `security/KeystoreTokenStore` (AES-GCM) |
