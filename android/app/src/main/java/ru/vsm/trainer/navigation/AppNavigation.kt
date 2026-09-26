@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -57,6 +58,8 @@ fun AppNavigation(onLogout: () -> Unit, shell: ShellViewModel = hiltViewModel())
     val unread by shell.unread.collectAsStateWithLifecycle()
     val shift = with(LocalDensity.current) { 6.dp.roundToPx() }
     val reduce = Vsm.reduceMotion
+    // Новый вход — счётчик непрочитанных нового сотрудника, не дожидаясь очередного опроса
+    LaunchedEffect(Unit) { shell.refreshUnread() }
     val go = { destination: String -> nav.navigate(destination) }
     val play = { scenarioId: String -> nav.navigate("play/$scenarioId") }
 

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,7 +53,8 @@ fun TeamScreen(onMember: (Int) -> Unit, model: TeamViewModel = hiltViewModel()) 
 @Composable
 private fun Cell(label: String, value: String) {
     Row(Modifier.fillMaxWidth().padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(label, style = VsmType.small, color = Vsm.colors.muted, modifier = Modifier.weight(1f))
+        // Значению — больше места: длинные названия компетенций не рвутся посреди слова
+        Text(label, style = VsmType.small, color = Vsm.colors.muted, modifier = Modifier.width(118.dp))
         Text(value, style = VsmType.smallStrong, color = Vsm.colors.text, modifier = Modifier.weight(1f))
     }
 }

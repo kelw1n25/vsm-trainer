@@ -74,7 +74,8 @@ fun ScaleLineChart(labels: List<String>, loyalty: List<Int>, safety: List<Int>) 
             val left = 34.dp.toPx()
             val bottom = size.height - 22.dp.toPx()
             val top = 8.dp.toPx()
-            val right = size.width - 12.dp.toPx()
+            // Справа — место под подпись последнего шага
+            val right = size.width - 24.dp.toPx()
             fun y(value: Int) = bottom - (bottom - top) * value / 100f
             fun x(index: Int) = if (labels.size < 2) left else left + (right - left) * index / (labels.size - 1)
             for (tick in listOf(0, 25, 50, 75, 100)) {

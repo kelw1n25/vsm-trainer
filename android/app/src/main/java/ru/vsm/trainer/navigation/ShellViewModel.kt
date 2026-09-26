@@ -18,12 +18,14 @@ import ru.vsm.trainer.data.repository.TrainerRepository
 /** Шапка: кто вошёл, счётчик непрочитанных (опрос раз в 30 с, как на сайте), ползунок темы. */
 @HiltViewModel
 class ShellViewModel @Inject constructor(
-    auth: AuthRepository,
+    private val auth: AuthRepository,
     private val repository: TrainerRepository,
     val preferences: AppPreferences,
 ) : ViewModel() {
-    val fullName: String = auth.current?.fullName.orEmpty()
-    val instructor: Boolean = auth.current?.role == Role.INSTRUCTOR
+    // ViewModel живёт дольше сессии (уровень Activity): после выхода и входа другим сотрудником
+    // имя и роль читаются заново, а не остаются от прежнего
+    val fullName: String get() = auth.current?.fullName.orEmpty()
+    val instructor: Boolean get() = auth.current?.role == Role.INSTRUCTOR
     private val _unread = MutableStateFlow(0)
     val unread = _unread.asStateFlow()
 
