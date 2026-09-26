@@ -3,7 +3,6 @@ import { Navigate } from "react-router";
 import { ApiError } from "../api";
 import { useAuth } from "../auth";
 import { LogoMark } from "../components/icons";
-import { HeroTrain } from "../components/illustrations";
 
 export function LoginPage() {
   const { session, login } = useAuth();
@@ -30,7 +29,7 @@ export function LoginPage() {
   return (
     <main className="login">
       <section className="login__panel">
-        <HeroTrain />
+        <img className="login__photo" src="/media/train-city.jpg" alt="" />
         <form className="card login__form" onSubmit={submit}>
           <div className="brand">
             <LogoMark />
