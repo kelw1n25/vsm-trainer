@@ -1,6 +1,6 @@
 # Сценарный движок и игровая механика
 
-Движок целиком на сервере (`backend/app/engine/service.py`). Клиенты — веб, iOS, Android — только показывают
+Движок целиком на сервере (`backend/app/engine/service.py`). Клиенты — веб и Android — только показывают
 состояние и отправляют действия: исход шага, таймер, шкалы, XP и ачивки считает backend. Поэтому поменять
 развилку или правило можно в одном месте, и оно сразу действует во всех клиентах.
 
@@ -35,7 +35,7 @@ flowchart TD
 | 1 | Где Scenario Engine? | `backend/app/engine/service.py`: `start_run`, `reveal_choices`, `choose`, `get_run` |
 | 2 | Где ветвление? | `Choice.next` и `Node.timeout_next` в `scenarios/schema.py`; переход — `engine/service.py: _advance` |
 | 3 | Где условия? | разбор и проверка — `scenarios/conditions.py: parse_condition, is_satisfied`; применение — `engine/service.py: visible_choices` |
-| 4 | Где таймер? | отсчёт от `ScenarioRun.choices_shown_at`; дедлайн — `_deadline`; просрочка — `_resolve_timeouts` → `apply_timeout`; ответ после дедлайна — `409 time_expired` в `choose`. Клиенты: iOS `ServerClock`, Android `core/ServerClock.kt` — только показ |
+| 4 | Где таймер? | отсчёт от `ScenarioRun.choices_shown_at`; дедлайн — `_deadline`; просрочка — `_resolve_timeouts` → `apply_timeout`; ответ после дедлайна — `409 time_expired` в `choose`. Клиент Android: `core/ServerClock.kt` — только показ |
 | 5 | Где меняется лояльность? | `engine/service.py: _apply` (эффекты варианта или таймаута) → `scoring/service.py: clamp_scale` |
 | 6 | Где меняется безопасность? | там же, `_apply`; провал при нуле — `_advance` |
 | 7 | Где очки компетенций? | `_apply` копит в `ScenarioRun.competence_points`; бонус за скорость — `scoring.fast_answer_bonus`; в профиль — `scoring.award` при финале |
@@ -44,8 +44,8 @@ flowchart TD
 | 10 | Где обновляется рейтинг? | отдельного обновления нет: `leaderboard/router.py: leaderboard` считает SQL-запросом по `scenario_runs.xp_earned` за период — рейтинг всегда актуален, клиент его не вычисляет |
 | 11 | Где разбор (feedback)? | `engine/debrief.py: build_debrief` — по журналу `events`: решение, пояснение, дельты шкал, лучший вариант, стандарт ситуации |
 | 12 | Где аналитика? | запись — `engine/service.py: _log` и `POST /api/analytics/events`; выводы — `analytics/service.py: build_analytics` |
-| 13 | Где офлайн? | iOS `RemoteTrainerRepository.cached` + `FileResponseCache`; Android `RemoteTrainerRepository.cached` + `FileResponseCache`. Прохождение — только онлайн, см. ниже |
-| 14 | Где auth token? | iOS — Keychain (`KeychainTokenStore`, `AfterFirstUnlockThisDeviceOnly`); Android — AES-GCM с ключом в Android Keystore (`KeystoreTokenStore`); веб — `localStorage` (см. LIMITATIONS) |
+| 13 | Где офлайн? | Android `RemoteTrainerRepository.cached` + `FileResponseCache`. Прохождение — только онлайн, см. ниже |
+| 14 | Где auth token? | Android — AES-GCM с ключом в Android Keystore (`KeystoreTokenStore`); веб — `localStorage` (см. LIMITATIONS) |
 | 15 | Где серверная валидация? | тела запросов — Pydantic-модели роутеров; действия — проверки в `choose` / `reveal_choices` (статус, актуальный узел, показаны ли варианты, видим ли вариант, не истёк ли таймер); файлы сценариев — `scenarios/validator.py` |
 | 16 | Где документирован API? | [API.md](API.md), [openapi.yaml](openapi.yaml), Swagger `/api/docs` |
 | 17 | Как добавить сценарий без правки ядра? | положить `backend/scenarios/<id>.yaml`, проверить `python -m app.scenarios.validator scenarios/<id>.yaml`, перезапустить backend. Клиентам ничего менять не нужно |
@@ -70,7 +70,7 @@ flowchart TD
    Если отсчёт дошёл до `timeout_at`, клиент делает `GET /api/runs/{id}` — сервер применяет таймаут.
 5. На финале — `final`, `new_achievements`, `level_up`; затем `GET /api/runs/{id}/debrief`.
 
-Реализации: веб — `frontend/src/story/StoryEngine.ts`, iOS — `VSMCore/Domain/StoryEngine.swift`,
-Android — `domain/story/StoryEngine.kt` (порты веб-движка один к одному). Сценарии переходов (двойное нажатие,
+Реализации: веб — `frontend/src/story/StoryEngine.ts`,
+Android — `domain/story/StoryEngine.kt` (порт веб-движка один к одному). Сценарии переходов (двойное нажатие,
 ответ после таймера, обрыв связи, таймаут, продолжение, пропуск виденного) покрыты тестами: `backend/tests/test_timer.py`,
-`StoryEngineTests.swift`, `StoryEngineTest.kt`.
+`StoryEngineTest.kt`.

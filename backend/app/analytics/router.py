@@ -37,7 +37,7 @@ class ClientEvent(BaseModel):
     type: Literal["debrief_opened", "notification_opened", "run_exited"]
     run_id: uuid.UUID | None = None
     notification_id: int | None = None
-    platform: Literal["web", "ios", "android"]
+    platform: Literal["web", "android"]
 
 
 @router.post("/events", status_code=202, summary="Записать действие пользователя на клиенте")

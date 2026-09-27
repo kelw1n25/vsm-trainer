@@ -1,12 +1,12 @@
 # Ассеты мобильных приложений
 
-Персонажи новеллы, фоны сцен, иллюстрации сценариев, поезд hero, аватар и звезда в iOS и Android — не перерисовка,
-а снимки **тех же React-компонентов сайта**. Поэтому приложения выглядят как сайт, а после правки иллюстрации на сайте
+Персонажи новеллы, фоны сцен, иллюстрации сценариев, поезд hero и звезда в Android — не перерисовка,
+а снимки **тех же React-компонентов сайта**. Поэтому приложение выглядит как сайт, а после правки иллюстрации на сайте
 ассеты обновляются одной командой.
 
 | Что | Откуда | Куда |
 |-----|--------|------|
-| `sprite_*` — персонажи | `Sprite` / `Person` (`frontend/src/story/StoryStage.tsx`, `components/illustrations.tsx`) | iOS `ios/VSMKit/Sources/VSMFeatures/Resources/Images`, Android `android/app/src/main/res/drawable-nodpi` |
+| `sprite_*` — персонажи | `Sprite` / `Person` (`frontend/src/story/StoryStage.tsx`, `components/illustrations.tsx`) | `android/app/src/main/res/drawable-nodpi` |
 | `bg_*` — фоны сцен | `StoryBackground` (с теми же фильтрами: размытие, вечер, ночь) | там же |
 | `scenario_*` — иллюстрации | `ScenarioImage` | там же |
 | `hero_static`, `hero_parallax`, `hero_drive` — слои поезда | `HeroTrain`: неподвижный план, город (параллакс), сам поезд | там же |

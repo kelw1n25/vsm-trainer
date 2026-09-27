@@ -11,13 +11,6 @@ flowchart LR
         STORY --- LS
     end
 
-    subgraph IOS["iOS — Swift, SwiftUI"]
-        IUI["VSMFeatures<br/>экраны SwiftUI"]
-        ICORE["VSMCore: ViewModel,<br/>репозитории, APIClient"]
-        IKC[("Keychain · файловый кэш")]
-        IUI --> ICORE --- IKC
-    end
-
     subgraph AND["Android — Kotlin, Compose"]
         AUI["feature + design<br/>Compose + ViewModel"]
         ACORE["data: Retrofit/OkHttp,<br/>репозитории, WorkManager"]
@@ -43,8 +36,6 @@ flowchart LR
     FILES[/"scenarios/*.yaml<br/>config/game.yaml<br/>config/handbook.yaml"/]
     EXT["HR / LMS / биллинг"]
 
-    ICORE -- "REST /api, JWT + refresh" --> AUTH
-    ICORE --> ENG & PR & LB & NOT & AN
     ACORE -- "REST /api, JWT + refresh" --> AUTH
     ACORE --> ENG & PR & LB & NOT & AN
     UI -- "REST /api, JWT" --> AUTH
@@ -63,22 +54,22 @@ flowchart LR
 журнал, автопрокрутка, пропуск виденного, сохранение места в localStorage. React-компоненты только
 подписываются на его состояние и рисуют сцену. Что происходит в истории, решает сервер.
 
-**Мобильные приложения** — нативные: iOS на Swift/SwiftUI, Android на Kotlin/Jetpack Compose, без WebView.
+**Мобильное приложение** — нативное: Android на Kotlin/Jetpack Compose, без WebView.
 Интерфейс перенесён с сайта один к одному: те же токены, шрифт Manrope, компоненты, ассеты (экспорт из
 React-компонентов, `tools/mobile-assets`) и движок новеллы — порт `StoryEngine.ts`. Итог сверки —
-[FINAL_UI_AUDIT.md](FINAL_UI_AUDIT.md). Устройство слоёв одинаковое:
+[FINAL_UI_AUDIT.md](FINAL_UI_AUDIT.md). Слои:
 
-| Слой | iOS (`ios/VSMKit`) | Android (`android/app`) |
-|------|--------------------|-------------------------|
-| Дизайн-система | `VSMFeatures/Design` (токены, Manrope, компоненты, графики) | `design` (токены, Manrope, компоненты, графики) |
-| Экраны и навигация | `VSMFeatures/Screens`, `Gameplay`, `Navigation` (SwiftUI) | `feature/*`, `navigation` (Compose) |
-| Движок новеллы | `VSMCore/Domain/StoryEngine.swift` | `domain/story/StoryEngine.kt` |
-| Состояние экранов | `VSMCore/Presentation/*ViewModel.swift` (`@Observable`) | `feature/*/…ViewModel.kt` (`StateFlow`, Hilt) |
-| Данные | `Data/Repositories`: сеть → кэш | `data/repository`: сеть → кэш |
-| Сеть | `Networking/APIClient`, `TokenRefresher` (actor) | Retrofit + OkHttp, `TokenAuthenticator` |
-| Секреты | `Security/KeychainTokenStore` | `security/KeystoreTokenStore` (AES-GCM) |
-| Уведомления | `.backgroundTask(.appRefresh)` → `UNUserNotificationCenter` | `WorkManager` → `NotificationManager` |
-| Внедрение зависимостей | `AppContainer` (через init) | Hilt (`di/AppModule.kt`) |
+| Слой | Android (`android/app`) |
+|------|-------------------------|
+| Дизайн-система | `design` (токены, Manrope, компоненты, графики) |
+| Экраны и навигация | `feature/*`, `navigation` (Compose) |
+| Движок новеллы | `domain/story/StoryEngine.kt` |
+| Состояние экранов | `feature/*/…ViewModel.kt` (`StateFlow`, Hilt) |
+| Данные | `data/repository`: сеть → кэш |
+| Сеть | Retrofit + OkHttp, `TokenAuthenticator` |
+| Секреты | `security/KeystoreTokenStore` (AES-GCM) |
+| Уведомления | `WorkManager` → `NotificationManager` |
+| Внедрение зависимостей | Hilt (`di/AppModule.kt`) |
 
 Бизнес-логики в клиентах нет: они показывают состояние сервера и отправляют действия. Отдельного «мобильного API»
 тоже нет — это те же эндпоинты, что у веб-клиента, плюс обновление сессии refresh-токеном.
@@ -238,4 +229,4 @@ sequenceDiagram
 | `GET /api/scenarios/{id}/story-map` — развитие истории | 4.6 мс | 8 мс |
 | `GET /api/scenarios` — каталог | 9.1 мс | 238 мс (первый запрос после старта) |
 
-Плавность интерфейса мобильных клиентов — в [FINAL_UI_AUDIT.md](FINAL_UI_AUDIT.md#быстродействие-android-эмулятор-pixel-7-apple-m3).
+Плавность интерфейса Android-приложения — в [FINAL_UI_AUDIT.md](FINAL_UI_AUDIT.md#быстродействие-android-эмулятор-pixel-7-apple-m3).

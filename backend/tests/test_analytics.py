@@ -86,7 +86,7 @@ def test_client_events_are_recorded(client, auth, db):
 
     finished = play(client, auth, *PARTIAL_PATH)
     for event in (
-        {"type": "debrief_opened", "run_id": finished["id"], "platform": "ios"},
+        {"type": "debrief_opened", "run_id": finished["id"], "platform": "android"},
         {"type": "run_exited", "run_id": start(client, auth, "passenger-unwell")["id"], "platform": "android"},
     ):
         assert client.post("/api/analytics/events", json=event, headers=auth).status_code == 202
@@ -96,14 +96,14 @@ def test_client_events_are_recorded(client, auth, db):
     assert client.post("/api/analytics/events", json=opened, headers=auth).status_code == 202
 
     recorded = {e.type: e.payload for e in db.scalars(select(Event)).all()}
-    assert recorded["debrief_opened"] == {"platform": "ios"}
+    assert recorded["debrief_opened"] == {"platform": "android"}
     assert recorded["notification_opened"] == {"platform": "web", "notification_type": notification["type"]}
 
 
 def test_client_events_reject_foreign_and_unknown(client, auth, db):
     create_employee(db, "100002")
     foreign = play(client, login(client, "100002"), *PARTIAL_PATH)["id"]
-    event = {"type": "debrief_opened", "run_id": foreign, "platform": "ios"}
+    event = {"type": "debrief_opened", "run_id": foreign, "platform": "android"}
     assert client.post("/api/analytics/events", json=event, headers=auth).status_code == 404
-    unknown = {"type": "xp_granted", "platform": "ios"}
+    unknown = {"type": "xp_granted", "platform": "android"}
     assert client.post("/api/analytics/events", json=unknown, headers=auth).status_code == 422

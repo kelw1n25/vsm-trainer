@@ -14,7 +14,6 @@ import { chromium } from "playwright";
 
 const ROOT = resolve(import.meta.dirname, "../..");
 const PAGE = process.env.ASSETS_URL ?? "http://localhost:5174/tools/mobile-assets.html";
-const IOS = join(ROOT, "ios/VSMKit/Sources/VSMFeatures/Resources/Images");
 const ANDROID = join(ROOT, "android/app/src/main/res/drawable-nodpi");
 const TMP = mkdtempSync(join(tmpdir(), "vsm-assets-"));
 
@@ -35,13 +34,11 @@ const PHOTOS = {
   photo_rolling_stock: "rolling-stock.jpg",
 };
 
-mkdirSync(IOS, { recursive: true });
 mkdirSync(ANDROID, { recursive: true });
 
 function publish(name, png, { quality, alpha }) {
   const webp = join(TMP, `${name}.webp`);
   execFileSync("cwebp", ["-quiet", "-q", String(quality), ...(alpha ? ["-alpha_q", "100", "-exact"] : []), png, "-o", webp]);
-  copyFileSync(webp, join(IOS, `${name}.webp`));
   copyFileSync(webp, join(ANDROID, `${name}.webp`));
 }
 
@@ -70,4 +67,4 @@ for (const [name, file] of Object.entries(PHOTOS)) {
   publish(name, join(ROOT, "frontend/public/media", file), { quality: 85, alpha: false });
   total += 1;
 }
-console.log(`Экспортировано ассетов: ${total} → ${IOS}, ${ANDROID}`);
+console.log(`Экспортировано ассетов: ${total} → ${ANDROID}`);

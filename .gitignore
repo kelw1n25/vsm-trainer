@@ -5,12 +5,6 @@ __pycache__/
 node_modules/
 dist/
 .DS_Store
-# Swift / Xcode
-.build/
-.swiftpm/
-*.xcodeproj/
-DerivedData/
-xcuserdata/
 # Android / Gradle
 .gradle/
 .kotlin/

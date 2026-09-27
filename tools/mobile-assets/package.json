@@ -2,7 +2,7 @@
   "name": "vsm-mobile-assets",
   "private": true,
   "type": "module",
-  "description": "Экспорт персонажей, фонов и иллюстраций сайта в ресурсы iOS и Android",
+  "description": "Экспорт персонажей, фонов и иллюстраций сайта в ресурсы Android",
   "scripts": {
     "export": "node export.mjs"
   },

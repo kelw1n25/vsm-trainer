@@ -24,15 +24,15 @@ Backend при старте применяет миграции (`alembic upgrad
 
 Для любого окружения, кроме демо: `cp .env.example .env` и заменить секреты — `.env` не коммитится.
 
-## Мобильные приложения
+## Android-приложение
 
-| | iOS | Android |
-|--|-----|---------|
-| Отладка | `API_BASE_URL = http://localhost:8000` (симулятор видит Mac) | `http://10.0.2.2:8000/` (эмулятор видит компьютер) |
-| Устройство в той же сети | в `ios/project.yml` → `configs.Debug.API_BASE_URL` адрес компьютера | `buildConfigField` в `app/build.gradle.kts` |
-| Продакшен | `xcodebuild … API_BASE_URL=https://api.example/` | `./gradlew assembleRelease -PapiBaseUrl=https://api.example/` |
+| | Адрес API |
+|--|-----------|
+| Отладка | `http://10.0.2.2:8000/` (эмулятор видит компьютер) |
+| Устройство в той же сети | адрес компьютера в `buildConfigField` в `app/build.gradle.kts` |
+| Продакшен | `./gradlew assembleRelease -PapiBaseUrl=https://api.example/` |
 
-Release-сборки подписываются ключами организации (Apple Developer, keystore Android); ключи в репозитории не хранятся.
+Release-сборка подписывается keystore организации; ключи в репозитории не хранятся.
 
 ## Продакшен
 
@@ -41,5 +41,4 @@ Release-сборки подписываются ключами организа�
 - Веб-клиент: `npm run build` и раздача `frontend/dist` через nginx.
 - Миграции лучше вынести в отдельный шаг деплоя: `alembic upgrade head`.
 - Журналы — JSON в stdout: собираются любым агрегатором (Loki, ELK) и ищутся по `request_id`.
-- CI — `.github/workflows/ci.yml`: backend (тесты на PostgreSQL), frontend (tsc + сборка), iOS (тесты ядра
-  + сборка под симулятор), Android (lint, тесты, APK).
+- CI — `.github/workflows/ci.yml`: backend (тесты на PostgreSQL), frontend (tsc + сборка), Android (lint, тесты, APK).

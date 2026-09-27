@@ -2,7 +2,7 @@
 
 Полная интерактивная документация — Swagger: http://localhost:8000/api/docs.
 OpenAPI-схема лежит в репозитории: [openapi.yaml](openapi.yaml) (выгружается `python scripts/export_openapi.py`,
-тест `test_openapi.py` не даёт ей отстать от кода). Один API обслуживает веб-клиент, iOS, Android и внешние системы.
+тест `test_openapi.py` не даёт ей отстать от кода). Один API обслуживает веб-клиент, Android-приложение и внешние системы.
 
 ## Формат ошибок
 
@@ -26,7 +26,7 @@ OpenAPI-схема лежит в репозитории: [openapi.yaml](openapi.
 | 500 | `internal_error` | непредвиденная ошибка: стек только в журнале сервера, в `message` — код запроса для поддержки |
 
 Каждый ответ несёт заголовок `X-Request-ID`. Клиент может прислать свой (8–64 символа `A-Za-z0-9-`) —
-мобильные приложения так и делают, — и по нему запрос находится в JSON-журнале сервера.
+Android-приложение так и делает, — и по нему запрос находится в JSON-журнале сервера.
 
 ## Интеграция с HR, LMS и биллингом
 
@@ -167,13 +167,13 @@ curl -s localhost:8000/api/runs/$RUN/choices -H "Authorization: Bearer $TOKEN" -
   -d '{"node_id":"start","choice_id":"check_both"}'
 ```
 
-## Сессии мобильных клиентов
+## Сессии Android-приложения
 
 Access-токен живёт `JWT_TTL_MINUTES` (12 ч), refresh-токен — `REFRESH_TTL_DAYS` (30 дней). В базе хранится только
 SHA-256 refresh-токена. Каждый обмен отзывает предъявленный токен и выдаёт новый. Если уже обменянный токен
 предъявят ещё раз, значит, его скопировали: сервер отзывает все сессии сотрудника. Поэтому клиенты
 обменивают токен строго одним запросом, даже когда на `401 invalid_token` наткнулись несколько запросов сразу
-(iOS — `TokenRefresher` actor, Android — `TokenAuthenticator` с блокировкой).
+(Android — `TokenAuthenticator` с блокировкой).
 
 ```bash
 curl -s localhost:8000/api/auth/refresh -H "Content-Type: application/json" -d '{"refresh_token":"<из ответа login>"}'

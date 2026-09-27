@@ -1,38 +1,35 @@
-# Карта экранов: сайт → мобильные приложения
+# Карта экранов: сайт → Android-приложение
 
 Каждый экран сайта переносится в нативный экран с той же структурой и визуальной системой.
-iOS — `ios/VSMKit/Sources/VSMFeatures/`, Android — `android/app/src/main/java/ru/vsm/trainer/`.
+Android — `android/app/src/main/java/ru/vsm/trainer/`.
 
 ```text
 Website Screen
       ↓
 Mobile Screen
       ↓
-iOS implementation
-      ↓
 Android implementation
 ```
 
-| Сайт | Маршрут | Мобильный экран | iOS (`VSMFeatures/`) | Android (`ru/vsm/trainer/`) |
-|------|---------|-----------------|-----|---------|
-| Вход | /login | Вход | LoginView.swift | feature/auth/LoginScreen.kt |
-| Шапка и навигация | Header + nav | Шапка + нижняя панель + меню аватара | Navigation/Shell.swift (AppShell, AppHeader, BottomNav) | navigation/AppNavigation.kt, AppHeader.kt, BottomNav.kt |
-| Главная | / | Главная | Screens/Home.swift (HeroCarousel) | feature/home/HomeScreen.kt |
-| Сценарии | /scenarios | Сценарии | Screens/Scenarios.swift (ScenarioListScreen) | feature/scenarios/ScenarioScreens.kt |
-| Сценарий | /scenarios/:id | Сценарий | Screens/Scenarios.swift (ScenarioDetailScreen) | feature/scenarios/ScenarioScreens.kt |
-| Новелла | /runs/:id | Новелла на весь экран | Gameplay/StoryPlayerScreen.swift, StoryStage.swift, StoryAudio.swift | feature/gameplay/StoryPlayerScreen.kt, StoryStage.kt, StoryAudio.kt |
-| Развитие истории | /scenarios/:id/map | Развитие истории | Screens/Scenarios.swift (StoryMapScreen) | feature/scenarios/StoryMapScreen.kt |
-| Разбор | /runs/:id/debrief | Разбор | Screens/Debrief.swift | feature/debrief/DebriefScreen.kt |
-| Профиль | /profile | Профиль | Screens/Progress.swift (ProfileScreen) | feature/profile/ProfileScreen.kt |
-| Рейтинг | /rating | Рейтинг | Screens/Progress.swift (RatingScreen) | feature/leaderboard/RatingScreen.kt |
-| Аналитика | /analytics, /team/:id | Аналитика | Screens/Progress.swift (AnalyticsScreen) | feature/analytics/AnalyticsScreen.kt |
-| Уведомления | /notifications | Уведомления | Screens/Reference.swift (NotificationsScreen) | feature/notifications/NotificationsScreen.kt |
-| Справочник | /handbook | Справочник | Screens/Reference.swift (HandbookScreen) | feature/handbook/HandbookScreen.kt |
-| Настройки | /settings | Настройки | Screens/Reference.swift (SettingsScreen) | feature/settings/SettingsScreen.kt |
-| Команда | /team | Команда (инструктор) | Screens/Reference.swift (TeamScreen) | feature/team/TeamScreen.kt |
+| Сайт | Маршрут | Мобильный экран | Android (`ru/vsm/trainer/`) |
+|------|---------|-----------------|---------|
+| Вход | /login | Вход | feature/auth/LoginScreen.kt |
+| Шапка и навигация | Header + nav | Шапка + нижняя панель + меню аватара | navigation/AppNavigation.kt, AppHeader.kt, BottomNav.kt |
+| Главная | / | Главная | feature/home/HomeScreen.kt |
+| Сценарии | /scenarios | Сценарии | feature/scenarios/ScenarioScreens.kt |
+| Сценарий | /scenarios/:id | Сценарий | feature/scenarios/ScenarioScreens.kt |
+| Новелла | /runs/:id | Новелла на весь экран | feature/gameplay/StoryPlayerScreen.kt, StoryStage.kt, StoryAudio.kt |
+| Развитие истории | /scenarios/:id/map | Развитие истории | feature/scenarios/StoryMapScreen.kt |
+| Разбор | /runs/:id/debrief | Разбор | feature/debrief/DebriefScreen.kt |
+| Профиль | /profile | Профиль | feature/profile/ProfileScreen.kt |
+| Рейтинг | /rating | Рейтинг | feature/leaderboard/RatingScreen.kt |
+| Аналитика | /analytics, /team/:id | Аналитика | feature/analytics/AnalyticsScreen.kt |
+| Уведомления | /notifications | Уведомления | feature/notifications/NotificationsScreen.kt |
+| Справочник | /handbook | Справочник | feature/handbook/HandbookScreen.kt |
+| Настройки | /settings | Настройки | feature/settings/SettingsScreen.kt |
+| Команда | /team | Команда (инструктор) | feature/team/TeamScreen.kt |
 
-Движок новеллы — `VSMCore/Domain/StoryEngine.swift` и `domain/story/StoryEngine.kt`, дизайн-система —
-`VSMFeatures/Design/` и `design/`.
+Движок новеллы — `domain/story/StoryEngine.kt`, дизайн-система — `design/`.
 
 ## Навигация
 
@@ -69,7 +66,6 @@ Android implementation
 - [x] States
 - [x] Interactions
 - [x] Mobile adaptation
-- [x] iOS
 - [x] Android
 
 ### SCREEN: Шапка и навигация
@@ -88,7 +84,6 @@ Android implementation
 - [x] States
 - [x] Interactions
 - [x] Mobile adaptation
-- [x] iOS
 - [x] Android
 
 ### SCREEN: Главная
@@ -107,7 +102,6 @@ Android implementation
 - [x] States
 - [x] Interactions
 - [x] Mobile adaptation
-- [x] iOS
 - [x] Android
 
 ### SCREEN: Сценарии
@@ -126,7 +120,6 @@ Android implementation
 - [x] States
 - [x] Interactions
 - [x] Mobile adaptation
-- [x] iOS
 - [x] Android
 
 ### SCREEN: Сценарий
@@ -145,7 +138,6 @@ Android implementation
 - [x] States
 - [x] Interactions
 - [x] Mobile adaptation
-- [x] iOS
 - [x] Android
 
 ### SCREEN: Новелла
@@ -164,7 +156,6 @@ Android implementation
 - [x] States
 - [x] Interactions
 - [x] Mobile adaptation
-- [x] iOS
 - [x] Android
 
 ### SCREEN: Развитие истории
@@ -183,7 +174,6 @@ Android implementation
 - [x] States
 - [x] Interactions
 - [x] Mobile adaptation
-- [x] iOS
 - [x] Android
 
 ### SCREEN: Разбор
@@ -202,7 +192,6 @@ Android implementation
 - [x] States
 - [x] Interactions
 - [x] Mobile adaptation
-- [x] iOS
 - [x] Android
 
 ### SCREEN: Профиль
@@ -221,7 +210,6 @@ Android implementation
 - [x] States
 - [x] Interactions
 - [x] Mobile adaptation
-- [x] iOS
 - [x] Android
 
 ### SCREEN: Рейтинг
@@ -240,7 +228,6 @@ Android implementation
 - [x] States
 - [x] Interactions
 - [x] Mobile adaptation
-- [x] iOS
 - [x] Android
 
 ### SCREEN: Аналитика
@@ -259,7 +246,6 @@ Android implementation
 - [x] States
 - [x] Interactions
 - [x] Mobile adaptation
-- [x] iOS
 - [x] Android
 
 ### SCREEN: Уведомления
@@ -278,7 +264,6 @@ Android implementation
 - [x] States
 - [x] Interactions
 - [x] Mobile adaptation
-- [x] iOS
 - [x] Android
 
 ### SCREEN: Справочник
@@ -297,7 +282,6 @@ Android implementation
 - [x] States
 - [x] Interactions
 - [x] Mobile adaptation
-- [x] iOS
 - [x] Android
 
 ### SCREEN: Настройки
@@ -316,7 +300,6 @@ Android implementation
 - [x] States
 - [x] Interactions
 - [x] Mobile adaptation
-- [x] iOS
 - [x] Android
 
 ### SCREEN: Команда
@@ -335,5 +318,4 @@ Android implementation
 - [x] States
 - [x] Interactions
 - [x] Mobile adaptation
-- [x] iOS
 - [x] Android

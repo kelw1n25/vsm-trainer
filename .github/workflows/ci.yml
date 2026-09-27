@@ -52,21 +52,6 @@ jobs:
       # tsc — проверка типов, затем production-сборка
       - run: npm run build
 
-  ios:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Тесты ядра (VSMCore)
-        working-directory: ios/VSMKit
-        run: swift test
-      - name: Сборка приложения для симулятора
-        working-directory: ios
-        run: |
-          brew install xcodegen
-          xcodegen generate
-          xcodebuild build -project VSMTrainer.xcodeproj -scheme VSMTrainer \
-            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO
-
   android:
     runs-on: ubuntu-latest
     defaults:

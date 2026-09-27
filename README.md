@@ -1,7 +1,7 @@
 # ВСМ-тренажёр проводника
 
 Тренажёр для хакатона Московского транспорта, кейс «Геймификация для ВСМ»: backend на FastAPI + PostgreSQL,
-веб-клиент на React и нативные мобильные приложения — **iOS (Swift, SwiftUI)** и **Android (Kotlin, Jetpack Compose)**.
+веб-клиент на React и нативное мобильное приложение **Android (Kotlin, Jetpack Compose)**.
 
 Проводник высокоскоростной магистрали ВСМ-400 проживает нештатные ситуации как **интерактивную
 визуальную новеллу**: сцены в салоне и на платформе, персонажи с эмоциями, диалоги и мысли, выборы с
@@ -18,15 +18,13 @@
 | Для чего | Что нужно |
 |----------|-----------|
 | Backend + веб | Docker и Docker Compose v2.24+ |
-| iOS | macOS, Xcode 16+, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`) |
 | Android | Android Studio (JDK 17, SDK 35) — или только Docker (см. ниже) |
 
 ## Архитектура
 
 ```
-iOS (SwiftUI) ─┐
-Android (Compose) ─┼── REST /api (JWT + refresh) ──► Backend FastAPI ──► PostgreSQL
-Веб (React) ───┘                                     движок сценариев, шкалы, XP, ачивки,
+Android (Compose) ─┬── REST /api (JWT + refresh) ──► Backend FastAPI ──► PostgreSQL
+Веб (React) ───────┘                                 движок сценариев, шкалы, XP, ачивки,
 HR / LMS / биллинг ── REST /api/integration (X-API-Key) ─┘  рейтинг, уведомления, аналитика
 ```
 
@@ -56,19 +54,6 @@ docker compose up --build
 
 База данных — PostgreSQL 17 в контейнере `db`; схема создаётся миграциями Alembic (`backend/alembic/versions`)
 при старте backend. Сбросить демо-данные: `docker compose down -v && docker compose up --build`.
-
-## Запуск iOS
-
-Backend должен быть запущен (симулятор обращается к `http://localhost:8000`).
-
-```bash
-cd ios
-xcodegen generate            # проект VSMTrainer.xcodeproj из project.yml
-open VSMTrainer.xcodeproj    # схема VSMTrainer → симулятор iPhone → Run
-```
-
-Структура: `ios/VSMKit` — Swift-пакет (`VSMCore`: сеть, Keychain, кэш, движок новеллы, ViewModel; `VSMFeatures`:
-дизайн-система и экраны сайта на SwiftUI, ассеты, шрифт Manrope), `ios/App` — точка входа и фоновая синхронизация уведомлений.
 
 ## Запуск Android
 
@@ -131,7 +116,7 @@ adb shell cmd package compile -m speed-profile -f ru.vsm.trainer   # сразу 
 | [docs/openapi.yaml](docs/openapi.yaml) | OpenAPI 3 — сверяется с кодом тестом |
 | [docs/PROJECT_AUDIT.md](docs/PROJECT_AUDIT.md), [docs/REQUIREMENTS_MATRIX.md](docs/REQUIREMENTS_MATRIX.md) | Аудит перед мобильной версией и сверка с ТЗ |
 | [docs/MOBILE_UI_AUDIT.md](docs/MOBILE_UI_AUDIT.md), [docs/MOBILE_SCREEN_MAP.md](docs/MOBILE_SCREEN_MAP.md) | Интерфейс сайта как эталон: токены, компоненты, карта экранов и чек-листы |
-| [docs/FINAL_UI_AUDIT.md](docs/FINAL_UI_AUDIT.md) | Итог переноса интерфейса: статус каждого экрана на iOS и Android, отличия и причины |
+| [docs/FINAL_UI_AUDIT.md](docs/FINAL_UI_AUDIT.md) | Итог переноса интерфейса: статус каждого экрана на Android, отличия и причины |
 | [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | Ограничения решения и план развития |
 | [FINAL_IMPLEMENTATION_REPORT.md](FINAL_IMPLEMENTATION_REPORT.md) | Итоговый отчёт о мобильной версии |
 
@@ -149,10 +134,6 @@ backend/
 frontend/          React + TypeScript + Vite
   src/story/       режим новеллы: StoryEngine (чистый TypeScript), сцена, диалог, финал
   public/media/    фото и слайды из датасета кейсодержателя
-ios/
-  VSMKit/          Swift-пакет: VSMCore (DTO, APIClient, Keychain, кэш, StoryEngine, ViewModel)
-                   и VSMFeatures (дизайн-система, экраны SwiftUI, ассеты сайта)
-  App/             точка входа, Info.plist; project.yml — проект XcodeGen
   UITests/         UI-тест входа
 android/
   app/src/main/    Kotlin: data (Retrofit, кэш), domain (StoryEngine), design (дизайн-система), feature (экраны Compose),
@@ -161,7 +142,7 @@ android/
   ci/Dockerfile    окружение сборки без Android SDK на машине
 tools/mobile-assets/ экспорт картинок из React-компонентов сайта для мобильных приложений
 docs/              документация
-.github/workflows/ CI: backend, frontend, iOS, Android
+.github/workflows/ CI: backend, frontend, Android
 ```
 
 ## Сценарии
@@ -186,10 +167,6 @@ pip install -r requirements-dev.txt
 POSTGRES_USER=... POSTGRES_PASSWORD=... POSTGRES_DB=vsm_test POSTGRES_HOST=localhost pytest
 ```
 
-**iOS.** `cd ios/VSMKit && swift test` (нужен Xcode) — или без Xcode, в Linux-контейнере:
-`docker run --rm -v "$PWD/ios/VSMKit:/pkg" -w /pkg swift:6.1-jammy swift test`.
-UI-тест — схема `VSMTrainer` в Xcode (⌘U).
-
 **Android.** `cd android && ./gradlew testDebugUnitTest` — JVM-тесты, MockWebServer и Compose UI-тесты
 на Robolectric, эмулятор не нужен. Или в Docker — команда из раздела «Запуск Android».
 
@@ -199,8 +176,7 @@ UI-тест — схема `VSMTrainer` в Xcode (⌘U).
 
 | Симптом | Что делать |
 |---------|-----------|
-| Мобильное приложение: «Нет связи с сервером» | backend запущен? `curl localhost:8000/api/health`. На реальном телефоне замените `localhost` / `10.0.2.2` на IP компьютера в `project.yml` / `build.gradle.kts` |
+| Мобильное приложение: «Нет связи с сервером» | backend запущен? `curl localhost:8000/api/health`. На реальном телефоне замените `10.0.2.2` на IP компьютера в `build.gradle.kts` |
 | `429 too_many_attempts` при входе | 5 неудачных попыток за 15 минут — подождать `Retry-After` секунд или перезапустить backend |
 | Android в Docker: «Gradle build daemon disappeared» | не хватает памяти Docker: добавьте `-Pkotlin.compiler.execution.strategy=in-process` или увеличьте память в Docker Desktop |
 | `test_openapi_file_matches_code` упал | API изменился: `cd backend && python scripts/export_openapi.py` |
-| iOS: `APIBaseURL` не задан | проект сгенерирован не из `project.yml` — выполните `xcodegen generate` |
