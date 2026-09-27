@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -35,6 +34,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
@@ -48,7 +49,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -119,26 +119,15 @@ fun HeroCarousel(slides: List<HeroSlide>) {
             },
     ) {
         Column {
-            AnimatedContent(
-                current,
-                transitionSpec = { (fadeIn(tween(400)) + slideInHorizontally(tween(400)) { -it / 30 }) togetherWith fadeOut(tween(150)) },
-                label = "slide",
-            ) { slide ->
-                // Справа — место под вертикальный ползунок
-                // Высота блока — по самому длинному слайду: при листании поезд и карточка не прыгают
-                Column(
-                    Modifier.fillMaxWidth().heightIn(min = 196.dp).padding(start = 22.dp, end = if (slides.size > 1) 44.dp else 22.dp, top = 28.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    Text(slide.eyebrow.uppercase(), style = VsmType.heroEyebrow, color = colors.heroEyebrow)
-                    val long = slide.titleBottom.length > 24
-                    Text("${slide.titleTop}\n${slide.titleBottom}", style = if (long) VsmType.heroTitleLong else VsmType.heroTitle, color = colors.heading)
-                    Text(
-                        slide.text, style = VsmType.heroText, color = colors.heroText,
-                        maxLines = if (long) 1 else 2, overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = if (long) 2.dp else 10.dp),
-                    )
-                }
+            // Высота блока — по самому длинному слайду: все слайды невидимо лежат под текущим,
+            // поэтому текст виден целиком, а при листании поезд и карточка не прыгают
+            Box {
+                slides.forEach { slide -> HeroSlideText(slide, slides.size > 1, Modifier.alpha(0f).clearAndSetSemantics {}) }
+                AnimatedContent(
+                    current,
+                    transitionSpec = { (fadeIn(tween(400)) + slideInHorizontally(tween(400)) { -it / 30 }) togetherWith fadeOut(tween(150)) },
+                    label = "slide",
+                ) { slide -> HeroSlideText(slide, slides.size > 1) }
             }
             HeroTrain(progress.value)
         }
@@ -152,6 +141,21 @@ fun HeroCarousel(slides: List<HeroSlide>) {
                 modifier = Modifier.align(Alignment.TopEnd).padding(top = 18.dp),
             )
         }
+    }
+}
+
+/** Текст слайда hero; справа — место под вертикальный ползунок. */
+@Composable
+private fun HeroSlideText(slide: HeroSlide, withScroller: Boolean, modifier: Modifier = Modifier) {
+    val colors = Vsm.colors
+    Column(
+        modifier.fillMaxWidth().padding(start = 22.dp, end = if (withScroller) 44.dp else 22.dp, top = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Text(slide.eyebrow.uppercase(), style = VsmType.heroEyebrow, color = colors.heroEyebrow)
+        val long = slide.titleBottom.length > 24
+        Text("${slide.titleTop}\n${slide.titleBottom}", style = if (long) VsmType.heroTitleLong else VsmType.heroTitle, color = colors.heading)
+        Text(slide.text, style = VsmType.heroText, color = colors.heroText, modifier = Modifier.padding(top = if (long) 2.dp else 10.dp))
     }
 }
 
