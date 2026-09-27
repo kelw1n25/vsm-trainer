@@ -106,6 +106,12 @@ html[data-theme="dark"] {
   box-sizing: border-box;
 }
 
+/* Safari на iPhone подсвечивает серым каждую нажатую кнопку; в новелле кнопка «Далее» на весь экран,
+   и вспышка на каждое касание выглядела как мерцание. Нажатие и так видно по стилям кнопок */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   margin: 0;
   background: var(--bg);
