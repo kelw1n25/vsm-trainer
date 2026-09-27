@@ -1,11 +1,17 @@
 package ru.vsm.trainer.data.repository
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import ru.vsm.trainer.core.ApiError
 import ru.vsm.trainer.core.Loaded
 import ru.vsm.trainer.core.apiCall
@@ -44,6 +50,11 @@ interface TrainerRepository {
     /** Аватар вошедшего сотрудника — один на все экраны: обновляется с профилем и после сохранения. */
     val myAvatar: StateFlow<Avatar>
     suspend fun updateAvatar(avatar: Avatar): Avatar
+    /** Своё фото на аватаре (квадрат с сервера) или null — тогда рисуется конструктор. */
+    val myPhoto: StateFlow<Bitmap?>
+    /** [jpeg] — уже повёрнутый и уменьшенный снимок; вызывать только после согласия сотрудника. */
+    suspend fun uploadPhoto(jpeg: ByteArray)
+    suspend fun deletePhoto()
     suspend fun scenarios(): Loaded<List<ScenarioSummary>>
     suspend fun meta(): Loaded<Meta>
     suspend fun leaderboard(scope: LeaderboardScope, period: LeaderboardPeriod): Loaded<Leaderboard>
@@ -78,7 +89,42 @@ class RemoteTrainerRepository(
     private val _myAvatar = MutableStateFlow(Avatar())
     override val myAvatar: StateFlow<Avatar> = _myAvatar.asStateFlow()
 
-    override suspend fun profile() = cached("profile", Profile.serializer()) { api.profile() }.also { _myAvatar.value = it.value.avatar }
+    private val _myPhoto = MutableStateFlow<Bitmap?>(null)
+    override val myPhoto: StateFlow<Bitmap?> = _myPhoto.asStateFlow()
+    private var photoVersion: Long? = null
+
+    override suspend fun profile() = cached("profile", Profile.serializer()) { api.profile() }.also {
+        _myAvatar.value = it.value.avatar
+        showPhoto(it.value.avatarPhoto)
+    }
+
+    /** Фото скачивается, только когда сменилась версия; не скачалось — остаётся прежнее, а не пустой круг. */
+    private suspend fun showPhoto(version: Long?) {
+        if (version == photoVersion) return
+        if (version == null) {
+            photoVersion = null
+            _myPhoto.value = null
+            return
+        }
+        val bytes = try {
+            apiCall { withContext(Dispatchers.IO) { api.photo(version).use { it.bytes() } } }
+        } catch (error: ApiError) {
+            return
+        }
+        val bitmap = withContext(Dispatchers.Default) { BitmapFactory.decodeByteArray(bytes, 0, bytes.size) } ?: return
+        photoVersion = version
+        _myPhoto.value = bitmap
+    }
+
+    override suspend fun uploadPhoto(jpeg: ByteArray) {
+        val saved = apiCall { api.uploadPhoto(consent = true, jpeg.toRequestBody("image/jpeg".toMediaType())) }
+        showPhoto(saved.version)
+    }
+
+    override suspend fun deletePhoto() {
+        apiCall { api.deletePhoto() }
+        showPhoto(null)
+    }
 
     override suspend fun updateAvatar(avatar: Avatar): Avatar {
         val previous = _myAvatar.value
@@ -115,6 +161,8 @@ class RemoteTrainerRepository(
     override fun clearCache() {
         cache.clear()
         _myAvatar.value = Avatar()
+        photoVersion = null
+        _myPhoto.value = null
     }
 }
 

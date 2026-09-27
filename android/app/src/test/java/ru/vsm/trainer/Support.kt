@@ -68,6 +68,9 @@ class FakeTrainerRepository : TrainerRepository {
     override val myAvatar = kotlinx.coroutines.flow.MutableStateFlow(ru.vsm.trainer.data.remote.dto.Avatar())
     override suspend fun profile() = Loaded(Fixture.decode<Profile>("profile"))
     override suspend fun updateAvatar(avatar: ru.vsm.trainer.data.remote.dto.Avatar) = avatar.also { myAvatar.value = it }
+    override val myPhoto = kotlinx.coroutines.flow.MutableStateFlow<android.graphics.Bitmap?>(null)
+    override suspend fun uploadPhoto(jpeg: ByteArray) {}
+    override suspend fun deletePhoto() {}
     override suspend fun scenarios() = Loaded(Fixture.decode<List<ScenarioSummary>>("scenarios"))
     override suspend fun meta() = Loaded(Fixture.decode<Meta>("meta"))
     override suspend fun leaderboard(scope: LeaderboardScope, period: LeaderboardPeriod) = Loaded(Fixture.decode<Leaderboard>("leaderboard"))

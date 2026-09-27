@@ -14,6 +14,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.remember
+import ru.vsm.trainer.design.components.LocalMyPhoto
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -66,10 +69,12 @@ fun AppNavigation(onLogout: () -> Unit, shell: ShellViewModel = hiltViewModel())
         shell.refreshProfile()
     }
     val avatar by shell.avatar.collectAsStateWithLifecycle()
+    val photoBitmap by shell.photo.collectAsStateWithLifecycle()
+    val photo = remember(photoBitmap) { photoBitmap?.asImageBitmap() }
     val go = { destination: String -> nav.navigate(destination) }
     val play = { scenarioId: String -> nav.navigate("play/$scenarioId") }
 
-    CompositionLocalProvider(LocalMyAvatar provides avatar) {
+    CompositionLocalProvider(LocalMyAvatar provides avatar, LocalMyPhoto provides photo) {
     SiteBackground(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize()) {
         if (!story) {

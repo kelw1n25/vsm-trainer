@@ -1,6 +1,7 @@
 package ru.vsm.trainer.design.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -17,9 +18,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,6 +32,9 @@ import ru.vsm.trainer.design.VsmType
 
 /** Аватар вошедшего сотрудника — задаётся навигацией из репозитория, чтобы новый выбор был виден сразу везде. */
 val LocalMyAvatar = staticCompositionLocalOf { Avatar() }
+
+/** Своё фото вошедшего сотрудника; null — рисуется конструктор. */
+val LocalMyPhoto = staticCompositionLocalOf<ImageBitmap?> { null }
 
 /** Варианты конструктора — те же, что у сайта (`frontend/src/avatar.ts`) и сервера (`profiles/avatar.py`). */
 object AvatarOptions {
@@ -56,11 +62,26 @@ private val Mannequin = Color(0xFFC9C9C9)
 private val MannequinShade = Color(0xFFA4A4A4)
 private val Gold = Color(0xFFE7C15A)
 
-/** Аватар проводника — манекен в форме, как `Avatar` сайта, с белым кольцом и тенью; детали — из конструктора. */
+/**
+ * Аватар проводника с белым кольцом и тенью, как `Avatar` сайта: своё фото, а без него — манекен в форме
+ * с деталями из конструктора.
+ */
 @Composable
-fun UserAvatar(size: Dp, modifier: Modifier = Modifier, ring: Dp = 3.dp, avatar: Avatar = LocalMyAvatar.current) {
-    Box(modifier.size(size).vsmShadow(CircleShape, 6.dp).clip(CircleShape).background(Vsm.colors.surface).border(ring, Vsm.colors.surface, CircleShape)) {
-        AvatarDrawing(avatar, Modifier.size(size).clip(CircleShape))
+fun UserAvatar(
+    size: Dp,
+    modifier: Modifier = Modifier,
+    ring: Dp = 3.dp,
+    avatar: Avatar = LocalMyAvatar.current,
+    photo: ImageBitmap? = LocalMyPhoto.current,
+) {
+    Box(modifier.size(size).vsmShadow(CircleShape, 6.dp).clip(CircleShape).background(Vsm.colors.surface)) {
+        if (photo != null) {
+            Image(photo, null, Modifier.size(size).clip(CircleShape), contentScale = ContentScale.Crop)
+        } else {
+            AvatarDrawing(avatar, Modifier.size(size).clip(CircleShape))
+        }
+        // Кольцо поверх картинки: фото, как и рисунок, не заходит на белую рамку
+        Box(Modifier.size(size).border(ring, Vsm.colors.surface, CircleShape))
     }
 }
 

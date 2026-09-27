@@ -6,7 +6,7 @@
 | Требование ТЗ | Статус до | Где реализовано | Что изменено |
 |---------------|-----------|-----------------|--------------|
 | Профиль сотрудника | ✅ | `backend/app/profiles/router.py` → `GET /api/profile` | экран профиля в Android |
-| Кастомизация профиля (аватар) | ✅ | `profiles/avatar.py` → `PUT /api/profile/avatar`; конструктор в «Настройках» сайта и Android | собирается из деталей формы (фон, фуражка, галстук), фото не загружаются — это были бы ПДН |
+| Кастомизация профиля (аватар) | ✅ | `profiles/avatar.py` → `PUT /api/profile/avatar`, `profiles/photo.py` → `PUT/GET/DELETE /api/profile/avatar/photo`; «Настройки» сайта и Android | своё фото (с согласием на обработку, видно только сотруднику, удаляется одной кнопкой) или конструктор из деталей формы (фон, фуражка, галстук) |
 | Прогресс | ✅ | `analytics/service.py: _progress` (XP по неделям), история в профиле | показан в мобильных клиентах |
 | Уровень | ✅ | `achievements/service.py: level_for`, пороги в `config/game.yaml` | — |
 | Очки компетенций | ✅ | `scoring/service.py: award`, `Choice.effects.competences` в сценариях | — |

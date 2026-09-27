@@ -38,7 +38,7 @@ fun Tag(text: String, category: Boolean = false) {
 
 /** Чип фильтра `.chip`: 38, рамка control-border, выбранный — фон brand и белый текст. */
 @Composable
-fun Chip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun Chip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     val colors = Vsm.colors
     val background = animateColorAsState(if (selected) colors.brand else colors.surface, label = "chip").value
     Box(
@@ -48,7 +48,7 @@ fun Chip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifie
             .background(background)
             .border(1.dp, if (selected) colors.brand else colors.controlBorder, Shapes.pill)
             .semantics { this.selected = selected }
-            .clickable(role = Role.Tab, onClick = onClick)
+            .clickable(enabled = enabled, role = Role.Tab, onClick = onClick)
             .padding(horizontal = 18.dp),
         contentAlignment = Alignment.Center,
     ) {

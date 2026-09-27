@@ -145,8 +145,11 @@ curl -s -G "$API/billing/usage" -H "X-API-Key: $KEY" --data-urlencode "month=202
 | `POST /api/runs/{id}/reveal` | сцена дочитана: `{node_id}` → варианты и дедлайн таймера |
 | `POST /api/runs/{id}/choices` | ответ: `{node_id, choice_id}` → реакция персонажей и следующая сцена |
 | `GET /api/runs/{id}/debrief` | разбор: каждое решение, лучший вариант, стандарты по ситуациям |
-| `GET /api/profile` | уровень, компетенции, ачивки, история, аватар |
+| `GET /api/profile` | уровень, компетенции, ачивки, история, аватар; `avatar_photo` — версия своего фото или `null` |
 | `PUT /api/profile/avatar` | сохранить аватар: `background` (blue, mint, sand, lilac, coral, night), `headwear` (cap, none), `tie` (red, blue, green, graphite); другое значение или лишнее поле — 422 |
+| `PUT /api/profile/avatar/photo?consent=true` | своё фото на аватар: тело — JPEG, PNG или WebP до 8 МБ (`Content-Type: image/…`). Без `consent=true` — `400 consent_required`; больше 8 МБ — `413 photo_too_large`; не картинка — `422 photo_invalid`. Ответ `{"version": …}` |
+| `GET /api/profile/avatar/photo?v=<версия>` | своё фото — JPEG 512 × 512 без метаданных; отдаётся только самому сотруднику; нет фото — `404 photo_not_found` |
+| `DELETE /api/profile/avatar/photo` | убрать фото — оно удаляется с сервера, на аватаре снова конструктор (`204`) |
 | `GET /api/leaderboard?scope=brigade\|depot\|company&period=week\|month\|all` | рейтинг |
 | `GET /api/notifications`, `POST /api/notifications/read-all` | уведомления |
 | `GET /api/analytics/me` | аналитика: прогресс, компетенции, доля завершённых, среднее время решения, ошибки, рекомендация |

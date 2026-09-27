@@ -30,6 +30,8 @@ class ShellViewModel @Inject constructor(
     val unread = _unread.asStateFlow()
     /** Аватар вошедшего сотрудника для шапки и всех экранов. */
     val avatar = repository.myAvatar
+    /** Своё фото на аватаре (если сотрудник его поставил). */
+    val photo = repository.myPhoto
 
     init {
         viewModelScope.launch {

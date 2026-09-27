@@ -1,6 +1,9 @@
 package ru.vsm.trainer.data.remote
 
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -16,6 +19,7 @@ import ru.vsm.trainer.data.remote.dto.LoginRequest
 import ru.vsm.trainer.data.remote.dto.Meta
 import ru.vsm.trainer.data.remote.dto.NodeRequest
 import ru.vsm.trainer.data.remote.dto.NotificationList
+import ru.vsm.trainer.data.remote.dto.PhotoVersion
 import ru.vsm.trainer.data.remote.dto.Profile
 import ru.vsm.trainer.data.remote.dto.RefreshRequest
 import ru.vsm.trainer.data.remote.dto.RunState
@@ -40,6 +44,16 @@ interface TrainerApi {
 
     @PUT("api/profile/avatar")
     suspend fun updateAvatar(@Body avatar: Avatar): Avatar
+
+    /** Своё фото: только с согласием сотрудника; сервер пересобирает снимок без метаданных. */
+    @PUT("api/profile/avatar/photo")
+    suspend fun uploadPhoto(@Query("consent") consent: Boolean, @Body photo: RequestBody): PhotoVersion
+
+    @GET("api/profile/avatar/photo")
+    suspend fun photo(@Query("v") version: Long): ResponseBody
+
+    @DELETE("api/profile/avatar/photo")
+    suspend fun deletePhoto()
 
     @GET("api/scenarios")
     suspend fun scenarios(): List<ScenarioSummary>
