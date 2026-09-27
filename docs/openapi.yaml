@@ -355,6 +355,74 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
       security:
       - HTTPBearer: []
+  /api/profile/avatar/photo:
+    put:
+      tags:
+      - profile
+      summary: Поставить своё фото на аватар (тело — JPEG, PNG или WebP до 8 МБ; нужен consent=true)
+      operationId: upload_photo_api_profile_avatar_photo_put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: consent
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Сотрудник согласился на обработку своего фото
+          default: false
+          title: Consent
+        description: Сотрудник согласился на обработку своего фото
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvatarPhoto'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      requestBody:
+        required: true
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
+          image/webp:
+            schema:
+              type: string
+              format: binary
+    get:
+      tags:
+      - profile
+      summary: Своё фото на аватаре (JPEG 512 × 512) — только самому сотруднику
+      operationId: get_photo_api_profile_avatar_photo_get
+      security:
+      - HTTPBearer: []
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            image/jpeg: {}
+    delete:
+      tags:
+      - profile
+      summary: 'Убрать своё фото: оно удаляется с сервера'
+      operationId: delete_photo_api_profile_avatar_photo_delete
+      security:
+      - HTTPBearer: []
+      responses:
+        '204':
+          description: Successful Response
   /api/leaderboard:
     get:
       tags:
@@ -883,6 +951,15 @@ components:
       additionalProperties: false
       type: object
       title: Avatar
+    AvatarPhoto:
+      properties:
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - version
+      title: AvatarPhoto
     BillingUsage:
       properties:
         month:
@@ -1862,6 +1939,11 @@ components:
           title: Competence Points
         avatar:
           $ref: '#/components/schemas/Avatar'
+        avatar_photo:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Avatar Photo
         achievements:
           items:
             $ref: '#/components/schemas/ProfileAchievement'
@@ -1884,6 +1966,7 @@ components:
       - runs_completed
       - competence_points
       - avatar
+      - avatar_photo
       - achievements
       - history
       title: Profile

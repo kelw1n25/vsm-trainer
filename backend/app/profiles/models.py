@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String
+from sqlalchemy import DateTime, Enum, ForeignKey, LargeBinary, String, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -55,3 +55,16 @@ class Employee(CreatedAtMixin, Base):
     last_burn_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     brigade: Mapped[Brigade] = relationship(back_populates="employees")
+
+
+class EmployeePhoto(Base):
+    """Своё фото на аватаре — только с согласия сотрудника, отдельно от строки сотрудника.
+
+    Хранится уже обработанный квадрат JPEG без метаданных (см. profiles/photo.py); удаление фото стирает строку.
+    """
+
+    __tablename__ = "employee_photos"
+
+    employee_id: Mapped[int] = mapped_column(ForeignKey("employees.id", ondelete="CASCADE"), primary_key=True)
+    image: Mapped[bytes] = mapped_column(LargeBinary)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
