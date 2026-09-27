@@ -45,7 +45,7 @@ private object AssetCache {
         return bitmap.asImageBitmap().also { bitmaps.put(id, it) }
     }
 
-    /** Размер без распаковки — заглушка занимает место картинки, и вёрстка не прыгает. */
+    /** Размер без распаковки: пока картинка готовится, её место уже занято, и вёрстка не прыгает. */
     fun size(context: Context, id: Int): Size {
         val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeResource(context.resources, id, options)

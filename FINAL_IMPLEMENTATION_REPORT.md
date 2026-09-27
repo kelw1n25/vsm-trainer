@@ -10,7 +10,7 @@ HR/LMS/биллинга; 14 сценариев по 51 ситуации из м�
 ## 2. Что изменено
 | Область | Изменение |
 |---------|-----------|
-| Backend | refresh-токены с ротацией и отзывом (миграция `0005`), `POST /api/auth/refresh`, `/logout`; лимит неудачных входов (`429` + `Retry-After`); JSON-журнал с `request_id`; аудит входов без ПДН; `500 internal_error` без стека; метрики `completion_rate`, `avg_decision_seconds`, `unfinished_runs`; клиентские события `POST /api/analytics/events` |
+| Backend | refresh-токены с ротацией и отзывом (миграция `0005`), `POST /api/auth/refresh`, `/logout`; лимит неудачных входов (`429` + `Retry-After`); JSON-журнал с `request_id`; аудит входов без ПДН; `500 internal_error` без стека; метрики `completion_rate`, `avg_decision_seconds`, `unfinished_runs`; клиентские события `POST /api/analytics/events`; кастомизация профиля — аватар-конструктор (миграция `0006`) и своё фото с согласием, без метаданных (миграция `0007`) |
 | Android | новое приложение: Kotlin, Jetpack Compose, Coroutines/Flow, Retrofit/OkHttp, Hilt, Android Keystore, WorkManager |
 | Документация | `openapi.yaml` в репозитории с тестом актуальности; SCENARIO_ENGINE, SECURITY, DEPLOYMENT; обновлены README, ARCHITECTURE, API, USER_FLOW, LIMITATIONS |
 | CI | `.github/workflows/ci.yml`: backend, frontend, Android |
@@ -73,7 +73,7 @@ XP, ачивки, защита от повторной награды, восс�
 ## 12. Testing
 | Часть | Тесты | Где запускались |
 |-------|-------|-----------------|
-| Backend | 137 pytest: движок, таймер, ветвление, условия, шкалы, XP, ачивки, рейтинг, аналитика, клиентские события, refresh-ротация и повтор, лимит входа, `500` без деталей, понятные ошибки валидации, `request_id`, актуальность OpenAPI | локально на PostgreSQL |
+| Backend | 143 pytest: движок, таймер, ветвление, условия, шкалы, XP, ачивки, рейтинг, аналитика, клиентские события, аватар и фото (согласие, формат, размер, удаление метаданных), refresh-ротация и повтор, лимит входа, `500` без деталей, понятные ошибки валидации, `request_id`, актуальность OpenAPI | локально на PostgreSQL |
 | Android | 31 JUnit (включая проверку тела запроса аналитики): контракт, MockWebServer (ошибки, офлайн, один обмен токена на параллельные 401, отказ и сбой обмена, кэш), `StoryEngine` (13 тестов), уведомления, Compose UI-тест входа на Robolectric | Docker (JDK 17, SDK 35) и нативно на macOS |
 
 ### Проверка интерфейса после переноса дизайна сайта
