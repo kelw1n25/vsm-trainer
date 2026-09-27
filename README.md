@@ -13,6 +13,17 @@
 14 сценариев построены на материалах кейсодержателя: все 51 ситуация из «Ситуаций на борту», ролевая модель
 общения, стандарты СТО РЖД 03.011/03.013/03.014 и фото из датасета. Материалы — в разделе «Справочник».
 
+## Попробовать онлайн
+
+| Что | Где |
+|-----|-----|
+| Веб-версия | https://vsm-trainer.onrender.com — вход `100001` / `demo2026` (инструктор — `900001`) |
+| API (Swagger) | https://vsm-trainer.onrender.com/api/docs |
+| Android-приложение | [APK из последнего релиза](https://github.com/kelw1n25/vsm-trainer/releases/latest/download/vsm-trainer.apk) — работает с тем же сервером |
+
+Бесплатный хостинг засыпает без посещений: первое открытие — до минуты, дальше без задержек.
+Как развёрнуто — [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#хостинг-render-бесплатный-тариф).
+
 ## Требования
 
 | Для чего | Что нужно |
@@ -81,6 +92,9 @@ docker run --rm --platform linux/amd64 -v "$PWD/android:/project" -v vsm-gradle:
 adb install -r app/build/outputs/apk/demo/app-demo.apk
 adb shell cmd package compile -m speed-profile -f ru.vsm.trainer   # сразу применить профили Compose
 ```
+
+**APK для телефона** (против развёрнутого сервера, HTTPS): `./gradlew assembleHosted` →
+`app/build/outputs/apk/hosted/app-hosted.apk`; другой сервер — `-PapiBaseUrl=https://…/`.
 
 Замеры до и после — в [docs/FINAL_UI_AUDIT.md](docs/FINAL_UI_AUDIT.md#быстродействие-android-эмулятор-pixel-7-apple-m3). Если эмулятор
 проработал много часов, его стоит перезапустить: система внутри него со временем замедляется.

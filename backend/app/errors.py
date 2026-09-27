@@ -13,6 +13,13 @@ def api_error(status: int, code: str, message: str, headers: dict[str, str] | No
 
 async def validation_error_handler(_: Request, error: RequestValidationError) -> JSONResponse:
     errors = error.errors()
+    # Битый UUID прохождения в ссылке (/api/runs/abc/debrief) — такого объекта просто нет: человеку нужно
+    # «не найдено», а не имя поля path.run_id. Остальные ошибки пути (формат табельного номера у HR API) — 422
+    if all(item["loc"][:1] == ("path",) and item["type"] == "uuid_parsing" for item in errors):
+        return JSONResponse(
+            status_code=404,
+            content={"detail": {"code": "not_found", "message": "Не найдено: в ссылке неверный идентификатор"}},
+        )
     # Тело — не JSON: позиция символа в ответе человеку ничего не скажет
     if any(item["type"] == "json_invalid" for item in errors):
         message = "Тело запроса — некорректный JSON"

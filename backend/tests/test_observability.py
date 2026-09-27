@@ -33,3 +33,7 @@ def test_invalid_input_gets_readable_message(client, auth):
     missing = client.post("/api/runs", json={}, headers=auth)
     assert missing.status_code == 422
     assert "scenario_id" in missing.json()["detail"]["message"]
+    # Неверный идентификатор в ссылке — «не найдено», а не имя внутреннего поля
+    malformed = client.get("/api/runs/not-a-uuid/debrief", headers=auth)
+    assert malformed.status_code == 404
+    assert malformed.json()["detail"]["code"] == "not_found"
