@@ -756,6 +756,64 @@ h2 {
   box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--brand);
 }
 
+.avatar-editor fieldset:disabled {
+  opacity: 0.5;
+}
+
+.avatar-editor fieldset:disabled .swatch,
+.avatar-editor fieldset:disabled .chip {
+  cursor: default;
+  transform: none;
+}
+
+.avatar-editor__photo {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+
+.avatar-editor__photo p {
+  margin: 0;
+}
+
+.avatar--photo {
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--surface);
+}
+
+.consent {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.consent input {
+  margin-top: 4px;
+  accent-color: var(--brand);
+}
+
+.button:has(input:focus-visible) {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.button.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* ───────── Hero ───────── */
 
 .hero {

@@ -1,15 +1,27 @@
 import { useId } from "react";
-import { AVATAR_BACKGROUNDS, AVATAR_TIES, DEFAULT_AVATAR, useMyAvatar } from "../avatar";
+import { AVATAR_BACKGROUNDS, AVATAR_TIES, DEFAULT_AVATAR, useMyAvatar, useMyPhoto } from "../avatar";
 import type { AvatarConfig } from "../types";
 
-/** Аватар вошедшего сотрудника — таким, каким он настроил его в «Настройках». */
+/** Аватар вошедшего сотрудника — таким, каким он настроил его в «Настройках»: своё фото или конструктор. */
 export function MyAvatar({ size = 64 }: { size?: number }) {
-  return <Avatar size={size} avatar={useMyAvatar()} />;
+  return <Avatar size={size} avatar={useMyAvatar()} photo={useMyPhoto()} />;
 }
 
-/** Аватар проводника: серый манекен с акцентами формы, как в сценах новеллы; фон, галстук и фуражка — из конструктора. */
-export function Avatar({ size = 64, avatar = DEFAULT_AVATAR }: { size?: number; avatar?: AvatarConfig }) {
+/**
+ * Аватар проводника: своё фото в круге, а без него — серый манекен с акцентами формы, как в сценах новеллы;
+ * фон, галстук и фуражка — из конструктора.
+ */
+export function Avatar({
+  size = 64,
+  avatar = DEFAULT_AVATAR,
+  photo = null,
+}: {
+  size?: number;
+  avatar?: AvatarConfig;
+  photo?: string | null;
+}) {
   const id = useId().replace(/:/g, "");
+  if (photo) return <img src={photo} width={size} height={size} alt="" className="avatar avatar--photo" />;
   const background = AVATAR_BACKGROUNDS[avatar.background];
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true" className="avatar">

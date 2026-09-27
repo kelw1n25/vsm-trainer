@@ -54,30 +54,34 @@ export function onUnauthorized(handler: () => void): void {
   unauthorizedHandler = handler;
 }
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+// Запрос с разбором ошибки сервера; тело — JSON или файл (фото аватара)
+async function call(method: string, path: string, body?: BodyInit, contentType?: string): Promise<Response> {
   const token = loadSession()?.token;
   const headers: Record<string, string> = {};
   if (token) headers.Authorization = `Bearer ${token}`;
-  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (contentType) headers["Content-Type"] = contentType;
 
   let response: Response;
   try {
-    response = await fetch(path, {
-      method,
-      headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
+    response = await fetch(path, { method, headers, body });
   } catch {
     throw new ApiError(0, "network", "Нет связи с сервером. Проверьте подключение.");
   }
 
-  const data = await response.json().catch(() => null);
   if (!response.ok) {
+    const data = await response.json().catch(() => null);
     if (response.status === 401 && token) unauthorizedHandler();
     const detail = data?.detail;
     throw new ApiError(response.status, detail?.code ?? "error", detail?.message ?? "Ошибка сервера");
   }
-  return data as T;
+  return response;
+}
+
+async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const response = await (body === undefined
+    ? call(method, path)
+    : call(method, path, JSON.stringify(body), "application/json"));
+  return (await response.json().catch(() => null)) as T;
 }
 
 export const api = {
@@ -96,6 +100,14 @@ export const api = {
   handbook: () => request<Handbook>("GET", "/api/handbook"),
   profile: () => request<Profile>("GET", "/api/profile"),
   updateAvatar: (avatar: AvatarConfig) => request<AvatarConfig>("PUT", "/api/profile/avatar", avatar),
+  // Своё фото: загрузка только с согласием сотрудника; сервер пересобирает снимок без метаданных
+  uploadPhoto: (photo: Blob) =>
+    call("PUT", "/api/profile/avatar/photo?consent=true", photo, photo.type).then(
+      (response) => response.json() as Promise<{ version: number }>,
+    ),
+  deletePhoto: () => call("DELETE", "/api/profile/avatar/photo").then(() => undefined),
+  // Картинке нужен заголовок авторизации, поэтому фото приходит blob-ом, а не адресом для <img>
+  photo: (version: number) => call("GET", `/api/profile/avatar/photo?v=${version}`).then((response) => response.blob()),
   leaderboard: (scope: LeaderboardScope, period: LeaderboardPeriod) =>
     request<Leaderboard>("GET", `/api/leaderboard?scope=${scope}&period=${period}`),
   notifications: () => request<NotificationList>("GET", "/api/notifications"),

@@ -25,11 +25,21 @@ export const AVATAR_TIES: Record<AvatarTie, { label: string; color: string }> = 
 };
 
 // Аватар вошедшего сотрудника — один на все места (шапка, профиль, рейтинг): смена в настройках видна сразу
-let current: { employeeId: number; avatar: AvatarConfig } | null = null;
+interface Mine {
+  employeeId: number;
+  avatar: AvatarConfig;
+  /** Своё фото: адрес blob для <img>; null — рисуется конструктор. */
+  photoUrl: string | null;
+}
+
+let current: Mine | null = null;
+let loadingFor: number | null = null;
 const listeners = new Set<() => void>();
 
-function publish(employeeId: number, avatar: AvatarConfig): void {
-  current = { employeeId, avatar };
+function publish(next: Mine): void {
+  // Старое фото больше не показывается — освобождаем память blob
+  if (current?.photoUrl && current.photoUrl !== next.photoUrl) URL.revokeObjectURL(current.photoUrl);
+  current = next;
   listeners.forEach((listener) => listener());
 }
 
@@ -38,30 +48,68 @@ function subscribe(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
-/** Аватар текущего сотрудника; пока профиль не загружен — аватар по умолчанию. */
-export function useMyAvatar(): AvatarConfig {
+async function photoUrl(version: number | null): Promise<string | null> {
+  return version === null ? null : URL.createObjectURL(await api.photo(version));
+}
+
+function useMine(): Mine | null {
   const { session } = useAuth();
   const employeeId = session?.employeeId;
   const snapshot = useSyncExternalStore(subscribe, () => current);
   useEffect(() => {
-    if (employeeId === undefined || current?.employeeId === employeeId) return;
+    if (employeeId === undefined || current?.employeeId === employeeId || loadingFor === employeeId) return;
+    loadingFor = employeeId;
     api
       .profile()
-      .then((profile) => publish(employeeId, profile.avatar))
+      .then(async (profile) =>
+        publish({
+          employeeId,
+          avatar: profile.avatar,
+          // Фото не загрузилось — остаётся конструктор, а не пустой круг
+          photoUrl: await photoUrl(profile.avatar_photo).catch(() => null),
+        }),
+      )
       .catch(() => {
         // без профиля остаётся аватар по умолчанию
+      })
+      .finally(() => {
+        loadingFor = null;
       });
   }, [employeeId]);
-  return snapshot && snapshot.employeeId === employeeId ? snapshot.avatar : DEFAULT_AVATAR;
+  return snapshot && snapshot.employeeId === employeeId ? snapshot : null;
+}
+
+/** Аватар-конструктор текущего сотрудника; пока профиль не загружен — по умолчанию. */
+export function useMyAvatar(): AvatarConfig {
+  return useMine()?.avatar ?? DEFAULT_AVATAR;
+}
+
+/** Своё фото текущего сотрудника (адрес для <img>) или null. */
+export function useMyPhoto(): string | null {
+  return useMine()?.photoUrl ?? null;
 }
 
 /** Сохранить выбор на сервере; при ошибке вернуть прежний и пробросить ошибку экрану. */
 export async function saveMyAvatar(employeeId: number, next: AvatarConfig, previous: AvatarConfig): Promise<void> {
-  publish(employeeId, next);
+  const photo = current?.photoUrl ?? null;
+  publish({ employeeId, avatar: next, photoUrl: photo });
   try {
-    publish(employeeId, await api.updateAvatar(next));
+    const saved = await api.updateAvatar(next);
+    publish({ employeeId, avatar: saved, photoUrl: current?.photoUrl ?? photo });
   } catch (error) {
-    publish(employeeId, previous);
+    publish({ employeeId, avatar: previous, photoUrl: current?.photoUrl ?? photo });
     throw error;
   }
+}
+
+/** Поставить своё фото: сервер обрезает его в квадрат и убирает метаданные. */
+export async function uploadMyPhoto(employeeId: number, file: File): Promise<void> {
+  const { version } = await api.uploadPhoto(file);
+  publish({ employeeId, avatar: current?.avatar ?? DEFAULT_AVATAR, photoUrl: await photoUrl(version) });
+}
+
+/** Убрать своё фото с сервера — на аватаре снова конструктор. */
+export async function removeMyPhoto(employeeId: number): Promise<void> {
+  await api.deletePhoto();
+  publish({ employeeId, avatar: current?.avatar ?? DEFAULT_AVATAR, photoUrl: null });
 }

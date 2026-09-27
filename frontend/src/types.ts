@@ -210,6 +210,8 @@ export interface Profile {
   runs_completed: number;
   competence_points: Record<string, number>;
   avatar: AvatarConfig;
+  /** Версия своего фото на аватаре; null — фото нет, рисуется конструктор. */
+  avatar_photo: number | null;
   achievements: (Achievement & { earned_at: string | null })[];
   history: HistoryItem[];
 }
