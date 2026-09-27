@@ -18,6 +18,9 @@ export function Header() {
         </span>
       </Link>
       <nav className="nav" aria-label="Основные разделы">
+        <NavLink to="/" end>
+          Главная
+        </NavLink>
         <NavLink to="/scenarios">Сценарии</NavLink>
         <NavLink to="/profile">Профиль</NavLink>
         <NavLink to="/rating">Рейтинг</NavLink>

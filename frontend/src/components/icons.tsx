@@ -64,17 +64,6 @@ export function PinIcon() {
   );
 }
 
-export function GridIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" {...common}>
-      <rect x="4" y="4" width="6.5" height="6.5" rx="1.8" />
-      <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.8" />
-      <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.8" />
-      <path d="M13.5 16.75h6.5M16.75 13.5v6.5" />
-    </svg>
-  );
-}
-
 function starPoints(cx: number, cy: number, outer: number, inner: number): string {
   return Array.from({ length: 10 }, (_, i) => {
     const radius = i % 2 === 0 ? outer : inner;

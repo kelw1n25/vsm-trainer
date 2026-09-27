@@ -33,6 +33,22 @@ interface Slide {
   note: string;
 }
 
+/** Текст слайда; невидимые копии (sizer) только задают высоту hero и скрыты от скринридера. */
+function SlideText({ slide, sizer = false }: { slide: Slide; sizer?: boolean }) {
+  const longTitle = slide.title[1].length > 24;
+  return (
+    <div className={sizer ? "hero__content hero__content--sizer" : "hero__content"} aria-hidden={sizer || undefined}>
+      <p className="hero__eyebrow">{slide.eyebrow}</p>
+      <h1 className={`hero__title ${longTitle ? "hero__title--long" : ""}`}>
+        {slide.title[0]}
+        <br />
+        {slide.title[1]}
+      </h1>
+      <p className="hero__text">{slide.text}</p>
+    </div>
+  );
+}
+
 /** Hero с ползунком: приветствие, челлендж недели, рекомендация; ползунок ведёт поезд. */
 export function HeroCarousel() {
   const { session } = useAuth();
@@ -171,19 +187,17 @@ export function HeroCarousel() {
   stepsRef.current = slides.length;
   // Слайд — ближайший к положению ползунка
   const current = slides[Math.round(progress * (slides.length - 1))];
-  const longTitle = current.title[1].length > 24;
 
   return (
     <section className="hero" aria-roledescription="карусель" ref={heroRef}>
       <HeroTrain offset={progress * TRAIN_DISTANCE} moving={moving} smooth={smooth} />
-      <div className="hero__content" key={current.eyebrow}>
-        <p className="hero__eyebrow">{current.eyebrow}</p>
-        <h1 className={`hero__title ${longTitle ? "hero__title--long" : ""}`}>
-          {current.title[0]}
-          <br />
-          {current.title[1]}
-        </h1>
-        <p className="hero__text">{current.text}</p>
+      {/* Высота hero — по самому длинному слайду: все слайды невидимо лежат под текущим,
+          поэтому текст виден целиком, а при листании страница не сдвигается */}
+      <div className="hero__texts">
+        {slides.map((slide) => (
+          <SlideText key={slide.eyebrow} slide={slide} sizer />
+        ))}
+        <SlideText key={current.eyebrow} slide={current} />
       </div>
       <div className="hero__note" key={`${current.eyebrow}-note`}>
         <StarIcon />
