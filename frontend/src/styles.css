@@ -1919,6 +1919,28 @@ input:focus {
   .details dd {
     margin-bottom: 10px;
   }
+
+  /* Телефон: ползунок — под текстом, поезд — своей полосой снизу и крупнее карточки
+     (нос в кадре, хвост за краем), чтобы ползунок его не закрывал */
+  .hero {
+    padding-bottom: 156px;
+  }
+
+  .hero__scroller {
+    position: static;
+    margin: 18px 22px 0;
+  }
+
+  .hero__scroller .scroller {
+    width: 100%;
+  }
+
+  /* В 1,35 раза шире карточки, как в приложении; сдвиг вправо держит в кадре участок, где ездит нос */
+  .hero__train {
+    right: -17%;
+    width: 135%;
+    height: 156px;
+  }
 }
 
 @media (max-width: 480px) {

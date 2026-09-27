@@ -12,6 +12,8 @@ interface Props {
 }
 
 const KEY_STEP = 0.05;
+// Сенсорный экран: ни курсора, ни колеса — подсказка про палец
+const TOUCH = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
 
 /**
  * Единый ползунок hero. Мышью управляется наведением — достаточно вести курсор над ним,
@@ -58,7 +60,7 @@ export function HeroScroller({ value, steps, label, onChange, onRelease }: Props
       className={`scroller ${dragging ? "scroller--dragging" : ""}`}
       role="slider"
       tabIndex={0}
-      aria-label="Прокрутка слайдов: ведите курсором или крутите колесо мыши"
+      aria-label={TOUCH ? "Прокрутка слайдов: проведите пальцем" : "Прокрутка слайдов: ведите курсором или крутите колесо мыши"}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(percent)}
@@ -83,7 +85,7 @@ export function HeroScroller({ value, steps, label, onChange, onRelease }: Props
         ))}
         <div className="scroller__thumb" style={{ left: `${percent}%` }} />
       </div>
-      <span className="scroller__hint">⇆ ведите курсором или крутите колесо</span>
+      <span className="scroller__hint">{TOUCH ? "⇆ проведите пальцем" : "⇆ ведите курсором или крутите колесо"}</span>
     </div>
   );
 }

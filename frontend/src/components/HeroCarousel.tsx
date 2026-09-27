@@ -8,8 +8,22 @@ import { HeroScroller } from "./HeroScroller";
 import { StarIcon } from "./icons";
 import { HeroTrain } from "./illustrations";
 
-// Сколько поезд проезжает за весь ход ползунка (единицы viewBox иллюстрации)
+// Сколько поезд проезжает за весь ход ползунка (единицы viewBox иллюстрации).
+// На телефоне кадр уже, а поезд крупнее — путь короче, чтобы нос оставался в кадре
 const TRAIN_DISTANCE = 220;
+const TRAIN_DISTANCE_PHONE = 140;
+const PHONE = "(max-width: 760px)";
+
+function usePhone(): boolean {
+  const [phone, setPhone] = useState(() => window.matchMedia(PHONE).matches);
+  useEffect(() => {
+    const query = window.matchMedia(PHONE);
+    const update = () => setPhone(query.matches);
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  return phone;
+}
 // Сколько после последнего движения линии скорости ещё «дуют» сильнее
 const WIND_AFTER_MS = 350;
 // Один «щелчок» колеса (deltaY ≈ 100) сдвигает ползунок на 1/8 пути
@@ -56,6 +70,7 @@ export function HeroCarousel() {
   const { scenarios } = useScenarios();
   const [recommendation, setRecommendation] = useState<Analytics["recommendation"]>(null);
   const [progress, setProgress] = useState(0);
+  const phone = usePhone();
   const [smooth, setSmooth] = useState(false);
   const [moving, setMoving] = useState(false);
   const windTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -190,7 +205,7 @@ export function HeroCarousel() {
 
   return (
     <section className="hero" aria-roledescription="карусель" ref={heroRef}>
-      <HeroTrain offset={progress * TRAIN_DISTANCE} moving={moving} smooth={smooth} />
+      <HeroTrain offset={progress * (phone ? TRAIN_DISTANCE_PHONE : TRAIN_DISTANCE)} moving={moving} smooth={smooth} />
       {/* Высота hero — по самому длинному слайду: все слайды невидимо лежат под текущим,
           поэтому текст виден целиком, а при листании страница не сдвигается */}
       <div className="hero__texts">
