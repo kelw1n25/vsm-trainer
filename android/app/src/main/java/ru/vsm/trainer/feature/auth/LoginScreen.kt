@@ -65,7 +65,7 @@ fun LoginScreen(state: LoginUiState, onNumberChange: (String) -> Unit, onPasswor
                     Text("Вход для сотрудников", style = VsmType.pageTitle, color = colors.heading)
                     VsmTextField(
                         state.personnelNumber, onNumberChange, label = "Табельный номер", tag = "login.number",
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Next),
                     )
                     VsmTextField(
                         state.password, onPasswordChange, label = "Пароль", password = true, tag = "login.password",
