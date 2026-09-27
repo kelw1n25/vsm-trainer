@@ -1,0 +1,44 @@
+# Blueprint Render: сайт + backend одним бесплатным веб-сервисом и бесплатный PostgreSQL.
+# Секреты Render генерирует сам — в репозитории их нет. Демо-данные создаются при первом запуске.
+databases:
+  - name: vsm-db
+    plan: free
+    region: frankfurt
+    databaseName: vsm_trainer
+    user: vsm
+    postgresMajorVersion: "17"
+
+services:
+  - type: web
+    name: vsm-trainer
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: vsm-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: vsm-db
+          property: port
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: vsm-db
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: vsm-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: vsm-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: INTEGRATION_API_KEY
+        generateValue: true

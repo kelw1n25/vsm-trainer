@@ -1,0 +1,10 @@
+# Контекст единого образа (Dockerfile в корне): только то, что нужно сайту и backend
+.git
+android
+docs
+tools
+**/node_modules
+**/dist
+**/__pycache__
+**/.pytest_cache
+.env

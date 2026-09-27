@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     integration_api_key: str = Field(min_length=32)
     # Создать синтетических сотрудников и историю при старте на пустой БД
     seed_demo_data: bool = True
+    # Папка собранного веб-клиента: backend отдаёт и API, и сайт одним сервисом (хостинг Render).
+    # Пусто — сайт раздаёт свой сервер (docker-compose, nginx)
+    web_dir: str | None = None
 
     @property
     def database_url(self) -> str:

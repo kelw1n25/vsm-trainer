@@ -2,9 +2,12 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+from starlette.exceptions import HTTPException
+from starlette.types import Scope
 
 from app.analytics.router import router as analytics_router
 from app.auth.router import router as auth_router
@@ -70,3 +73,21 @@ def meta() -> dict:
         "competences": game_config.competences,
         "weekly_challenge": challenge.model_dump() if challenge else None,
     }
+
+
+class WebClient(StaticFiles):
+    """Собранный React-клиент: файл, если он есть, иначе index.html — маршруты сайта (/scenarios/…) открываются
+    по прямой ссылке. Неизвестный адрес /api/… остаётся ошибкой 404, а не страницей сайта."""
+
+    async def get_response(self, path: str, scope: Scope):
+        try:
+            return await super().get_response(path, scope)
+        except HTTPException as error:
+            if error.status_code != 404 or path.startswith("api/"):
+                raise
+            return await super().get_response("index.html", scope)
+
+
+# Подключается последним: маршруты API выше имеют приоритет
+if settings.web_dir:
+    app.mount("/", WebClient(directory=settings.web_dir, html=True), name="web")
