@@ -19,7 +19,7 @@
 |-----|-----|
 | Веб-версия | https://vsm-trainer.onrender.com — вход `100001` / `demo2026` (инструктор — `900001`) |
 | API (Swagger) | https://vsm-trainer.onrender.com/api/docs |
-| Android-приложение | [APK из последнего релиза](https://github.com/kelw1n25/vsm-trainer/releases/latest/download/vsm-trainer.apk) — работает с тем же сервером |
+| Android-приложение | [`apk/vsm-trainer.apk`](apk/vsm-trainer.apk) в этом репозитории (или [из релиза](https://github.com/kelw1n25/vsm-trainer/releases/latest/download/vsm-trainer.apk)) — работает с тем же сервером |
 
 Бесплатный хостинг засыпает без посещений: первое открытие — до минуты, дальше без задержек.
 Как развёрнуто — [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#хостинг-render-бесплатный-тариф).

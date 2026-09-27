@@ -6,8 +6,10 @@ import android.graphics.BitmapFactory
 import android.util.LruCache
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -63,9 +65,11 @@ private class Placeholder(override val intrinsicSize: Size) : Painter() {
 fun assetPainter(name: String, fallback: Int? = null): Painter {
     val context = LocalContext.current
     val id = remember(name) { assetId(context, name).takeIf { it != 0 } ?: fallback }
-    // При смене картинки (другая эмоция персонажа) до готовности новой видна прежняя — без мигания пустотой
-    val bitmap by produceState(id?.let(AssetCache::cached), id) {
-        value = id?.let { AssetCache.cached(it) ?: withContext(Dispatchers.IO) { AssetCache.load(context, it) } }
+    // При смене картинки (другая эмоция персонажа) до готовности новой видна прежняя — без мигания пустотой:
+    // состояние одно на всё время, а загрузка перезапускается при смене id
+    var bitmap by remember { mutableStateOf(id?.let(AssetCache::cached)) }
+    LaunchedEffect(id) {
+        bitmap = if (id == null) null else AssetCache.cached(id) ?: withContext(Dispatchers.IO) { AssetCache.load(context, id) }
     }
     return remember(id, bitmap) { bitmap?.let(::BitmapPainter) ?: Placeholder(id?.let { AssetCache.size(context, it) } ?: Size.Zero) }
 }
