@@ -106,14 +106,14 @@ fun AppNavigation(onLogout: () -> Unit, shell: ShellViewModel = hiltViewModel())
                 "${Tab.HANDBOOK.route}?situation={situation}",
                 arguments = listOf(navArgument("situation") { type = NavType.StringType; nullable = true; defaultValue = null }),
             ) { HandbookScreen(onScenario = { go("scenario/$it") }) }
-            composable("profile") { ProfileScreen(onDebrief = { go("debrief/$it") }, onScenarios = { nav.openTab(Tab.SCENARIOS.route) }, onSettings = { go("settings") }) }
+            composable("profile") { ProfileScreen(onDebrief = { go("debrief/$it") }, onScenarios = { nav.showList(Tab.SCENARIOS.route) }, onSettings = { go("settings") }) }
             composable("notifications") { NotificationsScreen(onChanged = shell::refreshUnread) }
             composable("settings") { SettingsScreen(onLogout = onLogout) }
             composable("team") { TeamScreen(onMember = { go("team/$it") }) }
             composable("team/{employeeId}") { AnalyticsScreen(onPlay = play, onDebrief = { go("debrief/$it") }) }
             composable("scenario/{scenarioId}") {
                 ScenarioDetailScreen(
-                    onBack = { nav.openTab(Tab.SCENARIOS.route) },
+                    onBack = { nav.showList(Tab.SCENARIOS.route) },
                     onPlay = play,
                     onMap = { go("map/$it") },
                     onSituation = { go("${Tab.HANDBOOK.route}?situation=$it") },
@@ -122,7 +122,7 @@ fun AppNavigation(onLogout: () -> Unit, shell: ShellViewModel = hiltViewModel())
             }
             composable("map/{scenarioId}") { StoryMapScreen(onBack = { nav.popBackStack() }, onPlay = play) }
             composable("debrief/{runId}") {
-                DebriefScreen(onMap = { go("map/$it") }, onScenario = { go("scenario/$it") }, onScenarios = { nav.openTab(Tab.SCENARIOS.route) })
+                DebriefScreen(onMap = { go("map/$it") }, onScenario = { go("scenario/$it") }, onScenarios = { nav.showList(Tab.SCENARIOS.route) })
             }
             composable("play/{scenarioId}") {
                 StoryPlayerScreen(
@@ -130,7 +130,7 @@ fun AppNavigation(onLogout: () -> Unit, shell: ShellViewModel = hiltViewModel())
                     // Из финала — путь и разбор; «назад» из них ведёт туда, откуда начинали, а не в законченную историю
                     onMap = { scenarioId -> nav.navigate("map/$scenarioId") { popUpTo("play/{scenarioId}") { inclusive = true } } },
                     onDebrief = { runId -> nav.navigate("debrief/$runId") { popUpTo("play/{scenarioId}") { inclusive = true } } },
-                    onScenarios = { nav.openTab(Tab.SCENARIOS.route) },
+                    onScenarios = { nav.showList(Tab.SCENARIOS.route) },
                 )
             }
         }
@@ -143,7 +143,10 @@ fun AppNavigation(onLogout: () -> Unit, shell: ShellViewModel = hiltViewModel())
             BottomNav(current) { tab ->
                 // Подсвеченная вкладка (например, «Сценарии» на странице сценария) ведёт к своему списку,
                 // как ссылка на сайте, а не восстанавливает ту же страницу
-                if (tab != current || !nav.popBackStack(tab.route, inclusive = false)) nav.openTab(tab.route)
+                when {
+                    tab != current -> nav.openTab(tab.route)
+                    !nav.popBackStack(tab.route, inclusive = false) -> nav.showList(tab.route)
+                }
             }
         }
     }
@@ -155,4 +158,16 @@ private fun NavHostController.openTab(route: String) = navigate(route) {
     popUpTo(graph.findStartDestination().id) { saveState = true }
     launchSingleTop = true
     restoreState = true
+}
+
+/**
+ * Список вкладки с чистого листа — «← Все сценарии», «Вернуться к сценариям».
+ * [openTab] вернул бы сохранённый стек вкладки, то есть ту же страницу сценария, с которой ушли.
+ */
+private fun NavHostController.showList(route: String) {
+    clearBackStack(route)
+    navigate(route) {
+        popUpTo(graph.findStartDestination().id)
+        launchSingleTop = true
+    }
 }

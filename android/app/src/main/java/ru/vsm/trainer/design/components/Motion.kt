@@ -7,6 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -19,16 +21,20 @@ import ru.vsm.trainer.design.Vsm
 
 /**
  * Появление блока `rise-in` сайта: снизу на 18 и из прозрачности, по очереди с шагом [stepMs].
+ * Играет один раз: карточка, вернувшаяся в ленивый список при прокрутке, видна сразу, а не проявляется заново.
+ * Очередь — только для первого экрана, иначе дальняя карточка ждала бы появления почти секунду.
  * «Уменьшить анимацию» показывает блок сразу.
  */
 @Composable
 fun Modifier.riseIn(index: Int = 0, stepMs: Int = 70, durationMs: Int = 550): Modifier {
     val reduce = Vsm.reduceMotion
-    val progress = remember { Animatable(if (reduce) 1f else 0f) }
+    var played by rememberSaveable { mutableStateOf(reduce) }
+    val progress = remember { Animatable(if (played) 1f else 0f) }
     LaunchedEffect(Unit) {
-        if (!reduce) {
-            delay((index * stepMs).toLong())
+        if (!played) {
+            delay((index.coerceAtMost(MaxQueued) * stepMs).toLong())
             progress.animateTo(1f, tween(durationMs, easing = SiteEasing))
+            played = true
         }
     }
     val shift = with(androidx.compose.ui.platform.LocalDensity.current) { 18.dp.toPx() }
@@ -37,6 +43,8 @@ fun Modifier.riseIn(index: Int = 0, stepMs: Int = 70, durationMs: Int = 550): Mo
         translationY = (1f - progress.value) * shift
     }
 }
+
+private const val MaxQueued = 4
 
 /** `AnimatedNumber`: число досчитывает до значения за 0.9 с (ease-out cubic). */
 @Composable

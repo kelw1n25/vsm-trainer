@@ -647,7 +647,8 @@ private struct RiseIn: ViewModifier {
             .offset(y: shown || reduce ? 0 : 18)
             .onAppear {
                 guard !reduce else { return }
-                withAnimation(.site(duration).delay(Double(index) * step)) { shown = true }
+                // Очередь — только для первого экрана: дальняя карточка при прокрутке не ждёт появления почти секунду
+                withAnimation(.site(duration).delay(Double(min(index, 4)) * step)) { shown = true }
             }
     }
 }
