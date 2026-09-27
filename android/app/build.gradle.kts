@@ -27,8 +27,8 @@ android {
             buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8000/\"")
         }
         release {
-            // Продакшен — только HTTPS; адрес задаётся при сборке: ./gradlew assembleRelease -PapiBaseUrl=https://…/
-            val apiBaseUrl = (project.findProperty("apiBaseUrl") as String?) ?: "https://vsm-trainer.example.ru/"
+            // Только HTTPS; по умолчанию — развёрнутый сервер, другой адрес: ./gradlew assembleRelease -PapiBaseUrl=https://…/
+            val apiBaseUrl = (project.findProperty("apiBaseUrl") as String?) ?: "https://vsm-trainer.onrender.com/"
             buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
             isMinifyEnabled = true
             isShrinkResources = true
@@ -39,6 +39,13 @@ android {
         create("demo") {
             initWith(getByName("release"))
             buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8000/\"")
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+        }
+        // APK для жюри и любого телефона: release против развёрнутого сервера (HTTPS), подписан отладочным
+        // ключом — ставится без магазина. Ключ организации для публикации в репозитории не хранится
+        create("hosted") {
+            initWith(getByName("release"))
             signingConfig = signingConfigs.getByName("debug")
             matchingFallbacks += listOf("release")
         }
