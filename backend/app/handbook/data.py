@@ -8,23 +8,28 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 HANDBOOK_PATH = Path(__file__).resolve().parents[2] / "config" / "handbook.yaml"
 
 
-class RoleModelStep(BaseModel):
+class Content(BaseModel):
+    # Блоки YAML «>» оставляют перевод строки в конце — на телефоне это лишняя пустая строка в карточке
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+
+class RoleModelStep(Content):
     code: str
     title: str
     phrases: list[str] = Field(min_length=1)
 
 
-class RoleModel(BaseModel):
+class RoleModel(Content):
     title: str
     steps: list[RoleModelStep] = Field(min_length=1)
 
 
-class ServiceClass(BaseModel):
+class ServiceClass(Content):
     code: Literal["first", "business", "comfort", "standard"]
     title: str
     layout: str
@@ -35,12 +40,12 @@ class ServiceClass(BaseModel):
     summary: str
 
 
-class Standard(BaseModel):
+class Standard(Content):
     title: str
     text: str
 
 
-class Situation(BaseModel):
+class Situation(Content):
     number: int = Field(ge=1)
     title: str
     # boarding — на посадке, onboard — в пути следования
@@ -51,7 +56,7 @@ class Situation(BaseModel):
     comment: list[str] = Field(min_length=1)
 
 
-class Handbook(BaseModel):
+class Handbook(Content):
     role_model: RoleModel
     service_classes: list[ServiceClass]
     standards: list[Standard]

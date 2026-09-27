@@ -34,8 +34,10 @@ Background = Literal[
 
 
 class StrictModel(BaseModel):
-    # Опечатка в имени поля (например, «timout_next») — ошибка, а не молча проигнорированное поле
-    model_config = ConfigDict(extra="forbid")
+    # Опечатка в имени поля (например, «timout_next») — ошибка, а не молча проигнорированное поле.
+    # Блоки YAML «>» оставляют перевод строки в конце: его срезаем, иначе на телефоне кнопка ответа
+    # и абзац получают лишнюю пустую строку (браузер её схлопывает, нативный текст — нет)
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
 
 class Look(StrictModel):

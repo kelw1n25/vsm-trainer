@@ -203,3 +203,25 @@ def test_parse_conditions():
     assert parse_condition("not flag medic_called") == FlagCondition("medic_called", present=False)
     with pytest.raises(ValueError):
         parse_condition("доверие > 5")
+
+
+def _strings(value):
+    if isinstance(value, dict):
+        for item in value.values():
+            yield from _strings(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from _strings(item)
+    elif isinstance(value, str):
+        yield value
+
+
+def test_content_text_has_no_trailing_newlines():
+    # Блоки YAML «>» оставляют «\n» в конце: на телефоне это лишняя пустая строка в кнопке ответа и в карточке
+    texts = list(_strings(handbook.model_dump()))
+    for path in sorted(SCENARIOS_DIR.glob("*.yaml")):
+        scenario, errors = validate_text(path.read_text(encoding="utf-8"), path.stem)
+        assert not errors
+        texts += _strings(scenario.model_dump())
+    assert texts
+    assert [text for text in texts if text != text.strip()] == []
